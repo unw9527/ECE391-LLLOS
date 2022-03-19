@@ -5,6 +5,10 @@
 #ifndef _LIB_H
 #define _LIB_H
 
+#define VIDEO       0xB8000                                          /* The address of the VIDEO memory.*/
+#define NUM_COLS    80
+#define NUM_ROWS    25
+#define ATTRIB      0x7
 #include "types.h"
 
 int32_t printf(int8_t *format, ...);

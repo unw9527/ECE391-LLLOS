@@ -8,6 +8,7 @@
 #include "i8259.h"
 #include "debug.h"
 #include "tests.h"
+#include "page.h"
 
 #define RUN_TESTS
 
@@ -93,6 +94,7 @@ void entry(unsigned long magic, unsigned long addr) {
                     (unsigned)mmap->type,
                     (unsigned)mmap->length_high,
                     (unsigned)mmap->length_low);
+    page_init();
     }
 
     /* Construct an LDT entry in the GDT */

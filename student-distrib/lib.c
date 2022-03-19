@@ -3,11 +3,6 @@
 
 #include "lib.h"
 
-#define VIDEO       0xB8000
-#define NUM_COLS    80
-#define NUM_ROWS    25
-#define ATTRIB      0x7
-
 static int screen_x;
 static int screen_y;
 static char* video_mem = (char *)VIDEO;
