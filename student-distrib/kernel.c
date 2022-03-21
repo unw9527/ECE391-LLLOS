@@ -9,6 +9,8 @@
 #include "debug.h"
 #include "tests.h"
 #include "page.h"
+#include "rtc.h"
+#include "keyboard.h"
 
 #define RUN_TESTS
 
@@ -94,7 +96,6 @@ void entry(unsigned long magic, unsigned long addr) {
                     (unsigned)mmap->type,
                     (unsigned)mmap->length_high,
                     (unsigned)mmap->length_low);
-    page_init();
     }
 
     /* Construct an LDT entry in the GDT */
@@ -138,9 +139,13 @@ void entry(unsigned long magic, unsigned long addr) {
         ltr(KERNEL_TSS);
     }
 
+    /* Init the paging.*/
+    page_init();
+
     /* Init the PIC */
     i8259_init();
-
+    /*RTC_init();*/
+    keyboard_initial();
     /* Initialize devices, memory, filesystem, enable device interrupts on the
      * PIC, any other initialization stuff... */
 
@@ -156,7 +161,7 @@ void entry(unsigned long magic, unsigned long addr) {
     launch_tests();
 #endif
     /* Execute the first program ("shell") ... */
-
+    while(1);
     /* Spin (nicely, so we don't chew up cycles) */
     asm volatile (".1: hlt; jmp .1;");
 }

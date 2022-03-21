@@ -7,7 +7,6 @@
 #define SR 12
 
 typedef struct kb_4_directory_entry{
-    uint32_t val[2];
     struct{
         uint32_t P : 1;
         uint32_t R_W : 1;
@@ -24,7 +23,6 @@ typedef struct kb_4_directory_entry{
 } kb_4_directory_entry_t;
 
 typedef struct kb_4_page_entry{
-    uint32_t val[2];
     struct{
         uint32_t P : 1;
         uint32_t R_W : 1;
@@ -42,7 +40,6 @@ typedef struct kb_4_page_entry{
 } kb_4_page_entry_t;
 
 typedef struct mb_4_directory_entry{
-    uint32_t val[2];
     struct{
         uint32_t P : 1;
         uint32_t R_W : 1;

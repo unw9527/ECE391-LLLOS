@@ -24,8 +24,20 @@ _start:
     jmp     continue
 
 continue:
-    # Load the GDT
-    lgdt    gdt_desc
+    # Load the GD
+    lgdt    gdt_desc    
+
+    pushl    %eax
+    pushl    %ecx
+    pushl    %edx
+
+    call    idt_initial
+
+    popl     %edx
+    popl     %ecx
+    popl     %eax   
+    
+    lidt    idt_desc_ptr
     # Load CS with the new descriptor value
     ljmp    $KERNEL_CS, $keep_going
 
