@@ -48,7 +48,8 @@ int idt_test(){
 	return result;
 }
 
-void idt_exp_test() {
+int idt_exp_test() {
+	int result = PASS;
 	TEST_HEADER;
 	asm volatile("int $0");
 	asm volatile("int $1");
@@ -69,11 +70,11 @@ void idt_exp_test() {
 	asm volatile("int $17");
 	asm volatile("int $18");
 	asm volatile("int $19");	
+	return result;
 }
 
-int page_content_test(){
+int page_content_test1(){
 	TEST_HEADER;
-
 	printf("We will show first 2 entries of directory and first entry of page table. We will also print the page corresponds to video memory.\n");
 	int result = PASS;
 	printf("Page directory, entry0:\n");
@@ -81,25 +82,65 @@ int page_content_test(){
 	page_directory[0].kb_4_dir.R_W, page_directory[0].kb_4_dir.U_S, page_directory[0].kb_4_dir.PWT, page_directory[0].kb_4_dir.PCD, 
 	page_directory[0].kb_4_dir.A, page_directory[0].kb_4_dir.Reserved, page_directory[0].kb_4_dir.PS, page_directory[0].kb_4_dir.G,
 	page_directory[0].kb_4_dir.Avail, page_directory[0].kb_4_dir.PTBA);
-	clear();
+	return result;
+}
+int page_content_test2(){
+	TEST_HEADER;
+	int result = PASS;
 	printf("Page directory, entry1:\n");
 	printf("P:%x\nRW:%x\nU_S:%x\nPWT:%x\nPCD:%x\nA:%x\nD:%x\nPS:%x\nG:%x\nAvail:%x\nPAT:\nReserved:%x\nPBA:%x\n", page_directory[1].mb_4_dir.P,
 	page_directory[1].mb_4_dir.R_W, page_directory[1].mb_4_dir.U_S, page_directory[1].mb_4_dir.PWT, page_directory[1].mb_4_dir.PCD, 
 	page_directory[1].mb_4_dir.A, page_directory[1].mb_4_dir.PS, page_directory[1].mb_4_dir.PS, page_directory[1].mb_4_dir.G,
 	page_directory[1].mb_4_dir.Avail, page_directory[1].mb_4_dir.PAT, page_directory[1].mb_4_dir.Reserved, page_directory[1].mb_4_dir.PBA);
-	clear();
+	return result;
+}
+
+int page_content_test3(){
+	TEST_HEADER;
+	int result = PASS;
 	printf("Page table, entry0:\n");
 	printf("P:%x\nRW:%x\nU_S:%x\nPWT:%x\nPCD:%x\nA:%x\nD:%x\nPAT:%x\nG:%x\nAvail:%x\nPBA:%x\n", page_table[0].kb_4_page.P,
 	page_table[0].kb_4_page.R_W, page_table[0].kb_4_page.U_S, page_table[0].kb_4_page.PWT, page_table[0].kb_4_page.PCD,
 	page_table[0].kb_4_page.A, page_table[0].kb_4_page.D, page_table[0].kb_4_page.PAT, page_table[0].kb_4_page.G,
 	page_table[0].kb_4_page.Avail, page_table[0].kb_4_page.PBA);
-	clear();
+	return result;
+}
+
+int page_content_test4(){
+	TEST_HEADER;
+	int result = PASS;
 	printf("Page table, video memory:\n");
 	printf("P:%x\nRW:%x\nU_S:%x\nPWT:%x\nPCD:%x\nA:%x\nD:%x\nPAT:%x\nG:%x\nAvail:%x\nPBA:%x\n", page_table[VIDEO/BOUNDARY].kb_4_page.P,
 	page_table[VIDEO/BOUNDARY].kb_4_page.R_W, page_table[VIDEO/BOUNDARY].kb_4_page.U_S, page_table[VIDEO/BOUNDARY].kb_4_page.PWT, 
 	page_table[VIDEO/BOUNDARY].kb_4_page.PCD, page_table[VIDEO/BOUNDARY].kb_4_page.A, page_table[VIDEO/BOUNDARY].kb_4_page.D, 
 	page_table[VIDEO/BOUNDARY].kb_4_page.PAT, page_table[VIDEO/BOUNDARY].kb_4_page.G, page_table[VIDEO/BOUNDARY].kb_4_page.Avail, 
 	page_table[VIDEO/BOUNDARY].kb_4_page.PBA);
+	return result;
+}
+
+int page_dereference1()
+{
+	TEST_HEADER;
+	int val = 10;
+	int* address;
+	address = &val;
+	int result = PASS;
+	if (*address == val){
+		printf("Address: %x\nvalue: %d\n", address, val);
+	}
+	else
+		result = FAIL;
+	return result;
+}
+
+int page_dereference2()
+{
+	TEST_HEADER;
+	int* address;
+	int val;
+	address = 0;
+	int result = PASS;
+	val = *address;
 	return result;
 }
 
@@ -119,22 +160,26 @@ void launch_tests(){
 			TEST_OUTPUT("Test1: idt_test", idt_test());
 			break;
 		case 1:
-			idt_exp_test();
+			TEST_OUTPUT("Test2: idt_exp_test", idt_exp_test());
 			break;
-		// case 2:
-		// 	test_interrupts();
-		// case 1:
-		// 	TEST_OUTPUT("Test2: page_cotent_test", page_content_test1());
-		// 	break;
-		// case 2:
-		// 	TEST_OUTPUT("Test2: page_cotent_test", page_content_test2());
-		// 	break;
-		// case 3:
-		// 	TEST_OUTPUT("Test2: page_cotent_test", page_content_test3());
-		// 	break;
-		// case 4:
-		// 	TEST_OUTPUT("Test2: page_cotent_test", page_content_test4());
-			// break;
+		case 3:
+			TEST_OUTPUT("Test4: page_cotent_test", page_content_test1());
+			break;
+		case 4:
+			TEST_OUTPUT("Test4: page_cotent_test", page_content_test2());
+			break;
+		case 5:
+			TEST_OUTPUT("Test4: page_cotent_test", page_content_test3());
+			break;
+		case 6:
+			TEST_OUTPUT("Test4: page_cotent_test", page_content_test4());
+			break;
+		case 7:
+			TEST_OUTPUT("Test5: page_dereference_test_normal", page_dereference1());
+			break;
+		case 8:
+			TEST_OUTPUT("Test6: page_dereference_test_fault", page_dereference2());
+			break;
 		default:
 			break;
 	}
@@ -147,4 +192,9 @@ void refresh_and_test()
 	reset_screen();
 	test_counter++;
 	launch_tests();
+}
+
+int get_counter()
+{
+	return test_counter;
 }
