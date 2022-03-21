@@ -42,7 +42,7 @@ int idt_test(){
 			result = FAIL;
 		}
 	}
-	asm volatile("int $0");
+	// asm volatile("int $0");
 	return result;
 }
 
@@ -89,6 +89,7 @@ int page_content_test(){
 /* Test suite entry point */
 void launch_tests(){
 	TEST_OUTPUT("idt_test", idt_test());
+	asm volatile("int $0");
 	/*clear();*/
 	/*TEST_OUTPUT("page_cotent_test", page_content_test());*/
 	// launch your tests here

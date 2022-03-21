@@ -68,13 +68,10 @@ void disable_irq(uint32_t irq_num) {
 
 /* Send end-of-interrupt signal for the specified IRQ */
 void send_eoi(uint32_t irq_num) {
-    cli();
-    if (irq_num >= 8) {
-        outb(EOI + (irq_num - 8), SLAVE_8259_PORT);
-        outb(EOI + 0x2, MASTER_8259_PORT);
-    }
-    else 
-        outb(EOI + irq_num, SLAVE_8259_PORT);
-    sti();
+    // cli();
+    if (irq_num >= 8) 
+        outb(EOI | irq_num, SLAVE_8259_PORT);
+    outb(EOI | irq_num, MASTER_8259_PORT);
+    // sti();
 }
 
