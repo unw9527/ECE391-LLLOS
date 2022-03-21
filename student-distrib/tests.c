@@ -6,13 +6,15 @@
 #define PASS 1
 #define FAIL 0
 
+#define bar  printf("\n=========================================================\n\n")
+
 /* format these macros as you see fit */
 #define TEST_HEADER 	\
 	printf("[TEST %s] Running %s at %s:%d\n", __FUNCTION__, __FUNCTION__, __FILE__, __LINE__)
 #define TEST_OUTPUT(name, result)	\
 	printf("[TEST %s] Result = %s\n", name, (result) ? "PASS" : "FAIL");
 
-int test_counter = -1;
+int test_counter = -2;
 
 static inline void assertion_failure(){
 	/* Use exception #15 for assertions, otherwise
@@ -156,28 +158,56 @@ int page_dereference2()
 /* Test suite entry point */
 void launch_tests(){
 	switch (test_counter){
+		case -2:
+			printf("=========================================================\n");
+			printf("Press Enter to begin our test");
+			break;
+		case -1:
+			clear();
+			printf("\nPress Enter to begin our test\n");
+			break;
 		case 0:
+			printf("\nIDT Initial Test");
+			bar;
 			TEST_OUTPUT("Test1: idt_test", idt_test());
 			break;
 		case 1:
+			printf("\nIDT Exception Test");
+			bar;
 			TEST_OUTPUT("Test2: idt_exp_test", idt_exp_test());
 			break;
-		case 3:
-			TEST_OUTPUT("Test4: page_cotent_test", page_content_test1());
+		case 2:
+			printf("\nPress Enter to see the RTC test\n");
 			break;
 		case 4:
-			TEST_OUTPUT("Test4: page_cotent_test", page_content_test2());
+			printf("\nPage Content Test 1\n");
+			bar;
+			TEST_OUTPUT("Test4: page_cotent_test", page_content_test1());
 			break;
 		case 5:
-			TEST_OUTPUT("Test4: page_cotent_test", page_content_test3());
+			printf("\nPage Content Test 2\n");
+			bar;
+			TEST_OUTPUT("Test4: page_cotent_test", page_content_test2());
 			break;
 		case 6:
-			TEST_OUTPUT("Test4: page_cotent_test", page_content_test4());
+			printf("\nPage Content Test 3\n");
+			bar;
+			TEST_OUTPUT("Test4: page_cotent_test", page_content_test3());
 			break;
 		case 7:
-			TEST_OUTPUT("Test5: page_dereference_test_normal", page_dereference1());
+			printf("\nPage Content Test 4\n");
+			bar;
+			TEST_OUTPUT("Test4: page_cotent_test", page_content_test4());
 			break;
 		case 8:
+			printf("\nPage Dereference Test: Normal\n");
+			bar;
+			TEST_OUTPUT("Test5: page_dereference_test_normal", page_dereference1());
+			break;
+		case 9:
+			printf("\nPress Enter to see the Page Dereference NULL Test\n");
+			break;
+		case 10:
 			TEST_OUTPUT("Test6: page_dereference_test_fault", page_dereference2());
 			break;
 		default:

@@ -28,7 +28,7 @@ void RTC_init()
 
 void RTC_handler()
 {
-    if (get_counter() == 2)
+    if (get_counter() == 3)
         test_interrupts();
     send_eoi(8);
     outb(REG_C, PORT_0);                                             /* Do some strange stuff with register C.*/

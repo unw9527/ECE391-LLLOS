@@ -161,7 +161,6 @@ void entry(unsigned long magic, unsigned long addr) {
 
 #ifdef RUN_TESTS
     /* Run tests */
-    clear();
     // idt_test();
     launch_tests();
 #endif
