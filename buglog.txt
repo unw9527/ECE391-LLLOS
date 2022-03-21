@@ -8,14 +8,84 @@ CreateTime:
 
 Check Point 1:
 <--------------------------------------------------------->
-                          BUG X                          
+                          BUG 1                          
 <--------------------------------------------------------->
-File:
+File: boot.S
 
-Time:
+Time: 2022.03.15
 
-Creator:
+Creator: Peiyuan Liu
 
-Description:
+Description: The machine is not booted properly. When I tried
+             to boot the machine, it just reboot and stuck in
+             a loop.
 
-Solution:
+Solution: After I called the idt_initial function, the order of
+          popl is wrong. So I change the order of popl.
+
+<--------------------------------------------------------->
+                          BUG 2                          
+<--------------------------------------------------------->
+File: idt.c
+
+Time: 2022.03.16
+
+Creator: Peiyuan Liu
+
+Description: When doing the idt_test() function, it seems that
+             the idt is not loaded properly. The test failed.
+             The problem is the pointer of each entry of the
+             exception is NULL.
+
+Solution: I set the reserved4-reserved0 bits and presented 
+          bit properly, the problem solved.
+
+<--------------------------------------------------------->
+                          BUG 3                          
+<--------------------------------------------------------->
+File: idt.c
+
+Time: 2022.03.19
+
+Creator: Peiyuan Liu
+
+Description: After I finished keyboard.c, I tried to test it 
+             on the machine. For every single key, it worked
+             properly. However, if I switched to press the 
+             different key swiftly, the machine will crash.
+
+Solution: I used to implement the keyboard interrupt in c
+          language, but the c doesn't have "iret". So I 
+          reimplemented in assembly language.
+
+<--------------------------------------------------------->
+                          BUG 4                          
+<--------------------------------------------------------->
+File: idt_.S
+
+Time: 2022.03.20
+
+Creator: Ziyuan Lin
+
+Description: When implementing the idt_.S, I forgot to
+             add "$" in front of the numeber, thus all
+             the number is considered as memory reference
+             instead of its value.
+
+Solution: I add the "$" in front of the number.
+
+<--------------------------------------------------------->
+                          BUG 5                          
+<--------------------------------------------------------->
+File: idt_.S
+
+Time: 2022.03.20
+
+Creator: Ziyuan Lin
+
+Description: The machine still rebooted automatically, while
+             it worked properly of the original implementation.\
+             It must be something wrong in idt_.S
+
+Solution: In the previous line of every "iret", I forgot to 
+          clear the stack. So I adjusted the esp properly.

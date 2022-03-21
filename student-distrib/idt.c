@@ -1,10 +1,20 @@
+/* idt.c - Function supporting the IDT
+ * 
+ */
+
 #include "idt.h"
 #include "x86_desc.h"
 #include "lib.h"
 #include "i8259.h"
 #include "keyboard.h"
+#include "rtc.h"
 
+/* void* exception_handler(uint32_t num);
+ * Inputs:      uint32_t num = the number index of the exception
+ * Return Value: none
+ * Function: print the exception information to the console */
 void exception_handler(uint32_t num) {
+    // Use num to determine which exception
     switch (num)
     {
     case 0:
@@ -69,6 +79,10 @@ void exception_handler(uint32_t num) {
     }
 }
 
+/* void* interrupt_handler(uint32_t num);
+ * Inputs:      uint32_t num = the number index of the interrupt
+ * Return Value: none
+ * Function: handle the proper interrupt */
 void interrupt_handler(uint32_t num)
 {
     switch (num)
@@ -85,9 +99,14 @@ void interrupt_handler(uint32_t num)
     return;
 }
 
+/* void* idt_initial(void);
+ * Inputs:      none
+ * Return Value: none
+ * Function: Initial the IDT */
 void idt_initial(void) {
-    int i;
+    int i;  /* used as the number of the for loop.      */
 
+    // Set the function pointer of the IDT
     SET_IDT_ENTRY(idt[0], DEVIDE_ERROR_EXCEPTION);
     SET_IDT_ENTRY(idt[1], DEBUG_EXCEPTION);
     SET_IDT_ENTRY(idt[2], NMI_INTERRUPT);
@@ -107,12 +126,11 @@ void idt_initial(void) {
     SET_IDT_ENTRY(idt[17], ALIGNMENT_CHECK_EXCEPTION);
     SET_IDT_ENTRY(idt[18], MACHINE_CHECK_EXCEPTION);
     SET_IDT_ENTRY(idt[19], FLOATING_POINT_EXCEPTION);
-    SET_IDT_ENTRY(idt[33], KEYBOARD_INT);
-    SET_IDT_ENTRY(idt[40], RTC_INT);
+    SET_IDT_ENTRY(idt[KEYBOARD_IDT], KEYBOARD_INT);
+    SET_IDT_ENTRY(idt[RTC_IDT], RTC_INT);
 
     for (i = 0; i < EXCEPTION_NUM; i++) {                            /* We first set all the exceptions to be present.*/
         idt[i].seg_selector = KERNEL_CS;
-        // idt[i].reserved4 = 0;
         idt[i].reserved3 = 1;
         idt[i].reserved2 = 1;
         idt[i].reserved1 = 1;
@@ -123,7 +141,6 @@ void idt_initial(void) {
     }
     for (i = EXCEPTION_NUM; i < NUM_VEC; i++){                       /* Then we set all the other IDT entries to be not present.*/
         idt[i].seg_selector = KERNEL_CS;
-        // idt[i].reserved4 = 0;
         idt[i].reserved3 = 1;
         idt[i].reserved2 = 1;
         idt[i].reserved1 = 1;
@@ -132,8 +149,8 @@ void idt_initial(void) {
         idt[i].dpl = 0;
         idt[i].present = 0;
     }
-    idt[33].reserved3 = 0;
-    idt[40].reserved3 = 0;
-    idt[33].present = 1;
-    idt[40].present = 1;
+    idt[KEYBOARD_IDT].reserved3 = 0;
+    idt[RTC_IDT].reserved3 = 0;
+    idt[KEYBOARD_IDT].present = 1;
+    idt[RTC_IDT].present = 1;
 }

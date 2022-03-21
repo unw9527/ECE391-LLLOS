@@ -469,3 +469,10 @@ void test_interrupts(void) {
         video_mem[i << 1]++;
     }
 }
+
+void reset_screen()
+{
+    screen_x = 0;
+    screen_y = 0;
+    return;
+}

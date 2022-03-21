@@ -1,6 +1,13 @@
 #include "keyboard.h"
 #include "lib.h"
 #include "i8259.h"
+#include "tests.h"
+
+uint8_t caps;
+uint8_t shift;
+uint8_t alt;
+uint8_t ctrl;
+
 
 typedef struct key
 {
@@ -25,24 +32,49 @@ static key_t key_map[36] =
 };
 
 void keyboard_initial(void) {
+    ctrl = 0;
+    caps = 0;
+    alt  = 0;
+    shift = 0;
     enable_irq(KEYBOARD_IRQ);
+}
+
+uint8_t key_to_ascii(uint8_t scan_code) {
+    int i;
+    for (i = 0; i < 36; i++) {
+        if (key_map[i].scan == scan_code)
+            return key_map[i].ascii;
+    }
+    return 0;
 }
 
 void keyboard_handler(void) {
     cli();
     uint8_t scan_code = inb(KEYBOARD_PORT);
     uint8_t ascii_value;
-    int find = 0;
-    int i;
-
-    for (i = 0; i < 36; i++) {
-        if (key_map[i].scan == scan_code) {
-            ascii_value = key_map[i].ascii;
-            find = 1;
-        }
+    
+    switch (scan_code)
+    {
+    case 0x3A:          // CAPS LOCK pressed
+        caps = (caps == 1)? 0 : 1;
+        send_eoi(KEYBOARD_IRQ);
+        return;
+    case 0xBA:          // CAPS LOCK released
+        send_eoi(KEYBOARD_IRQ);
+        return;
+    case 0x1C:
+        refresh_and_test();
+        send_eoi(KEYBOARD_IRQ);
+        return;
+    default:
+        break;
     }
 
-    if (find)
+    ascii_value = key_to_ascii(scan_code);
+
+    if ((caps == 1) && (ascii_value >= 0x61) && (ascii_value <= 0x7A))
+        ascii_value -= 0x20;
+    if(ascii_value != 0)
         putc(ascii_value);
     
     send_eoi(KEYBOARD_IRQ);

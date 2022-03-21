@@ -27,9 +27,8 @@ void RTC_init()
 
 void RTC_handler()
 {
-    test_interrupts();
+    // test_interrupts();
     send_eoi(8);
     outb(REG_C, PORT_0);                                             /* Do some strange stuff with register C.*/
     inb(PORT_1);
-    return;
 }

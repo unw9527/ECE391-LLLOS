@@ -12,6 +12,8 @@
 #define TEST_OUTPUT(name, result)	\
 	printf("[TEST %s] Result = %s\n", name, (result) ? "PASS" : "FAIL");
 
+int test_counter = -1;
+
 static inline void assertion_failure(){
 	/* Use exception #15 for assertions, otherwise
 	   reserved by Intel */
@@ -42,8 +44,31 @@ int idt_test(){
 			result = FAIL;
 		}
 	}
-	// asm volatile("int $0");
+	asm volatile("int $0");
 	return result;
+}
+
+void idt_exp_test() {
+	TEST_HEADER;
+	asm volatile("int $0");
+	asm volatile("int $1");
+	asm volatile("int $2");
+	asm volatile("int $3");
+	asm volatile("int $4");
+	asm volatile("int $5");
+	asm volatile("int $6");
+	asm volatile("int $7");
+	asm volatile("int $8");
+	asm volatile("int $9");
+	asm volatile("int $10");
+	asm volatile("int $11");
+	asm volatile("int $12");
+	asm volatile("int $13");
+	asm volatile("int $14");
+	asm volatile("int $16");
+	asm volatile("int $17");
+	asm volatile("int $18");
+	asm volatile("int $19");	
 }
 
 int page_content_test(){
@@ -87,10 +112,39 @@ int page_content_test(){
 
 
 /* Test suite entry point */
+/* Test suite entry point */
 void launch_tests(){
-	TEST_OUTPUT("idt_test", idt_test());
-	asm volatile("int $0");
-	/*clear();*/
-	/*TEST_OUTPUT("page_cotent_test", page_content_test());*/
+	switch (test_counter){
+		case 0:
+			TEST_OUTPUT("Test1: idt_test", idt_test());
+			break;
+		case 1:
+			idt_exp_test();
+			break;
+		// case 2:
+		// 	test_interrupts();
+		// case 1:
+		// 	TEST_OUTPUT("Test2: page_cotent_test", page_content_test1());
+		// 	break;
+		// case 2:
+		// 	TEST_OUTPUT("Test2: page_cotent_test", page_content_test2());
+		// 	break;
+		// case 3:
+		// 	TEST_OUTPUT("Test2: page_cotent_test", page_content_test3());
+		// 	break;
+		// case 4:
+		// 	TEST_OUTPUT("Test2: page_cotent_test", page_content_test4());
+			// break;
+		default:
+			break;
+	}
 	// launch your tests here
+}
+
+void refresh_and_test()
+{
+	clear();
+	reset_screen();
+	test_counter++;
+	launch_tests();
 }

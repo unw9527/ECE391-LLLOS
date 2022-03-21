@@ -24,19 +24,23 @@ _start:
     jmp     continue
 
 continue:
-    # Load the GD
+    # Load the GDT
     lgdt    gdt_desc    
 
+    # Save the caller-saved register
     pushl    %eax
     pushl    %ecx
     pushl    %edx
 
+    # Intial the IDT
     call    idt_initial
 
+    # Restore the caller-saved register
     popl     %edx
     popl     %ecx
     popl     %eax   
     
+    # Load the IDT
     lidt    idt_desc_ptr
     # Load CS with the new descriptor value
     ljmp    $KERNEL_CS, $keep_going

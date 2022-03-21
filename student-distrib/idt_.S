@@ -88,7 +88,7 @@ FLOATING_POINT_EXCEPTION:
 
 
 KEYBOARD_INT:
-    ; sti
+    sti
     pushl $0xFFFFFFFE                                                 # Push the opposite value to the stack.
     jmp COMMON_INT                                                   # Jump to common interrupt.
 RTC_INT:
