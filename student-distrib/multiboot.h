@@ -15,7 +15,7 @@
 /* Types */
 #include "types.h"
 
-/* The Multiboot header. */
+/* The Multiboot header. The instance is inside the image file.*/
 typedef struct multiboot_header {
     uint32_t magic;
     uint32_t flags;

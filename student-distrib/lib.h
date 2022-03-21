@@ -5,6 +5,10 @@
 #ifndef _LIB_H
 #define _LIB_H
 
+#define VIDEO       0xB8000                                          /* The address of the VIDEO memory.*/
+#define NUM_COLS    80
+#define NUM_ROWS    25
+#define ATTRIB      0x7
 #include "types.h"
 
 int32_t printf(int8_t *format, ...);
@@ -14,6 +18,7 @@ int8_t *itoa(uint32_t value, int8_t* buf, int32_t radix);
 int8_t *strrev(int8_t* s);
 uint32_t strlen(const int8_t* s);
 void clear(void);
+void test_interrupts(void);
 
 void* memset(void* s, int32_t c, uint32_t n);
 void* memset_word(void* s, int32_t c, uint32_t n);
@@ -27,6 +32,7 @@ int8_t* strncpy(int8_t* dest, const int8_t*src, uint32_t n);
 /* Userspace address-check functions */
 int32_t bad_userspace_addr(const void* addr, int32_t len);
 int32_t safe_strncpy(int8_t* dest, const int8_t* src, int32_t n);
+
 
 /* Port read functions */
 /* Inb reads a byte and returns its value as a zero-extended 32-bit

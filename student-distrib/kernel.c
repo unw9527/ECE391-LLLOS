@@ -8,6 +8,9 @@
 #include "i8259.h"
 #include "debug.h"
 #include "tests.h"
+#include "page.h"
+#include "rtc.h"
+#include "keyboard.h"
 
 #define RUN_TESTS
 
@@ -136,9 +139,13 @@ void entry(unsigned long magic, unsigned long addr) {
         ltr(KERNEL_TSS);
     }
 
+    /* Init the paging.*/
+    page_init();
+
     /* Init the PIC */
     i8259_init();
-
+    /*RTC_init();*/
+    keyboard_initial();
     /* Initialize devices, memory, filesystem, enable device interrupts on the
      * PIC, any other initialization stuff... */
 
@@ -151,10 +158,10 @@ void entry(unsigned long magic, unsigned long addr) {
 
 #ifdef RUN_TESTS
     /* Run tests */
+    clear();
     launch_tests();
 #endif
     /* Execute the first program ("shell") ... */
-
     /* Spin (nicely, so we don't chew up cycles) */
     asm volatile (".1: hlt; jmp .1;");
 }
