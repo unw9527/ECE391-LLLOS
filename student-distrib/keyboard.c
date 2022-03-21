@@ -9,13 +9,13 @@ uint8_t alt;
 uint8_t ctrl;
 
 
-typedef struct key
+typedef struct key                                                              /* The first entry is the scan code and the second is the ascii.*/
 {
     uint8_t scan;
     uint8_t ascii;
 } key_t;
 
-static key_t key_map[36] = 
+static key_t key_map[36] =                                                     /* The little case letter and numbers.*/
 {
     /* 0 - 9 */
     {0x0B, 0x30}, {0x02, 0x31}, {0x03, 0x32}, {0x04, 0x33}, {0x05, 0x34}, 
@@ -30,24 +30,44 @@ static key_t key_map[36] =
     {0x2C, 0x7A}
 
 };
-
+/* key_to_ascii
+ * 
+ * Initial the keyboard
+ * Inputs: scan_code
+ * Outputs: 0
+ * Side Effects: none
+ */
 void keyboard_initial(void) {
-    ctrl = 0;
-    caps = 0;
-    alt  = 0;
-    shift = 0;
+    ctrl = 0;                                                                   /* To decide whether control is entered.*/
+    caps = 0;                                                                   /* To indicate the capital case. */
+    alt  = 0;                                                                   /* To indicate the alt.*/
+    shift = 0;                                                                  /* To indicate the shift pressed.*/
     enable_irq(KEYBOARD_IRQ);
 }
 
+/* key_to_ascii
+ * 
+ * Change the key to ascii.
+ * Inputs: scan_code
+ * Outputs: 0 or ascii
+ * Side Effects: none
+ */
 uint8_t key_to_ascii(uint8_t scan_code) {
     int i;
-    for (i = 0; i < 36; i++) {
+    for (i = 0; i < 36; i++) {                                                   /* There are 36 letters for normal case.*/
         if (key_map[i].scan == scan_code)
             return key_map[i].ascii;
     }
     return 0;
 }
 
+/* keyboard_handler
+ * 
+ * The keyboard handler
+ * Inputs: none
+ * Outputs: none
+ * Side Effects: none
+ */
 void keyboard_handler(void) {
     cli();
     uint8_t scan_code = inb(KEYBOARD_PORT);
@@ -62,7 +82,7 @@ void keyboard_handler(void) {
     case 0xBA:          // CAPS LOCK released
         send_eoi(KEYBOARD_IRQ);
         return;
-    case 0x1C:
+    case 0x1C:          // Enter pressed
         refresh_and_test();
         send_eoi(KEYBOARD_IRQ);
         return;
@@ -72,9 +92,9 @@ void keyboard_handler(void) {
 
     ascii_value = key_to_ascii(scan_code);
 
-    if ((caps == 1) && (ascii_value >= 0x61) && (ascii_value <= 0x7A))
+    if ((caps == 1) && (ascii_value >= 0x61) && (ascii_value <= 0x7A))                  /* To change to the capital letters.*/
         ascii_value -= 0x20;
-    if(ascii_value != 0)
+    if(ascii_value != 0)                                                                /* Print the ascii value.*/
         putc(ascii_value);
     
     send_eoi(KEYBOARD_IRQ);
