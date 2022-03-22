@@ -89,3 +89,19 @@ Description: The machine still rebooted automatically, while
 
 Solution: In the previous line of every "iret", I forgot to 
           clear the stack. So I adjusted the esp properly.
+
+<--------------------------------------------------------->
+                          BUG 6                          
+<--------------------------------------------------------->
+File: i8259.c
+
+Time: 2022.03.21
+
+Creator: Peiyuan Liu
+
+Description: When we were testing the rtc interrupt, we found
+             that the rtc interrupt would only generate once.
+             So the whole scrren will not flash.
+
+Solution: The send_eoi function of the PIC is not correct. For
+          the slave PIC, the interrupt number should minus 8.
