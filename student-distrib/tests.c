@@ -50,6 +50,13 @@ int idt_test(){
 	return result;
 }
 
+/* int idt_exp_test(void);
+ * Inputs: void
+ * Outputs: PASS/FAIL
+ * Side Effects: None
+ * Coverage: test exceptions 
+ * Files: x86_desc.h/S
+ */
 int idt_exp_test() {
 	int result = PASS;
 	TEST_HEADER;
@@ -75,6 +82,13 @@ int idt_exp_test() {
 	return result;
 }
 
+/* int page_content_test1(void);
+ * Inputs: void
+ * Outputs: PASS/FAIL
+ * Side Effects: None
+ * Coverage: test page directory entry 0
+ * Files: x86_desc.h/S
+ */
 int page_content_test1(){
 	TEST_HEADER;
 	printf("We will show first 2 entries of directory and first entry of page table. We will also print the page corresponds to video memory.\n");
@@ -86,6 +100,14 @@ int page_content_test1(){
 	page_directory[0].kb_4_dir.Avail, page_directory[0].kb_4_dir.PTBA);
 	return result;
 }
+
+/* int page_content_test2(void);
+ * Inputs: void
+ * Outputs: PASS/FAIL
+ * Side Effects: None
+ * Coverage: test page directory entry 1
+ * Files: x86_desc.h/S
+ */
 int page_content_test2(){
 	TEST_HEADER;
 	int result = PASS;
@@ -97,6 +119,12 @@ int page_content_test2(){
 	return result;
 }
 
+/* int page_content_test3(void);
+ * Inputs: void
+ * Outputs: PASS/FAIL
+ * Side Effects: None
+ * Coverage: test page table entry 0
+ * Files: x86_desc.h/S 1 */
 int page_content_test3(){
 	TEST_HEADER;
 	int result = PASS;
@@ -108,6 +136,12 @@ int page_content_test3(){
 	return result;
 }
 
+/* int page_content_test4(void);
+ * Inputs: void
+ * Outputs: PASS/FAIL
+ * Side Effects: None
+ * Coverage: test page table entry 1
+ * Files: x86_desc.h/S 1 */
 int page_content_test4(){
 	TEST_HEADER;
 	int result = PASS;
@@ -120,6 +154,12 @@ int page_content_test4(){
 	return result;
 }
 
+/* int page_dereference1(void);
+ * Inputs: void
+ * Outputs: PASS/FAIL
+ * Side Effects: None
+ * Coverage: Function: test paging when address is not null
+ * Files: x86_desc.h/S 1 */
 int page_dereference1()
 {
 	TEST_HEADER;
@@ -135,6 +175,12 @@ int page_dereference1()
 	return result;
 }
 
+/* int page_dereference2(void);
+ * Inputs: void
+ * Outputs: PASS/FAIL
+ * Side Effects: None
+ * Coverage: Function: test paging when address is null
+ * Files: x86_desc.h/S 1 */
 int page_dereference2()
 {
 	TEST_HEADER;
@@ -155,7 +201,10 @@ int page_dereference2()
 
 
 /* Test suite entry point */
-/* Test suite entry point */
+/* void launch_test(void);
+ * Inputs: void
+ * Return Value: none
+ * Function: launch all tests */
 void launch_tests(){
 	switch (test_counter){
 		case -2:
@@ -216,6 +265,11 @@ void launch_tests(){
 	// launch your tests here
 }
 
+
+/* void refresh_and_test(void);
+ * Inputs: void
+ * Return Value: none
+ * Function: reset the screen and test again */
 void refresh_and_test()
 {
 	clear();
@@ -224,6 +278,11 @@ void refresh_and_test()
 	launch_tests();
 }
 
+
+/* int get_counter(void);
+ * Inputs: void
+ * Return Value: test counter
+ * Function: return the test counter */
 int get_counter()
 {
 	return test_counter;

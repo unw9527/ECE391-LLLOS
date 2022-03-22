@@ -1,6 +1,12 @@
 #include "page.h"
 #include "lib.h"
 
+
+
+/* void page_init();
+ * Inputs: void
+ * Return Value: none
+ * Function: initialize the page */
 int page_init()
 {
     int i;

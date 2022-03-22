@@ -3,6 +3,10 @@
 #include "i8259.h"
 #include "tests.h"
 
+/* void RTC_init(void);
+ * Inputs: void
+ * Return Value: none
+ * Function: initialize the RTC */
 void RTC_init()
 {
     uint32_t flags;
@@ -26,6 +30,11 @@ void RTC_init()
     enable_irq(8);                                                   /* IRQ8 corresponds to rtc.*/
 }
 
+
+/* void RTC_handler(void);
+ * Inputs: void
+ * Return Value: none
+ * Function: handle the RTC */
 void RTC_handler()
 {
     if (get_counter() == 3)

@@ -9,6 +9,11 @@
 uint8_t master_mask; /* IRQs 0-7  */
 uint8_t slave_mask;  /* IRQs 8-15 */
 
+
+/* void i8259_init(void);
+ * Inputs: void
+ * Return Value: none
+ * Function: initialize i8259 */
 /* Initialize the 8259 PIC */
 void i8259_init(void) {
     cli();
@@ -36,6 +41,10 @@ void i8259_init(void) {
     sti();
 }
 
+/* void enable_irq(void);
+ * Inputs: void
+ * Return Value: none
+ * Function: enable irq */
 /* Enable (unmask) the specified IRQ */
 void enable_irq(uint32_t irq_num) {
     cli();
@@ -57,6 +66,10 @@ void enable_irq(uint32_t irq_num) {
     sti();
 }
 
+/* void disable_irq(void);
+ * Inputs: void
+ * Return Value: none
+ * Function: disable irq */
 /* Disable (mask) the specified IRQ */
 void disable_irq(uint32_t irq_num) {
     cli();
@@ -74,6 +87,10 @@ void disable_irq(uint32_t irq_num) {
     sti();
 }
 
+/* void send_eoi(void);
+ * Inputs: void
+ * Return Value: none
+ * Function: send eoi for an IRQ */
 /* Send end-of-interrupt signal for the specified IRQ */
 void send_eoi(uint32_t irq_num) {
     // cli();
