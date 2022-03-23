@@ -106,3 +106,6 @@ Description: When we were testing the rtc interrupt, we found
 Solution: The send_eoi function of the PIC is not correct. For
           the slave PIC, the interrupt number should minus 8.
           
+To do:
+    1. page.h comment
+    2. exception while loop
