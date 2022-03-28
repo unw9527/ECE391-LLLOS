@@ -221,7 +221,7 @@ Solution: I first send_eoi of keyboard interrupt, then call the
           RTC test in the launch_test.
 
 <--------------------------------------------------------->
-                          BUG 7                          
+                          BUG 8                          
 <--------------------------------------------------------->
 File: lib.c
 
@@ -240,7 +240,7 @@ Solution: Add the situation when screen_x = 0 and screen_y > 0, the
 
 
 <--------------------------------------------------------->
-                          BUG 8                          
+                          BUG 9                          
 <--------------------------------------------------------->
 File: terminal.c, keyboard.c
 
