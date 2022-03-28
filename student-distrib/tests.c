@@ -250,7 +250,6 @@ int rtc_cp2_test(){
 			for (j = 0; j < num_char; j++){
 				RTC_read(fd, NULL, 0); // test RTC_read
 				// if (0 != j && 0 == j % 79) printf("\n"); // 80 is the maximum number of chars in one line
-				if (1 != test_counter) return PASS;
 				printf("1");
 			}
 
@@ -262,7 +261,6 @@ int rtc_cp2_test(){
 		reset_cursor();
 		printf("Now show some of the invalid input\n");
 		for (i = 0; i < 3; i++){
-			// if (1 != test_counter) return PASS;
 			printf("Setting the frequency of RTC to %u Hz\n", fails[i]);
 			if (0 != RTC_write(fd, &fails[i], 4)){
 				printf("Invalid frequency!\n");
@@ -272,7 +270,7 @@ int rtc_cp2_test(){
 	printf("\n");
 	RTC_close(fd); // test RTC_close
 	// clear();
-	// reset_cursor();
+	// reset_screen();
 	return PASS;
 
 }
@@ -582,7 +580,7 @@ void launch_tests(){
 			bar;
 			printf("                 Test 2: RTC Test                              \n");
 			bar;
-			rtc_cp2_test();
+			TEST_OUTPUT("RTC TEST: ", rtc_cp2_test());
 			break;
 		case 2:
 			bar;
