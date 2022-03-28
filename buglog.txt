@@ -203,3 +203,57 @@ Description: When comparing the filename and the required name,
 
 Solution: Check whether the name of the file is longer than 32,
           set the maximal length to be 32.
+
+<--------------------------------------------------------->
+                          BUG 7                          
+<--------------------------------------------------------->
+File: keyboard.c
+
+Time: 2022.03.26
+
+Creator: Peiyuan Liu
+
+Description: When I try to press any key to launch the RTC test,
+             the RTC did't work. But it worked properly when 
+             directly launching the RTC test.
+
+Solution: I first send_eoi of keyboard interrupt, then call the 
+          RTC test in the launch_test.
+
+<--------------------------------------------------------->
+                          BUG 7                          
+<--------------------------------------------------------->
+File: lib.c
+
+Time: 2022.03.27
+
+Creator: Peiyuan Liu
+
+Description: When pressing the backspace, the cursor didn't move
+             left by 1 as intended. It moved left by 1 and moved
+             up by 1.
+
+Solution: Add the situation when screen_x = 0 and screen_y > 0, the
+          cursor will move up by 1 and screen_x = NUM_COL - 1. 
+          Otherwise if x > 0, the cursor will only move left by 1.
+          i.e. screen_x -= 1
+
+
+<--------------------------------------------------------->
+                          BUG 8                          
+<--------------------------------------------------------->
+File: terminal.c, keyboard.c
+
+Time: 2022.03.27
+
+Creator: Peiyuan Liu
+
+Description: The line buffer will hold more than 128 characters,
+             and the backspace can just delete the echo character.
+             The element in the line buffer was not deleted when
+             backspace was pressed.
+
+Solution: Add the threshold of the line buffer array and decrement
+          the buffer index by 1 when backspace is pressed.
+
+
