@@ -304,17 +304,25 @@ int read_directory()
 {
 	TEST_HEADER;
 	int result = PASS;
+	uint8_t space = 32;
+	int i;
+	int32_t length;
 	uint8_t buf[FILENAME_LEN+1];
 	buf[FILENAME_LEN] = 0;
 	int32_t fd;
 	fd = open((uint8_t*)".");
-	while (read(fd, buf, 0)){
-		printf("file_name: ");
+	length = read(fd, buf, 0);
+	while (length){
+		printf("file_name:");
+		for (i = 0; i < 40 - length; i++){
+			putc(space);
+		}
 		printf("%s  ", buf);
 		printf("file_type: ");
 		printf("%d  ", type);
 		printf("size:  ");
 		printf("%d\n", file_size);
+		length = read(fd, buf, 0);
 	}
 	close(fd);
 	return result;
