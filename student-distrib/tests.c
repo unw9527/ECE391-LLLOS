@@ -2,6 +2,10 @@
 #include "x86_desc.h"
 #include "lib.h"
 #include "page.h"
+#include "terminal.h"
+#include "rtc.h"
+#include "syscall.h"
+#include "filesys.h"
 
 #define PASS 1
 #define FAIL 0
@@ -14,7 +18,7 @@
 #define TEST_OUTPUT(name, result)	\
 	printf("[TEST %s] Result = %s\n", name, (result) ? "PASS" : "FAIL");
 
-int test_counter = -2;
+int test_counter = 0;
 
 static inline void assertion_failure(){
 	/* Use exception #15 for assertions, otherwise
@@ -192,88 +196,12 @@ int page_dereference2()
 	return result;
 }
 
-// add more tests here
-
-/* Checkpoint 2 tests */
-/* Checkpoint 3 tests */
-/* Checkpoint 4 tests */
-/* Checkpoint 5 tests */
-
-
-/* Test suite entry point */
-/* void launch_test(void);
- * Inputs: void
- * Return Value: none
- * Function: launch all tests */
-void launch_tests(){
-	switch (test_counter){
-		case -2:
-			printf("=========================================================\n");
-			printf("Press Enter to begin our test");
-			break;
-		case -1:
-			clear();
-			printf("\nPress Enter to begin our test\n");
-			break;
-		case 0:
-			printf("\nIDT Initial Test");
-			bar;
-			TEST_OUTPUT("Test1: idt_test", idt_test());
-			break;
-		case 1:
-			printf("\nIDT Exception Test");
-			bar;
-			TEST_OUTPUT("Test2: idt_exp_test", idt_exp_test());
-			break;
-		case 2:
-			printf("\nPress Enter to see the RTC test\n");
-			break;
-		case 4:
-			printf("\nPage Content Test 1\n");
-			bar;
-			TEST_OUTPUT("Test4: page_cotent_test", page_content_test1());
-			break;
-		case 5:
-			printf("\nPage Content Test 2\n");
-			bar;
-			TEST_OUTPUT("Test4: page_cotent_test", page_content_test2());
-			break;
-		case 6:
-			printf("\nPage Content Test 3\n");
-			bar;
-			TEST_OUTPUT("Test4: page_cotent_test", page_content_test3());
-			break;
-		case 7:
-			printf("\nPage Content Test 4\n");
-			bar;
-			TEST_OUTPUT("Test4: page_cotent_test", page_content_test4());
-			break;
-		case 8:
-			printf("\nPage Dereference Test: Normal\n");
-			bar;
-			TEST_OUTPUT("Test5: page_dereference_test_normal", page_dereference1());
-			break;
-		case 9:
-			printf("\nPress Enter to see the Page Dereference NULL Test\n");
-			break;
-		case 10:
-			TEST_OUTPUT("Test6: page_dereference_test_fault", page_dereference2());
-			break;
-		default:
-			break;
-	}
-	// launch your tests here
-}
-
-
 /* void refresh_and_test(void);
  * Inputs: void
  * Return Value: none
  * Function: reset the screen and test again */
 void refresh_and_test()
 {
-	clear();
-	reset_screen();
 	test_counter++;
 	launch_tests();
 }
@@ -287,3 +215,330 @@ int get_counter()
 {
 	return test_counter;
 }
+
+// add more tests here
+
+/* Checkpoint 2 tests */
+/* int rtc_cp2_test();
+ * Inputs: void
+ * Outputs: PASS/FAIL
+ * Side Effects: None
+ * Coverage: rtc open, close, read, write
+ * Files: rtc.h/c */
+int rtc_cp2_test(){
+	TEST_HEADER;
+	int i, j;
+	int fd;
+	int num_char;
+	int fails[4] = {0, 13, 2048}; // failure cases
+	// TODO - lzy: can we ignore ENTER when executing this test?
+	fd = RTC_open((uint8_t *) 0); // test RTC_open
+	num_char = 8; // we just print 8 characters for 2 Hz
+	for (i = 0; i <= 1024; i++){
+		if (0 != RTC_write(fd, &i, 4)) continue; // test RTC_write
+		else{
+			clear();
+			reset_cursor();
+			printf("Setting the frequency of RTC to %u Hz\n", i);
+			if (i < 256) num_char = i * 3; // triple number is suitable for display when i is small based on trials 
+			else if (i < 1024) num_char = i * 2; // double number is suitable for display when i is in this range
+			else num_char = i; // fit the screen limit
+			for (j = 0; j < num_char; j++){
+				RTC_read(fd, NULL, 0); // test RTC_read
+				// if (0 != j && 0 == j % 79) printf("\n"); // 80 is the maximum number of chars in one line
+				printf("1");
+			}
+
+		}
+	}
+	// print some failure cases
+	for (i = 0; i < 3; i++){
+		clear();
+		reset_cursor();
+		printf("Now show some of the invalid input\n");
+		for (i = 0; i < 3; i++){
+			printf("Setting the frequency of RTC to %u Hz\n", fails[i]);
+			if (0 != RTC_write(fd, &fails[i], 4)){
+				printf("Invalid frequency!\n");
+			}
+		}
+	}
+	printf("\n");
+	RTC_close(fd); // test RTC_close
+	// clear();
+	// reset_screen();
+	return PASS;
+
+}
+
+
+int terminal_read_test(void)
+{
+    printf("Terminal Test\n");
+
+    int8_t buf[128];
+    int32_t i, size;
+	int32_t fd;
+    size = terminal_read(fd, buf, 0);
+
+    for(i = 0; i < size; i++)
+        printf("%c", buf[i]);
+
+    return 0;
+}
+
+int read_directory()
+{
+	TEST_HEADER;
+	int result = PASS;
+	uint8_t buf[FILENAME_LEN+1];
+	buf[FILENAME_LEN] = 0;
+	int32_t fd;
+	fd = open((uint8_t*)".");
+	while (read(fd, buf, 0)){
+		printf("file_name: ");
+		printf("%s  ", buf);
+		printf("file_type: ");
+		printf("%d  ", type);
+		printf("size:  ");
+		printf("%d\n", file_size);
+	}
+	close(fd);
+	return result;
+}
+
+int test_read_file1()
+{
+	TEST_HEADER;
+	int result = PASS;
+	printf("frame0.txt:\n");
+	uint8_t buf[1000];
+	buf[999] = 0;
+	int32_t fd;
+	fd = open((uint8_t*)"frame0.txt");
+	read(fd, buf, 999);
+	printf("%s", buf);
+	close(fd);
+	return result;
+}
+
+int test_read_file2()
+{
+	TEST_HEADER;
+	int i;
+	int32_t num;
+	int result = PASS;
+	uint8_t buf[1000];
+	int32_t fd;
+	printf("frame1.txt:\n");
+	for (i = 0; i < 1000; i++)
+		buf[i] = 0;
+	fd = open((uint8_t*)"frame1.txt");
+	num = read(fd, buf, 999);
+	printf("%s", buf);
+	printf("%d", num);
+	close(fd);
+	return result;
+}
+
+int test_read_file3()
+{
+	TEST_HEADER;
+	int i;
+	int32_t num;
+	int result = PASS;
+	uint8_t buf[2000];
+	int32_t fd;
+	printf("verylargetextwithverylongname.txt:\n");
+	for (i = 0; i < 2000; i++)
+		buf[i] = 0;
+	fd = open((uint8_t*)"verylargetextwithverylongname.tx");
+	num = read(fd, buf, 1999);
+	printf("%s", buf);
+	return result;
+}
+
+int test_read_file4()
+{
+	TEST_HEADER;
+	int i;
+	int32_t num;
+	int32_t fd = 2;
+	int result = PASS;
+	uint8_t buf[2000];
+	printf("verylargetextwithverylongname.txt:\n");
+	for (i = 0; i < 2000; i++)
+		buf[i] = 0;
+	num = read(fd, buf, 1999);
+	printf("%s", buf);
+	return result;
+}
+
+int test_read_file5()
+{
+	TEST_HEADER;
+	int i;
+	int32_t num;
+	int32_t fd = 2;
+	int result = PASS;
+	uint8_t buf[2000];
+	printf("verylargetextwithverylongname.txt:\n");
+	for (i = 0; i < 2000; i++)
+		buf[i] = 0;
+	num = read(fd, buf, 1999);
+	printf("%s", buf);
+	close(fd);
+	return result;
+}
+
+int test_read_file6()
+{
+	TEST_HEADER;
+	int i;
+	int32_t num;
+	int32_t fd;
+	int result = PASS;
+	uint8_t buf[40000];
+	fd = open((uint8_t*)"fish");
+	printf("fish\n");
+	for (i = 0; i < 40000; i++)
+		buf[i] = 0;
+	num = read(fd, buf, 39999);
+	for (i = 0; i < num; i++)
+		putc(buf[i]);
+	close(fd);
+	return result;
+}
+
+int test_read_file7()
+{
+	TEST_HEADER;
+	int i;
+	int32_t num;
+	int32_t fd;
+	int result = PASS;
+	uint8_t buf[20];
+	fd = open((uint8_t*)"grep");
+	printf("grep\n");
+	for (i = 0; i < 20; i++)
+		buf[i] = 0;
+	num = read(fd, buf, 19);
+	for (i = 0; i < num; i++)
+		putc(buf[i]);
+	return result;
+}
+
+int test_read_file8()
+{
+	TEST_HEADER;
+	int i;
+	int32_t num;
+	int32_t fd = 2;
+	int result = PASS;
+	uint8_t buf[7000];
+	printf("grep\n");
+	for (i = 0; i < 7000; i++)
+		buf[i] = 0;
+	num = read(fd, buf, 6999);
+	for (i = 0; i < num; i++)
+		putc(buf[i]);
+	close(fd);
+	return result;
+}
+
+int test_read_file9()
+{
+	TEST_HEADER;
+	int i;
+	int32_t num;
+	int32_t fd;
+	int result = PASS;
+	uint8_t buf[20];
+	fd = open((uint8_t*)"ls");
+	printf("ls\n");
+	for (i = 0; i < 20; i++)
+		buf[i] = 0;
+	num = read(fd, buf, 19);
+	for (i = 0; i < num; i++)
+		putc(buf[i]);
+	return result;
+}
+
+int test_read_file10()
+{
+	TEST_HEADER;
+	int i;
+	int32_t num;
+	int32_t fd = 2;
+	int result = PASS;
+	uint8_t buf[7000];
+	printf("ls\n");
+	for (i = 0; i < 7000; i++)
+		buf[i] = 0;
+	num = read(fd, buf, 6999);
+	for (i = 0; i < num; i++)
+		putc(buf[i]);
+	close(fd);
+	return result;
+}
+
+/* Checkpoint 3 tests */
+/* Checkpoint 4 tests */
+/* Checkpoint 5 tests */
+
+
+/* Test suite entry point */
+/* void launch_test(void);
+ * Inputs: void
+ * Return Value: none
+ * Function: launch all tests */
+void launch_tests(){
+	clear();
+    reset_cursor();
+	switch (test_counter) {
+		case 0:
+			terminal_read_test();
+			break;
+		case 1:
+			TEST_OUTPUT("RTC TEST: ", rtc_cp2_test());
+			break;
+		case 2:
+			read_directory();
+			break;
+		case 3:
+			test_read_file1();
+			break;
+		case 4:
+			test_read_file2();
+			break;
+		case 5:
+			test_read_file3();
+			break;
+		case 6:
+			test_read_file4();
+			break;
+		case 7:
+			test_read_file5();
+			break;
+		case 8:
+			test_read_file6();
+			break;
+		case 9:
+			test_read_file7();
+			break;
+		case 10:
+			test_read_file8();
+			break;
+		case 11:
+			test_read_file9();
+			break;
+		case 12:
+			test_read_file10();
+			break;
+		default:
+			break;
+	}
+}
+
+
+
