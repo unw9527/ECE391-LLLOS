@@ -220,9 +220,32 @@ int32_t open_dir (const uint8_t* filename)
     return 0;
 }
 
+/* int32_t write_dir (int32_t fd, const void* buf, int32_t nbytes);;
+ * Inputs: fd: File descriptor. buf: The buffer. nbytes: Number of bytes to write.
+ * Return Value: 0.
+ * Function: none. */
+/* Side effect: none.*/
+int32_t write_dir (int32_t fd, const void* buf, int32_t nbytes)
+{
+    return 0;
+}
+
+/* int32_t write_file (int32_t fd, const void* buf, int32_t nbytes);;
+ * Inputs: fd: File descriptor. buf: The buffer. nbytes: Number of bytes to write.
+ * Return Value: 0.
+ * Function: none. */
+/* Side effect: none.*/
+int32_t write_file (int32_t fd, const void* buf, int32_t nbytes)
+{
+    return 0;
+}
+
 int32_t (*read_file_pt) (int32_t, void*, int32_t) = read_file;
 int32_t (*read_dir_pt) (int32_t, void*, int32_t) = read_dir;
 int32_t (*open_file_pt) (const uint8_t*) = open_file;
 int32_t (*open_dir_pt) (const uint8_t*) = open_dir;
 int32_t (*close_file_pt) (int32_t) = close_file;
 int32_t (*close_dir_pt) (int32_t) = close_dir;
+int32_t (*write_file_pt) (int32_t, const void*, int32_t) = write_file;
+int32_t (*write_dir_pt) (int32_t, const void*, int32_t) = write_dir;
+

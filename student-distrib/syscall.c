@@ -1,9 +1,9 @@
 #include "syscall.h"
 #include "filesys.h"
 
-extern int32_t jump_table_rtc[3];
-extern int32_t jump_table_file[3];
-extern int32_t jump_table_dir[3];
+extern int32_t jump_table_rtc[4];
+extern int32_t jump_table_file[4];
+extern int32_t jump_table_dir[4];
 
 /* int32_t open(const uint8_t* filename);
  * Inputs: filename: The name of the file.
@@ -89,4 +89,17 @@ int32_t read (int32_t fd, void* buf, int32_t nbytes)
     /* Call the specific read function.*/
     bytes_read = (**pt) (fd, buf, nbytes);
     return bytes_read;
+}
+
+/* int32_t write (int32_t fd, const void* buf, int32_t nbytes);
+ * Inputs: fd: The file descriptor. buf: The buffer to write. nbytes: #bytes to write.
+ * Return Value: 0.
+ * Function: Write the file. */
+/* Side effect: none.*/
+int32_t write(int32_t fd, const void* buf, int32_t nbytes)
+{
+    int32_t (**pt)(int32_t, const void*, int32_t);
+    pt = (int32_t (**)(int32_t, const void*, int32_t)) file_descriptor_array[fd].file_op_pt[3];
+    (**pt) (fd, buf, nbytes);
+    return 0;
 }
