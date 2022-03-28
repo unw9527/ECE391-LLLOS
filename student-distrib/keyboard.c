@@ -120,9 +120,9 @@ uint8_t shift_ascii(uint8_t ascii_value) {
 }
 
 void echo(uint8_t ascii_value) {
-    if (ascii_value == 0 || (ascii == BACKSPACE && buffer_index == 0))
-        return;
     uint8_t ascii;
+    if (ascii_value == 0 || (ascii_value == BACKSPACE && buffer_index == 0))
+        return;
     ascii = ascii_value;
     if (((shift || (caps == 1)) && (ascii_value >= 0x61) && (ascii_value <= 0x7A)))
         ascii = ascii_value - 0x20;
