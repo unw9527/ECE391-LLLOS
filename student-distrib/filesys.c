@@ -169,6 +169,8 @@ int32_t read_dir(int32_t fd, void* buf, int32_t nbytes)
         return 0;
     file_name = dentry.filename;
     length = strlen(file_name);
+    if (length > 32)
+        length = 32;
     /* Copy the file name into the buffer.*/
     strncpy((int8_t*)buf, file_name, FILENAME_LEN);
     /* Update the file position by 1.*/
