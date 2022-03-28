@@ -578,13 +578,12 @@ void launch_tests(){
 			printf("                 Test 1: Terminal Test                         \n");
 			bar;
 			printf("\n\nFeel Free to type what you want, and press enter to see the echo of the buffer\n\n");
-			while(test_counter == 0) terminal_read_test();
+			while(test_counter == -1) terminal_read_test();
 			break;
 		case 0:
 			bar;
 			printf("                 Test 2: RTC Test                              \n");
 			bar;
-			printf("\n\n         Next Page is the RTC test                       \n\n");
 			break;
 		case 1:
 			rtc_cp2_test();   
