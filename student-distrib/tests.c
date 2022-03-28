@@ -18,7 +18,7 @@
 #define TEST_OUTPUT(name, result)	\
 	printf("[TEST %s] Result = %s\n", name, (result) ? "PASS" : "FAIL");
 
-int test_counter = -1;
+int test_counter = -2;
 
 static inline void assertion_failure(){
 	/* Use exception #15 for assertions, otherwise
@@ -243,6 +243,8 @@ int rtc_cp2_test(){
 	for (i = 0; i <= 1024; i++){
 		if (0 != RTC_write(fd, &i, 4)) continue; // test RTC_write
 		else{
+			clear();
+			reset_cursor();
 			printf("\nSetting the frequency of RTC to %u Hz\n", i);
 			if (i < 256) num_char = i * 3; // triple number is suitable for display when i is small based on trials 
 			else if (i < 1024) num_char = i * 2; // double number is suitable for display when i is in this range
@@ -565,25 +567,28 @@ void launch_tests(){
 	clear();
     reset_cursor();
 	switch (test_counter) {			// use test_counter to determine which test
-		case -1:
+		case -2:
 			bar;
 			printf("                         Test Begin                            \n");
 			bar;
 			printf("\n\n   !!!!!  Please press ctrl + space to switch test  !!!!!! \n");
 			break;
-		case 0:
+		case -1:
 			bar;
 			printf("                 Test 1: Terminal Test                         \n");
 			bar;
 			printf("\n\nFeel Free to type what you want, and press enter to see the echo of the buffer\n\n");
 			while(test_counter == 0) terminal_read_test();
 			break;
-		case 1:
+		case 0:
 			bar;
 			printf("                 Test 2: RTC Test                              \n");
 			bar;
-			rtc_cp2_test();
+			printf("\n\n         Next Page is the RTC test                       \n\n");
 			break;
+		case 1:
+			rtc_cp2_test();   
+			break;  
 		case 2:
 			bar;
 			printf("                 Test 3: Read Directory Test                   \n");
