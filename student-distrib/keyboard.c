@@ -129,8 +129,6 @@ void echo(uint8_t ascii_value) {
     else if (shift)
         ascii = shift_ascii(ascii_value);
 
-    putc(ascii);
-
     // determine whether the backspace is pressed
     if (ascii == BACKSPACE) {
         if (buffer_index > 0) {                                 // decrement the line buffer
@@ -138,7 +136,12 @@ void echo(uint8_t ascii_value) {
                 line_buffer[buffer_index - 1] = NEW_LINE;
             buffer_index--;
         }
+        else
+            return;
     }
+
+    putc(ascii);
+
     else {
         if (buffer_index < MAX_BUFFER - 1) {                    // increment the buffer_index and store the line buffer
             line_buffer[buffer_index] = ascii;
