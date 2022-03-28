@@ -142,3 +142,64 @@ Description: Did not write the auto linefeed function, which
 
 Solution: Give a new linefeed when the number of characters we 
           input exceeds 80.
+
+<--------------------------------------------------------->
+                          BUG 3                          
+<--------------------------------------------------------->
+File: syscall.S, syscall.c
+
+Time: 2022.03.27
+
+Creator: Ziyuan Lin
+
+Description: Declare two pointer type variable as label, but
+             store more than one data inside it. Causing
+             overlap.
+
+Solution: Change the variable to be array.
+
+<--------------------------------------------------------->
+                          BUG 4                          
+<--------------------------------------------------------->
+File: syscall.S, syscall.c
+
+Time: 2022.03.27
+
+Creator: Ziyuan Lin
+
+Description: Store the function pointer inside the label will
+             not be the value.
+
+Solution: Change the pt to be a pointer to pointer. Dereference
+          twice to a certain function.
+
+<--------------------------------------------------------->
+                          BUG 5                          
+<--------------------------------------------------------->
+File: filesys.c
+
+Time: 2022.03.26
+
+Creator: Ziyuan Lin
+
+Description: Use strcpy rather than strncpy. The maximal length
+             is not controled. If filename is over 32 characters,
+             the \0 in the buffer will be gone.
+
+Solution: Use strncpy.
+
+<--------------------------------------------------------->
+                          BUG 6                          
+<--------------------------------------------------------->
+File: filesys.c
+
+Time: 2022.03.26
+
+Creator: Ziyuan Lin
+
+Description: When comparing the filename and the required name,
+             for the very long file name not ended with \0 in
+             32 bytes, the maximal length lead to fail.
+
+Solution: Check whether the name of the file is longer than 32,
+          set the maximal length to be 32.
