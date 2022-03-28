@@ -3,6 +3,7 @@
 #include "keyboard.h"
 #include "tests.h"
 
+// the key flag
 uint8_t caps;
 uint8_t shift;
 uint8_t alt;
@@ -128,20 +129,28 @@ void echo(uint8_t ascii_value) {
     else if (shift)
         ascii = shift_ascii(ascii_value);
 
-    // if (buffer_index < MAX_BUFFER - 1)
-    //     putc(ascii);
     putc(ascii);
-    if (buffer_index < MAX_BUFFER - 1) {
-        line_buffer[buffer_index] = ascii;
-        line_buffer[buffer_index + 1] = NEW_LINE;
-        buffer_index++;
+
+    // determine whether the backspace is pressed
+    if (ascii == BACKSPACE) {
+        if (buffer_index > 0) {                                 // decrement the line buffer
+            if (buffer_index <= MAX_BUFFER)
+                line_buffer[buffer_index - 1] = NEW_LINE;
+            buffer_index--;
+        }
     }
-    else if (buffer_index == MAX_BUFFER - 1)
-        buffer_index++;
     else {
-        if (enter) {
-            buffer_index = 0;
-            enter = 0;
+        if (buffer_index < MAX_BUFFER - 1) {                    // increment the buffer_index and store the line buffer
+            line_buffer[buffer_index] = ascii;
+            line_buffer[buffer_index + 1] = NEW_LINE;
+            buffer_index++;
+        }
+        else {
+            buffer_index++;
+            if (enter) {
+                buffer_index = 0;
+                enter = 0;
+            }
         }
     }
 }
@@ -204,28 +213,29 @@ void keyboard_handler(void) {
     
     /* ctrl + l */
     if (ctrl & (ascii_value == 0x6C)) {
-        clear();
-        reset_cursor();
-        buffer_index = 0;
-        enter = 0;
         send_eoi(KEYBOARD_IRQ);
-        sti();
-        return;
+        sti();   
+        clear();                            // clear the creen
+        reset_cursor();     
+        buffer_index = 0;                   // reset the buffer index
+        enter = 0;                           
+        return;                            
     }
 
     /* ctrl + space */
     if (ctrl & (scan_code == 0x39)) {
         send_eoi(KEYBOARD_IRQ);
-        refresh_and_test();
-        buffer_index = 0;
+        sti();
+        refresh_and_test();                 // change test
+        buffer_index = 0;                   // reset the buffer index
         enter = 0;
         return;
     }
 
-
-
+    // echo the key
     echo(ascii_value);
     
     send_eoi(KEYBOARD_IRQ);
     sti();
 }
+

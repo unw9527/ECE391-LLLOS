@@ -22,3 +22,4 @@ extern int32_t RTC_close(int32_t fd);
 extern void RTC_set_freq(int32_t rate);
 
 #endif
+

@@ -19,6 +19,10 @@ void clear(void) {
     }
 }
 
+/* void move_cursor(void);
+ * Inputs: void
+ * Return Value: none
+ * Function: move the cursor to the supposed position */
 void move_cursor(void) {
     uint16_t pos = screen_y * NUM_COLS + screen_x;
     outb(0x0F, 0x3D4);
@@ -27,14 +31,21 @@ void move_cursor(void) {
     outb((uint8_t) ((pos >> 8) & 0xFF), 0x3D5);
 }
 
-void reset_cursor()
-{
+/* void reset_cursor(void);
+ * Inputs: void
+ * Return Value: none
+ * Function: reset the cursor to the upper left of the screen */
+void reset_cursor(void) {
     screen_x = 0;
     screen_y = 0;
     move_cursor();
     return;
 }
 
+/* void vertical_scroll(void);
+ * Inputs: void
+ * Return Value: none
+ * Function: scroll the screen if reaching the end of the screen line */
 void vertical_scroll(void) {
     int i;
     for (i = 0; i < (NUM_ROWS - 1) * NUM_COLS; i++) {
@@ -186,6 +197,10 @@ int32_t puts(int8_t* s) {
     return index;
 }
 
+/* void backspace(uint8_t c);
+ * Inputs: void
+ * Return Value: void
+ *  Function: move the cursor and the current position caused by the backspace */
 void backspace(void) {
     if (screen_x > 0)
         screen_x--;
@@ -207,12 +222,12 @@ void backspace(void) {
 void putc(uint8_t c) {
     if (c == 0) return;
 
-    if (c == 0x08) {        // backspace
+    if (c == BACK_SPACE) {        // backspace
         backspace();
         return;
     }
 
-    if (screen_x == NUM_COLS - 1) {
+    if (screen_x == NUM_COLS - 1) {         // Determine whether the vertical scroll is needed
         screen_x = 0;
         if (screen_y == NUM_ROWS - 1)
             vertical_scroll();
@@ -220,14 +235,14 @@ void putc(uint8_t c) {
             screen_y++;
     }
 
-    if (c == '\n' || c == '\r') {
+    if (c == '\n' || c == '\r') {           
         screen_x = 0;
         if (screen_y == NUM_ROWS - 1)
             vertical_scroll();
         else 
             screen_y++;
     } 
-    else {
+    else {                              
         *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = c;
         *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = ATTRIB;
         screen_x++;

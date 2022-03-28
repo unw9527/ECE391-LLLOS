@@ -9,6 +9,7 @@
 #define NUM_COLS    80
 #define NUM_ROWS    25
 #define ATTRIB      0x7
+#define BACK_SPACE  0x08
 #include "types.h"
 
 int32_t printf(int8_t *format, ...);

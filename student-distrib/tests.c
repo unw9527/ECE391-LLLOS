@@ -10,7 +10,7 @@
 #define PASS 1
 #define FAIL 0
 
-#define bar  printf("\n=========================================================\n\n")
+#define bar  printf("***************************************************************\n");
 
 /* format these macros as you see fit */
 #define TEST_HEADER 	\
@@ -18,7 +18,7 @@
 #define TEST_OUTPUT(name, result)	\
 	printf("[TEST %s] Result = %s\n", name, (result) ? "PASS" : "FAIL");
 
-int test_counter = 0;
+int test_counter = -1;
 
 static inline void assertion_failure(){
 	/* Use exception #15 for assertions, otherwise
@@ -128,7 +128,8 @@ int page_content_test2(){
  * Outputs: PASS/FAIL
  * Side Effects: None
  * Coverage: test page table entry 0
- * Files: x86_desc.h/S 1 */
+ * Files: x86_desc.h/S 1 
+ */
 int page_content_test3(){
 	TEST_HEADER;
 	int result = PASS;
@@ -145,7 +146,8 @@ int page_content_test3(){
  * Outputs: PASS/FAIL
  * Side Effects: None
  * Coverage: test page table entry 1
- * Files: x86_desc.h/S 1 */
+ * Files: x86_desc.h/S 1 
+ */
 int page_content_test4(){
 	TEST_HEADER;
 	int result = PASS;
@@ -163,7 +165,8 @@ int page_content_test4(){
  * Outputs: PASS/FAIL
  * Side Effects: None
  * Coverage: Function: test paging when address is not null
- * Files: x86_desc.h/S 1 */
+ * Files: x86_desc.h/S 1 
+ */
 int page_dereference1()
 {
 	TEST_HEADER;
@@ -184,7 +187,8 @@ int page_dereference1()
  * Outputs: PASS/FAIL
  * Side Effects: None
  * Coverage: Function: test paging when address is null
- * Files: x86_desc.h/S 1 */
+ * Files: x86_desc.h/S 1 
+ */
 int page_dereference2()
 {
 	TEST_HEADER;
@@ -199,7 +203,8 @@ int page_dereference2()
 /* void refresh_and_test(void);
  * Inputs: void
  * Return Value: none
- * Function: reset the screen and test again */
+ * Function: reset the screen and test again 
+ */
 void refresh_and_test()
 {
 	test_counter++;
@@ -210,7 +215,8 @@ void refresh_and_test()
 /* int get_counter(void);
  * Inputs: void
  * Return Value: test counter
- * Function: return the test counter */
+ * Function: return the test counter 
+ */
 int get_counter()
 {
 	return test_counter;
@@ -224,9 +230,9 @@ int get_counter()
  * Outputs: PASS/FAIL
  * Side Effects: None
  * Coverage: rtc open, close, read, write
- * Files: rtc.h/c */
+ * Files: rtc.h/c 
+ */
 int rtc_cp2_test(){
-	TEST_HEADER;
 	int i, j;
 	int fd;
 	int num_char;
@@ -237,9 +243,7 @@ int rtc_cp2_test(){
 	for (i = 0; i <= 1024; i++){
 		if (0 != RTC_write(fd, &i, 4)) continue; // test RTC_write
 		else{
-			clear();
-			reset_cursor();
-			printf("Setting the frequency of RTC to %u Hz\n", i);
+			printf("\nSetting the frequency of RTC to %u Hz\n", i);
 			if (i < 256) num_char = i * 3; // triple number is suitable for display when i is small based on trials 
 			else if (i < 1024) num_char = i * 2; // double number is suitable for display when i is in this range
 			else num_char = i; // fit the screen limit
@@ -271,22 +275,31 @@ int rtc_cp2_test(){
 
 }
 
-
+/* int terminal_read_test(void);
+ * Inputs: void
+ * Return Value: test counter
+ * Function: test the function of terminal_read *
+ */
 int terminal_read_test(void)
 {
-    printf("Terminal Test\n");
-
     int8_t buf[128];
     int32_t i, size;
 	int32_t fd;
+
     size = terminal_read(fd, buf, 0);
 
+	printf("Buffer Echo Content\n");
     for(i = 0; i < size; i++)
         printf("%c", buf[i]);
-
+	printf("\n\n");
     return 0;
 }
 
+/* int read_directory(void);
+ * Inputs: void
+ * Return Value: test counter
+ * Function: test the directory of file system 
+ */
 int read_directory()
 {
 	TEST_HEADER;
@@ -307,6 +320,11 @@ int read_directory()
 	return result;
 }
 
+/* int test_read_file1(void);
+ * Inputs: void
+ * Return Value: test counter
+ * Function: test the content of frame0.txt 
+ */
 int test_read_file1()
 {
 	TEST_HEADER;
@@ -322,6 +340,11 @@ int test_read_file1()
 	return result;
 }
 
+/* int test_read_file2(void);
+ * Inputs: void
+ * Return Value: test counter
+ * Function: test the content of frame1.txt 
+ */
 int test_read_file2()
 {
 	TEST_HEADER;
@@ -336,11 +359,15 @@ int test_read_file2()
 	fd = open((uint8_t*)"frame1.txt");
 	num = read(fd, buf, 999);
 	printf("%s", buf);
-	printf("%d", num);
 	close(fd);
 	return result;
 }
 
+/* int test_read_file3(void);
+ * Inputs: void
+ * Return Value: test counter
+ * Function: test the content of verylargetextwithverylongname.txt 
+ */
 int test_read_file3()
 {
 	TEST_HEADER;
@@ -349,15 +376,19 @@ int test_read_file3()
 	int result = PASS;
 	uint8_t buf[2000];
 	int32_t fd;
-	printf("verylargetextwithverylongname.txt:\n");
 	for (i = 0; i < 2000; i++)
 		buf[i] = 0;
-	fd = open((uint8_t*)"verylargetextwithverylongname.tx");
+	fd = open((uint8_t*)"verylargetextwithverylongname.txt");
 	num = read(fd, buf, 1999);
 	printf("%s", buf);
 	return result;
 }
 
+/* int test_read_file4(void);
+ * Inputs: void
+ * Return Value: test counter
+ * Function: test the content of verylargetextwithverylongname.txt 
+ */
 int test_read_file4()
 {
 	TEST_HEADER;
@@ -366,7 +397,6 @@ int test_read_file4()
 	int32_t fd = 2;
 	int result = PASS;
 	uint8_t buf[2000];
-	printf("verylargetextwithverylongname.txt:\n");
 	for (i = 0; i < 2000; i++)
 		buf[i] = 0;
 	num = read(fd, buf, 1999);
@@ -374,6 +404,11 @@ int test_read_file4()
 	return result;
 }
 
+/* int test_read_file5(void);
+ * Inputs: void
+ * Return Value: test counter
+ * Function: test the content of verylargetextwithverylongname.txt 
+ */
 int test_read_file5()
 {
 	TEST_HEADER;
@@ -382,7 +417,6 @@ int test_read_file5()
 	int32_t fd = 2;
 	int result = PASS;
 	uint8_t buf[2000];
-	printf("verylargetextwithverylongname.txt:\n");
 	for (i = 0; i < 2000; i++)
 		buf[i] = 0;
 	num = read(fd, buf, 1999);
@@ -391,6 +425,11 @@ int test_read_file5()
 	return result;
 }
 
+/* int test_read_file6(void);
+ * Inputs: void
+ * Return Value: test counter
+ * Function: test the content of fish 
+ */
 int test_read_file6()
 {
 	TEST_HEADER;
@@ -410,6 +449,11 @@ int test_read_file6()
 	return result;
 }
 
+/* int test_read_file7(void);
+ * Inputs: void
+ * Return Value: test counter
+ * Function: test the content of grep 
+ */
 int test_read_file7()
 {
 	TEST_HEADER;
@@ -428,6 +472,11 @@ int test_read_file7()
 	return result;
 }
 
+/* int test_read_file8(void);
+ * Inputs: void
+ * Return Value: test counter
+ * Function: test the content of grep 
+ */
 int test_read_file8()
 {
 	TEST_HEADER;
@@ -446,6 +495,11 @@ int test_read_file8()
 	return result;
 }
 
+/* int test_read_file9(void);
+ * Inputs: void
+ * Return Value: test counter
+ * Function: test the content of ls 
+ */
 int test_read_file9()
 {
 	TEST_HEADER;
@@ -464,6 +518,11 @@ int test_read_file9()
 	return result;
 }
 
+/* int test_read_file10(void);
+ * Inputs: void
+ * Return Value: test counter
+ * Function: test the content of ls 
+ */
 int test_read_file10()
 {
 	TEST_HEADER;
@@ -495,46 +554,96 @@ int test_read_file10()
 void launch_tests(){
 	clear();
     reset_cursor();
-	switch (test_counter) {
+	switch (test_counter) {			// use test_counter to determine which test
+		case -1:
+			bar;
+			printf("                         Test Begin                            \n");
+			bar;
+			printf("\n\n   !!!!!  Please press ctrl + space to switch test  !!!!!! \n");
+			break;
 		case 0:
-			terminal_read_test();
+			bar;
+			printf("                 Test 1: Terminal Test                         \n");
+			bar;
+			printf("\n\nFeel Free to type what you want, and press enter to see the echo of the buffer\n\n");
+			while(test_counter == 0) terminal_read_test();
 			break;
 		case 1:
+			bar;
+			printf("                 Test 2: RTC Test                              \n");
+			bar;
 			TEST_OUTPUT("RTC TEST: ", rtc_cp2_test());
 			break;
 		case 2:
+			bar;
+			printf("                 Test 3: Read Directory Test                   \n");
+			bar;
 			read_directory();
 			break;
 		case 3:
+			bar;
+			printf("                 Test 4: frame0.txt Test                       \n");
+			bar;
 			test_read_file1();
 			break;
 		case 4:
+			bar;
+			printf("                 Test 5: frame1.txt Test                       \n");
+			bar;
 			test_read_file2();
 			break;
 		case 5:
-			test_read_file3();
+			bar;
+			printf("      Test 6: verylargetextwithverylongname.txt Test           \n");
+			bar;
+			printf("\nNext 3 pages are the test output for verylargetextwithverylongname.txt\n");
 			break;
 		case 6:
-			test_read_file4();
+			test_read_file3();
 			break;
 		case 7:
-			test_read_file5();
+			test_read_file4();
 			break;
 		case 8:
-			test_read_file6();
+			test_read_file5();
 			break;
 		case 9:
-			test_read_file7();
+			bar;
+			printf("                    Test 7: fish Test                          \n");
+			bar;
+			printf("\nNext 1 page is test output for fish\n");
 			break;
 		case 10:
-			test_read_file8();
+			test_read_file6();
 			break;
 		case 11:
-			test_read_file9();
+			bar;
+			printf("                    Test 8: grep Test                          \n");
+			bar;
+			printf("\nNext 2 pages are test output for grep\n");
 			break;
 		case 12:
+			test_read_file7();
+			break;
+		case 13:
+			test_read_file8();
+			break;
+		case 14:
+			printf("***************************************************************\n");
+			printf("                    Test 9: ls Test1                           \n");
+			printf("***************************************************************\n");
+			printf("\nNext 2 pages are test output for ls\n");
+			break;
+		case 15:
+			test_read_file9();
+			break;
+		case 16:
 			test_read_file10();
 			break;
+		case 17:
+			bar;
+			printf("                         Test End                             \n");
+			bar;
 		default:
 			break;
 	}
