@@ -227,7 +227,7 @@ int32_t open_dir (const uint8_t* filename)
 /* Side effect: none.*/
 int32_t write_dir (int32_t fd, const void* buf, int32_t nbytes)
 {
-    return 0;
+    return -1;
 }
 
 /* int32_t write_file (int32_t fd, const void* buf, int32_t nbytes);;
@@ -237,7 +237,7 @@ int32_t write_dir (int32_t fd, const void* buf, int32_t nbytes)
 /* Side effect: none.*/
 int32_t write_file (int32_t fd, const void* buf, int32_t nbytes)
 {
-    return 0;
+    return -1;
 }
 
 int32_t (*read_file_pt) (int32_t, void*, int32_t) = read_file;

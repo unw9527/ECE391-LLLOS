@@ -1,5 +1,6 @@
 #include "syscall.h"
 #include "filesys.h"
+#include "keyboard.h"
 
 extern int32_t jump_table_rtc[4];
 extern int32_t jump_table_file[4];
@@ -10,7 +11,21 @@ extern int32_t jump_table_dir[4];
  * Return Value: -1 if not success. 0 if success.
  * Function: Open the file and fill in the information about the file for further operation. */
 /* Side effect: none.*/
-int32_t open (const uint8_t* filename)
+
+int32_t sys_halt (uint8_t status)
+{
+    return -1;
+}
+
+int32_t sys_execute (const uint8_t* command)
+{
+    uint8_t buf1[MAX_BUFFER];
+    uint8_t buf2[MAX_BUFFER];
+    
+    return -1;
+}
+
+int32_t sys_open (const uint8_t* filename)
 {
     int32_t fd;
     int32_t (**pt)(const uint8_t*);
@@ -63,7 +78,7 @@ int32_t open (const uint8_t* filename)
  * Return Value: -1 if fd==0 or fd==1. 0 if success.
  * Function: Close the file. */
 /* Side effect: Close the file.*/
-int32_t close (int32_t fd)
+int32_t sys_close (int32_t fd)
 {
     int32_t (**pt)(int32_t);
     /* If fd corresponds to stdin and stdout, return -1.*/
@@ -81,7 +96,7 @@ int32_t close (int32_t fd)
  * Return Value: Number of bytes read. -1 indicates failure.
  * Function: Read the file. */
 /* Side effect: none.*/
-int32_t read (int32_t fd, void* buf, int32_t nbytes)
+int32_t sys_read (int32_t fd, void* buf, int32_t nbytes)
 {
     int32_t bytes_read;
     int32_t (**pt)(int32_t, void* , int32_t);
@@ -96,10 +111,15 @@ int32_t read (int32_t fd, void* buf, int32_t nbytes)
  * Return Value: 0.
  * Function: Write the file. */
 /* Side effect: none.*/
-int32_t write(int32_t fd, const void* buf, int32_t nbytes)
+int32_t sys_write(int32_t fd, const void* buf, int32_t nbytes)
 {
     int32_t (**pt)(int32_t, const void*, int32_t);
     pt = (int32_t (**)(int32_t, const void*, int32_t)) file_descriptor_array[fd].file_op_pt[3];
     (**pt) (fd, buf, nbytes);
     return 0;
+}
+
+int32_t sys_getargs (uint8_t* buf, int32_t nbytes)
+{
+    return -1;
 }

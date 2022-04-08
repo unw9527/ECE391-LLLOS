@@ -8,6 +8,7 @@
 #define EXCEPTION_NUM           20          // The number of the exception
 #define KEYBOARD_IDT            0x21        // The IDT entry of keyboard
 #define RTC_IDT                 0x28        // The IDT entry of RTC
+#define SYSTEM_IDT              0x80        // The IDT entry of system call
 
 /* The initial function of the IDT.         */
 void idt_initial(void);
@@ -17,6 +18,8 @@ void exception_handler(uint32_t num);
 
 /* The function to handle the interrupt.    */
 void interrupt_handler(uint32_t num);
+
+extern int system_call();
 
 /* -------------------- Exception Function -------------------- */
 void DEVIDE_ERROR_EXCEPTION(void);

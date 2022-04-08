@@ -128,6 +128,7 @@ void idt_initial(void) {
     SET_IDT_ENTRY(idt[19], FLOATING_POINT_EXCEPTION);
     SET_IDT_ENTRY(idt[KEYBOARD_IDT], KEYBOARD_INT);
     SET_IDT_ENTRY(idt[RTC_IDT], RTC_INT);
+    SET_IDT_ENTRY(idt[SYSTEM_IDT], system_call);
 
     for (i = 0; i < EXCEPTION_NUM; i++) {                            /* We first set all the exceptions to be present.*/
         idt[i].seg_selector = KERNEL_CS;
@@ -153,4 +154,5 @@ void idt_initial(void) {
     idt[RTC_IDT].reserved3 = 0;
     idt[KEYBOARD_IDT].present = 1;
     idt[RTC_IDT].present = 1;
+    idt[SYSTEM_IDT].present = 1;
 }

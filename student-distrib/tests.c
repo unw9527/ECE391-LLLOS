@@ -6,6 +6,7 @@
 #include "rtc.h"
 #include "syscall.h"
 #include "filesys.h"
+#include "process.h"
 
 #define PASS 1
 #define FAIL 0
@@ -18,7 +19,7 @@
 #define TEST_OUTPUT(name, result)	\
 	printf("[TEST %s] Result = %s\n", name, (result) ? "PASS" : "FAIL");
 
-int test_counter = -2;
+int test_counter = 0;
 
 static inline void assertion_failure(){
 	/* Use exception #15 for assertions, otherwise
@@ -232,328 +233,33 @@ int get_counter()
  * Coverage: rtc open, close, read, write
  * Files: rtc.h/c 
  */
-int rtc_cp2_test(){
-	int i, j;
-	int fd;
-	int num_char;
-	int fails[4] = {0, 13, 2048}; // failure cases
-	// TODO - lzy: can we ignore ENTER when executing this test?
-	fd = RTC_open((uint8_t *) 0); // test RTC_open
-	num_char = 8; // we just print 8 characters for 2 Hz
-	for (i = 0; i <= 1024; i++){
-		if (0 != RTC_write(fd, &i, 4)) continue; // test RTC_write
-		else{
-			clear();
-			reset_cursor();
-			printf("\nSetting the frequency of RTC to %u Hz\n", i);
-			if (i < 256) num_char = i * 3; // triple number is suitable for display when i is small based on trials 
-			else if (i < 1024) num_char = i * 2; // double number is suitable for display when i is in this range
-			else num_char = i; // fit the screen limit
-			for (j = 0; j < num_char; j++){
-				RTC_read(fd, NULL, 0); // test RTC_read
-				// if (0 != j && 0 == j % 79) printf("\n"); // 80 is the maximum number of chars in one line
-				if (1 != test_counter) return PASS;
-				printf("1");
-			}
-
-		}
-	}
-	// print some failure cases
-	for (i = 0; i < 3; i++){
-		clear();
-		reset_cursor();
-		printf("Now show some of the invalid input\n");
-		for (i = 0; i < 3; i++){
-			// if (1 != test_counter) return PASS;
-			printf("Setting the frequency of RTC to %u Hz\n", fails[i]);
-			if (0 != RTC_write(fd, &fails[i], 4)){
-				printf("Invalid frequency!\n");
-			}
-		}
-	}
-	printf("\n");
-	RTC_close(fd); // test RTC_close
-	// clear();
-	// reset_cursor();
-	return PASS;
-
-}
-
-/* int terminal_read_test(void);
- * Inputs: void
- * Return Value: test counter
- * Function: test the function of terminal_read *
- */
-int terminal_read_test(void)
-{
-    int8_t buf[128];
-    int32_t i, size;
-	int32_t fd;
-
-    size = terminal_read(fd, buf, 0);
-
-	printf("Buffer Echo Content\n");
-    for(i = 0; i < size; i++)
-        printf("%c", buf[i]);
-	printf("\n\n");
-    return 0;
-}
-
-/* int read_directory(void);
- * Inputs: void
- * Return Value: test counter
- * Function: test the directory of file system 
- */
-int read_directory()
-{
-	TEST_HEADER;
-	int result = PASS;
-	uint8_t space = 32;
-	int i;
-	int32_t length;
-	uint8_t buf[FILENAME_LEN+1];
-	buf[FILENAME_LEN] = 0;
-	int32_t fd;
-	fd = open((uint8_t*)".");
-	length = read(fd, buf, 0);
-	while (length){
-		printf("file_name:");
-		for (i = 0; i < 40 - length; i++){
-			putc(space);
-		}
-		printf("%s  ", buf);
-		printf("file_type: ");
-		printf("%d  ", type);
-		printf("size:  ");
-		printf("%d\n", file_size);
-		length = read(fd, buf, 0);
-	}
-	close(fd);
-	return result;
-}
-
-/* int test_read_file1(void);
- * Inputs: void
- * Return Value: test counter
- * Function: test the content of frame0.txt 
- */
-int test_read_file1()
-{
-	TEST_HEADER;
-	int result = PASS;
-	printf("frame0.txt:\n");
-	uint8_t buf[1000];
-	buf[999] = 0;
-	int32_t fd;
-	fd = open((uint8_t*)"frame0.txt");
-	read(fd, buf, 999);
-	printf("%s", buf);
-	close(fd);
-	return result;
-}
-
-/* int test_read_file2(void);
- * Inputs: void
- * Return Value: test counter
- * Function: test the content of frame1.txt 
- */
-int test_read_file2()
-{
-	TEST_HEADER;
-	int i;
-	int32_t num;
-	int result = PASS;
-	uint8_t buf[1000];
-	int32_t fd;
-	printf("frame1.txt:\n");
-	for (i = 0; i < 1000; i++)
-		buf[i] = 0;
-	fd = open((uint8_t*)"frame1.txt");
-	num = read(fd, buf, 999);
-	printf("%s", buf);
-	close(fd);
-	return result;
-}
-
-/* int test_read_file3(void);
- * Inputs: void
- * Return Value: test counter
- * Function: test the content of verylargetextwithverylongname.txt 
- */
-int test_read_file3()
-{
-	TEST_HEADER;
-	int i;
-	int32_t num;
-	int result = PASS;
-	uint8_t buf[2000];
-	int32_t fd;
-	for (i = 0; i < 2000; i++)
-		buf[i] = 0;
-	fd = open((uint8_t*)"verylargetextwithverylongname.txt");
-	num = read(fd, buf, 1999);
-	printf("%s", buf);
-	return result;
-}
-
-/* int test_read_file4(void);
- * Inputs: void
- * Return Value: test counter
- * Function: test the content of verylargetextwithverylongname.txt 
- */
-int test_read_file4()
-{
-	TEST_HEADER;
-	int i;
-	int32_t num;
-	int32_t fd = 2;
-	int result = PASS;
-	uint8_t buf[2000];
-	for (i = 0; i < 2000; i++)
-		buf[i] = 0;
-	num = read(fd, buf, 1999);
-	printf("%s", buf);
-	return result;
-}
-
-/* int test_read_file5(void);
- * Inputs: void
- * Return Value: test counter
- * Function: test the content of verylargetextwithverylongname.txt 
- */
-int test_read_file5()
-{
-	TEST_HEADER;
-	int i;
-	int32_t num;
-	int32_t fd = 2;
-	int result = PASS;
-	uint8_t buf[2000];
-	for (i = 0; i < 2000; i++)
-		buf[i] = 0;
-	num = read(fd, buf, 1999);
-	printf("%s", buf);
-	close(fd);
-	return result;
-}
-
-/* int test_read_file6(void);
- * Inputs: void
- * Return Value: test counter
- * Function: test the content of fish 
- */
-int test_read_file6()
-{
-	TEST_HEADER;
-	int i;
-	int32_t num;
-	int32_t fd;
-	int result = PASS;
-	uint8_t buf[40000];
-	fd = open((uint8_t*)"fish");
-	printf("fish\n");
-	for (i = 0; i < 40000; i++)
-		buf[i] = 0;
-	num = read(fd, buf, 39999);
-	for (i = 0; i < num; i++)
-		putc(buf[i]);
-	close(fd);
-	return result;
-}
-
-/* int test_read_file7(void);
- * Inputs: void
- * Return Value: test counter
- * Function: test the content of grep 
- */
-int test_read_file7()
-{
-	TEST_HEADER;
-	int i;
-	int32_t num;
-	int32_t fd;
-	int result = PASS;
-	uint8_t buf[20];
-	fd = open((uint8_t*)"grep");
-	printf("grep\n");
-	for (i = 0; i < 20; i++)
-		buf[i] = 0;
-	num = read(fd, buf, 19);
-	for (i = 0; i < num; i++)
-		putc(buf[i]);
-	return result;
-}
-
-/* int test_read_file8(void);
- * Inputs: void
- * Return Value: test counter
- * Function: test the content of grep 
- */
-int test_read_file8()
-{
-	TEST_HEADER;
-	int i;
-	int32_t num;
-	int32_t fd = 2;
-	int result = PASS;
-	uint8_t buf[7000];
-	printf("grep\n");
-	for (i = 0; i < 7000; i++)
-		buf[i] = 0;
-	num = read(fd, buf, 6999);
-	for (i = 0; i < num; i++)
-		putc(buf[i]);
-	close(fd);
-	return result;
-}
-
-/* int test_read_file9(void);
- * Inputs: void
- * Return Value: test counter
- * Function: test the content of ls 
- */
-int test_read_file9()
-{
-	TEST_HEADER;
-	int i;
-	int32_t num;
-	int32_t fd;
-	int result = PASS;
-	uint8_t buf[20];
-	fd = open((uint8_t*)"ls");
-	printf("ls\n");
-	for (i = 0; i < 20; i++)
-		buf[i] = 0;
-	num = read(fd, buf, 19);
-	for (i = 0; i < num; i++)
-		putc(buf[i]);
-	return result;
-}
-
-/* int test_read_file10(void);
- * Inputs: void
- * Return Value: test counter
- * Function: test the content of ls 
- */
-int test_read_file10()
-{
-	TEST_HEADER;
-	int i;
-	int32_t num;
-	int32_t fd = 2;
-	int result = PASS;
-	uint8_t buf[7000];
-	printf("ls\n");
-	for (i = 0; i < 7000; i++)
-		buf[i] = 0;
-	num = read(fd, buf, 6999);
-	for (i = 0; i < num; i++)
-		putc(buf[i]);
-	close(fd);
-	return result;
-}
 
 /* Checkpoint 3 tests */
+
+void launch_tests()
+{
+	int8_t string[20];
+	string[0] = 46;
+	string[1] = 0;
+	clear();
+	reset_cursor();
+	switch (test_counter){
+		case 0:
+			asm volatile ("                                               \n\
+        		movl $5, %%eax											  \n\
+				movl %0, %%ebx											  \n\
+				int $0x80											      \n\
+        		"                                                           \
+        	: /* no outputs */                                          	\
+        	: "g"((string))                                       			\
+        	: "eax", "%ebx", "memory", "cc"                                 \
+   		 	);
+			break;
+		default:
+			break;
+	}
+}
+
 /* Checkpoint 4 tests */
 /* Checkpoint 5 tests */
 
@@ -563,7 +269,7 @@ int test_read_file10()
  * Inputs: void
  * Return Value: none
  * Function: launch all tests */
-void launch_tests(){
+/* void launch_tests(){
 	clear();
     reset_cursor();
 	switch (test_counter) {			// use test_counter to determine which test
@@ -662,6 +368,6 @@ void launch_tests(){
 			break;
 	}
 }
-
+*/
 
 

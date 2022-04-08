@@ -1,4 +1,4 @@
-.globl jump_table_rtc, jump_table_file, jump_table_dir
+.globl jump_table_rtc, jump_table_file, jump_table_dir, system_call
 
 jump_table_rtc:
 .align 4
@@ -14,4 +14,51 @@ jump_table_dir:
     .long close_dir_pt
     .long write_dir_pt
 
+.text
+
+jump_table_syscall:
+    # Use a padding.
+    .long 0, sys_halt, sys_execute, sys_read, sys_write, sys_open, sys_close, sys_getargs
+    # These 3 will be written in cp4.
+    # sys_vidmap,
+    # sys_set_handler,
+    # sys_sigreturn
+
+system_call:
+    # Save all the registers in the correct order.
+    pushl %fs
+    pushl %es
+    pushl %ds
+    pushl %gs
+    pushl %ebp
+    pushl %edi
+    pushl %esi
+    pushl %edx
+    pushl %ecx
+    pushl %ebx
+    # Check whether the system call number is valid.
+    cmpl $1, %eax
+    jl fail
+    cmpl $7, %eax
+    jg fail
+    # Call the sub function through jump table.
+    call *jump_table_syscall(, %eax, 4)
+    jmp return_system_call
+fail:
+    # Return -1 in this case.
+    movl $-1, %eax
+return_system_call:
+    # Pop all the registers in the correct order.
+    popl %ebx
+    popl %ecx
+    popl %edx
+    popl %esi
+    popl %edi
+    popl %ebp
+    popl %gs
+    popl %ds
+    popl %es
+    popl %fs
+    iret
+    # Do not need to modify the %eax value since this is already done in the sub function.
 .end
