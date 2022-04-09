@@ -6,6 +6,7 @@
 
 #define BACKSPACE       0x08    
 #define NEW_LINE        0x0A
+#define SPACE           0x20
 #define MAX_BUFFER      128
 
 uint8_t enter;

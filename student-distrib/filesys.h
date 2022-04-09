@@ -5,7 +5,15 @@
 #define FILENAME_LEN 32
 #define NUM_DIR_ENTRIES 63
 #define BLOCK_SIZE 4096
+#define HALF_BLOCK_SIZE 2048
 #define DESP_NUM 8
+#define EXECUTE_LEN 40
+#define MAGIC1 0x7F
+#define MAGIC2 0x45
+#define MAGIC3 0x4c
+#define MAGIC4 0x46
+#define HIGH_ADDR 27
+#define VIRTUAL_EXECUTE_START_ADDR  0x08048000
 
 typedef struct dentry{
     int8_t filename[FILENAME_LEN];                                   /* The file name of the directory entry.*/
@@ -64,5 +72,6 @@ int32_t close_file(int32_t fd);
 int32_t close_dir(int32_t fd);
 int32_t write_dir (int32_t fd, const void* buf, int32_t nbytes);
 int32_t write_file (int32_t fd, const void* buf, int32_t nbytes);
-
+int32_t file_loader(dentry_t* dentry);
+int32_t get_length(dentry_t* dentry);
 #endif

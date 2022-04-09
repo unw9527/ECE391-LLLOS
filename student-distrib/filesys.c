@@ -131,6 +131,20 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t length
     }
 }
 
+/* int32_t get_length(dentry_t* dentry)
+ * Inputs: a pointer to a dentry struct
+ * Return Value: the length of file if success; -1 otherwise
+ * Side effect: none.
+ */
+int32_t get_length(dentry_t* dentry){
+    if (NULL == dentry) {
+        printf("Error: in get_length: expect a pointer to a dentry_t struct, but got a NULL pointer\n");
+        return -1;
+    }
+    return cast_pt[dentry->inode_num+1].inode.length;
+}
+
+
 /* int32_t read_file(int32_t fd, void* buf, int32_t nbytes);
  * Inputs: fd: The file descriptor. buf: The buffer to store the data. nbytes: The # bytes to read.
  * Return Value: Number of bytes read into the buffer if success. -1 if fail.
@@ -238,6 +252,37 @@ int32_t write_dir (int32_t fd, const void* buf, int32_t nbytes)
 int32_t write_file (int32_t fd, const void* buf, int32_t nbytes)
 {
     return -1;
+}
+
+
+/*
+ * iint32_t file_loader(dentry_t* dentry)
+ * input: a pointer to dentry struct
+ * output: 0 if success; -1 otherwise
+ * effect: load the file to its virtual memory
+ * side effect: none
+ */
+int32_t file_loader(dentry_t* dentry)
+{
+    int32_t file_length;
+    int32_t i;
+    int32_t rest_length;
+    uint8_t* virtual_addr;
+    uint8_t file_data[HALF_BLOCK_SIZE];
+    virtual_addr = (uint8_t*) VIRTUAL_EXECUTE_START_ADDR;
+    if (NULL == dentry) {
+        printf("Error: in file_loader: expect a pointer to a dentry_t struct, but got a NULL pointer\n");
+        return -1;
+    }
+    file_length = get_length(dentry);
+    for (i = 0; (i+1) * HALF_BLOCK_SIZE < file_length; i++){
+        read_data(dentry->inode_num, i * HALF_BLOCK_SIZE, file_data, HALF_BLOCK_SIZE);
+        memcpy(&virtual_addr[HALF_BLOCK_SIZE*i], file_data, HALF_BLOCK_SIZE);
+    }
+    rest_length = file_length - i * HALF_BLOCK_SIZE;
+    read_data(dentry->inode_num, i * HALF_BLOCK_SIZE, file_data, rest_length);
+    memcpy(&virtual_addr[HALF_BLOCK_SIZE*i], file_data, rest_length);
+    return 0;
 }
 
 int32_t (*read_file_pt) (int32_t, void*, int32_t) = read_file;

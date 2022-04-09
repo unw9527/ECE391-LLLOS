@@ -41,6 +41,8 @@ system_call:
     jl fail
     cmpl $7, %eax
     jg fail
+    movw $0x18, %bx
+    movw %bx, %ds
     # Call the sub function through jump table.
     call *jump_table_syscall(, %eax, 4)
     jmp return_system_call
