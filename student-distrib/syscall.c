@@ -14,10 +14,35 @@
 
 int32_t sys_halt (uint8_t status)
 {
+    int i;
+
+    process_one_hot[process_counter] = 0;
+    
+    for (i = 2; i < DESP_NUM; i++) {
+        if (PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[i].flags)
+            sys_close(i);
+        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[i].flags = 0;
+    }
+
+    if (PCB_array[NUM_PROCESS-1-process_counter].thread_info.parent_index == -1) {
+        process_counter = -1;
+        sys_execute((uint8_t *) "shell");
+    }
+    /* Restore parent paging */
+    swap_page(PCB_array[NUM_PROCESS-1-process_counter].thread_info.parent_index);
+    process_counter = PCB_array[NUM_PROCESS-1-process_counter].thread_info.parent_index;
+    // tss.esp0 = current pcb's esp
+    tss.esp0 = STACK_BASE - 4 * KERNEL_STACK * process_counter - 4;
+    // !!! ebp of PCB
     asm volatile (
-        "jmp RET_FROM_PROCESS;"
+                 "mov %0, %%eax;"
+                 "mov %1, %%ebp;"
+                 "jmp RET_FROM_PROCESS;"
+                 :
+                 :"r"((uint32_t) status), "r"(PCB_array[NUM_PROCESS-1-process_counter].thread_info.ebp)
+                 :"%eax"
  	);
-    return -1;
+    return 0;
 }
 
 int32_t sys_execute (const uint8_t* command)
@@ -119,15 +144,18 @@ int32_t sys_execute (const uint8_t* command)
         movw %0, %%cx                                             \n\
         movw %%cx, %%ds                                           \n\
         iret                                                      \n\
-        RET_FROM_PROCESS:                                         \n\
-        movl %%eax, %4                                            \n\
+        RET_FROM_PROCESS:                                         \n\ 
+        leave                                                     \n\
+        ret                                                       \n\             
         "                                                           \
     : /* no output*/                                                \
-    : "g"((user_space_ss)), "g"((user_space_esp)), "g"((user_space_cs)), "g"((user_space_eip)), "g"((return_val))  \
+    : "g"((user_space_ss)), "g"((user_space_esp)), "g"((user_space_cs)), "g"((user_space_eip)) \
     : "memory", "%ecx"/* no register modification*/                 \
     );
-    return return_val;
+    return 0; 
+
 }
+
 
 int32_t sys_open (const uint8_t* filename)
 {

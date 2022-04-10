@@ -18,5 +18,10 @@ int32_t set_up_PCB(int32_t process_ct, int32_t prev_process_ct)
     PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[1].file_pos = 0;
     PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[1].inode = 0;
     PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[1].flags = 1;
+
+    asm volatile("            \n\
+        movl   %%ebp, %%eax   \n\
+        "
+        :"=a"(PCB_array[NUM_PROCESS-1-process_counter].thread_info.ebp) );
     return 0;
 }

@@ -11,6 +11,8 @@
 
 typedef struct thread_info
 {
+    uint32_t esp;
+    uint32_t ebp;
     int32_t my_index;
     int32_t parent_index;
     file_descriptor_entry_t file_array[DESP_NUM];
