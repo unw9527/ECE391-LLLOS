@@ -57,7 +57,6 @@ typedef struct file_descriptor_entry
 } file_descriptor_entry_t;
 
 extern block_t* cast_pt;
-extern file_descriptor_entry_t file_descriptor_array[DESP_NUM];      /* Externed to be used in kernel.c*/
 extern int32_t type;
 extern int32_t file_size;
 

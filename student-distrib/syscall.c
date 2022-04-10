@@ -1,13 +1,10 @@
 #include "syscall.h"
 #include "filesys.h"
 #include "keyboard.h"
+#include "terminal.h"
 #include "process.h"
 #include "page.h"
 #include "x86_desc.h"
-
-extern int32_t jump_table_rtc[4];
-extern int32_t jump_table_file[4];
-extern int32_t jump_table_dir[4];
 
 /* int32_t open(const uint8_t* filename);
  * Inputs: filename: The name of the file.
@@ -100,7 +97,7 @@ int32_t sys_execute (const uint8_t* command)
  	);
     tss.ss0 = ss_val;
     /* Set the esp0 value.*/
-    esp0_val = STACK_BASE - 4 * KERNEL_STACK * process_counter;
+    esp0_val = STACK_BASE - 4 * KERNEL_STACK * process_counter - 4;
     tss.esp0 = esp0_val;
     /* Get the value needed to push onto the stack.*/
     user_space_esp = USER_SPACE_ESP;
@@ -113,6 +110,9 @@ int32_t sys_execute (const uint8_t* command)
         pushw %0                                                  \n\
         pushl %1                                                  \n\
         pushfl                                                    \n\
+        popl %%ecx                                                \n\
+        orl $0x200,%%ecx                                          \n\
+		pushl %%ecx                                               \n\
         pushw $0                                                  \n\
         pushw %2                                                  \n\
         pushl %3                                                  \n\
@@ -138,7 +138,7 @@ int32_t sys_open (const uint8_t* filename)
     if (read_dentry_by_name(filename, &dentry) == -1)
         return -1;
     for (fd = 2; fd <= 7; fd++){
-        if (file_descriptor_array[fd].flags == 0){
+        if (PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].flags == 0){
             break;
         }
     }
@@ -149,30 +149,30 @@ int32_t sys_open (const uint8_t* filename)
     {
     /* The rtc.*/
     case 0:
-        file_descriptor_array[fd].file_op_pt = (int32_t*)jump_table_rtc;
-        file_descriptor_array[fd].inode = 0;
-        file_descriptor_array[fd].file_pos = 0;
-        file_descriptor_array[fd].flags = 1;
+        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_op_pt = (int32_t*)jump_table_rtc;
+        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].inode = 0;
+        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_pos = 0;
+        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].flags = 1;
         break;
     /* The directory.*/
     case 1:
-        file_descriptor_array[fd].file_op_pt = (int32_t*)jump_table_dir;
-        file_descriptor_array[fd].inode = 0;
-        file_descriptor_array[fd].file_pos = 0;
-        file_descriptor_array[fd].flags = 1;
+        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_op_pt = (int32_t*)jump_table_dir;
+        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].inode = 0;
+        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_pos = 0;
+        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].flags = 1;
         break;
     /* The regular file.*/
     case 2:
-        file_descriptor_array[fd].file_op_pt = (int32_t*)jump_table_file;
-        file_descriptor_array[fd].inode = dentry.inode_num;
-        file_descriptor_array[fd].file_pos = 0;
-        file_descriptor_array[fd].flags = 1;
+        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_op_pt = (int32_t*)jump_table_file;
+        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].inode = dentry.inode_num;
+        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_pos = 0;
+        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].flags = 1;
         break;
     default:
         break;
     }
     /* Call the specific open operation.*/
-    pt = (int32_t (**)(const uint8_t*)) file_descriptor_array[fd].file_op_pt[0];
+    pt = (int32_t (**)(const uint8_t*)) PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_op_pt[0];
     (**pt)(filename);
     return fd;
 }
@@ -188,10 +188,10 @@ int32_t sys_close (int32_t fd)
     /* If fd corresponds to stdin and stdout, return -1.*/
     if (fd == 0 || fd == 1)
         return -1;
-    pt = (int32_t (**)(int32_t)) file_descriptor_array[fd].file_op_pt[2];
+    pt = (int32_t (**)(int32_t)) PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_op_pt[2];
     /* Call the specific close function.*/
     (**pt)(fd);
-    file_descriptor_array[fd].flags = 0;
+    PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].flags = 0;
     return 0;
 }
 
@@ -204,7 +204,9 @@ int32_t sys_read (int32_t fd, void* buf, int32_t nbytes)
 {
     int32_t bytes_read;
     int32_t (**pt)(int32_t, void* , int32_t);
-    pt = (int32_t (**)(int32_t, void* , int32_t)) file_descriptor_array[fd].file_op_pt[1];
+    if (PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].flags == 0)
+        return -1;
+    pt = (int32_t (**)(int32_t, void* , int32_t)) PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_op_pt[1];
     /* Call the specific read function.*/
     bytes_read = (**pt) (fd, buf, nbytes);
     return bytes_read;
@@ -217,18 +219,16 @@ int32_t sys_read (int32_t fd, void* buf, int32_t nbytes)
 /* Side effect: none.*/
 int32_t sys_write(int32_t fd, const void* buf, int32_t nbytes)
 {
+    int32_t bytes_written;
     int32_t (**pt)(int32_t, const void*, int32_t);
-    pt = (int32_t (**)(int32_t, const void*, int32_t)) file_descriptor_array[fd].file_op_pt[3];
-    (**pt) (fd, buf, nbytes);
-    return 0;
+    if (PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].flags == 0)
+        return -1;
+    pt = (int32_t (**)(int32_t, const void*, int32_t)) PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_op_pt[3];
+    bytes_written = (**pt) (fd, buf, nbytes);
+    return bytes_written;
 }
 
 int32_t sys_getargs (uint8_t* buf, int32_t nbytes)
 {
     return -1;
 }
-
-/*
-        iret                                                      \n\
-        RET_FROM_PROCESS:                                         \n\
-        movl %%eax, %4                                            \n\*/

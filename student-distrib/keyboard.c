@@ -242,4 +242,3 @@ void keyboard_handler(void) {
     send_eoi(KEYBOARD_IRQ);
     sti();
 }
-

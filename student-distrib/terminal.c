@@ -17,7 +17,7 @@ void clear_buffer(void) {
  * Inputs: void
  * Return Value: 0
  * Function: Initial the terminal */
-int32_t terminal_initial(void) {
+int32_t terminal_open(const uint8_t* filename) {
     clear();                        // clear the screen
     reset_cursor();                 // reset the cursor
     clear_buffer();                 // clear the buffer
@@ -77,3 +77,7 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes) {
     return nbytes;
 }
 
+int32_t (*read_terminal_pt) (int32_t, void*, int32_t) = terminal_read;
+int32_t (*open_terminal_pt) (const uint8_t*) = terminal_open;
+int32_t (*close_terminal_pt) (int32_t) = terminal_close;
+int32_t (*write_terminal_pt) (int32_t, const void*, int32_t) = terminal_write;

@@ -10,7 +10,7 @@
 #define MAX_BUFFER      128
 
 uint8_t enter;
-uint8_t line_buffer[MAX_BUFFER];
+volatile uint8_t line_buffer[MAX_BUFFER];
 int32_t buffer_index;
 
 extern void keyboard_initial(void);

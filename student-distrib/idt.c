@@ -155,4 +155,5 @@ void idt_initial(void) {
     idt[KEYBOARD_IDT].present = 1;
     idt[RTC_IDT].present = 1;
     idt[SYSTEM_IDT].present = 1;
+    idt[SYSTEM_IDT].dpl = 3;
 }

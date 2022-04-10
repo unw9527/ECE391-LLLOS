@@ -6,8 +6,8 @@
 #define KERNEL_STACK 2048
 #define NUM_PROCESS 6
 #define START_PCB 0x007F4000
-#define STACK_BASE 0x08000000
-#define USER_SPACE_ESP 0x08400000
+#define STACK_BASE 0x00800000
+#define USER_SPACE_ESP 0x08300000
 
 typedef struct thread_info
 {
