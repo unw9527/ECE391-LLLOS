@@ -5,6 +5,8 @@
 #define NUM_PAGE_ENTRY 1024
 #define BOUNDARY 4096
 #define SR 12
+#define PDE_VAL 0x08000000 >> 22
+#define PHYSICAL_FRAME_ID   2 // 2nd frame corresponds to 8MB
 
 typedef struct kb_4_directory_entry{
     struct{
@@ -72,6 +74,8 @@ general_page_entry_t page_table[NUM_PAGE_ENTRY] __attribute__((aligned (BOUNDARY
 /* Here defines some extern functions used by the paging.*/
 
 int page_init();
+int32_t swap_page(uint32_t process_ct);
+void flush_tlb();
 int en_pg(general_page_entry_t* pt);
 
 #endif

@@ -58,3 +58,44 @@ int page_init()
     en_pg(page_directory);
     return 0;
 }
+
+/*
+ * int32_t swap_page(uint32_t process_ct)
+ * input: the id of the current process
+ * output: 0 if success; -1 otherwise
+ * effect: map the virtual memory of the current process to physical memory
+ * side effect: none
+ */
+
+int32_t swap_page(uint32_t process_ct){
+    // enable paging at the 128MB position
+    page_directory[PDE_VAL].mb_4_dir.P = 1;
+    page_directory[PDE_VAL].mb_4_dir.U_S = 1;
+    page_directory[PDE_VAL].mb_4_dir.R_W = 1;
+    page_directory[PDE_VAL].mb_4_dir.PS = 1;
+    page_directory[PDE_VAL].mb_4_dir.G = 0;  // need to flush TLB
+    page_directory[PDE_VAL].mb_4_dir.Reserved = 0; // Need to set to 0
+    page_directory[PDE_VAL].mb_4_dir.PBA = PHYSICAL_FRAME_ID + process_ct; 
+    flush_tlb();
+    return 0;
+}
+
+
+/*
+ * void flush_tlb()
+ * input: none
+ * output: none
+ * effect: flush tlb (should be called every time cr3 is reloaded)
+ * side effect: clobbers eax
+ */
+void flush_tlb() {
+    asm volatile("         \n\
+    movl %%cr3, %%eax      \n\
+    movl %%eax, %%cr3      \n\
+    "
+    :
+    :
+    :"cc", "memory", "eax");
+}
+
+

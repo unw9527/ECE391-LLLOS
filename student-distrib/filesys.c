@@ -1,10 +1,10 @@
 #include "filesys.h"
 #include "lib.h"
+#include "process.h"
 
 int32_t type;
 int32_t file_size;
 block_t* cast_pt;
-file_descriptor_entry_t file_descriptor_array[DESP_NUM];
 
 /* int32_t read_dentry_by_name(const uint8_t*, dentry_t*);
  * Inputs: fname: The file name. dentry: The directory entry structure to be copied to.
@@ -131,6 +131,20 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t length
     }
 }
 
+/* int32_t get_length(dentry_t* dentry)
+ * Inputs: a pointer to a dentry struct
+ * Return Value: the length of file if success; -1 otherwise
+ * Side effect: none.
+ */
+int32_t get_length(dentry_t* dentry){
+    if (NULL == dentry) {
+        printf("Error: in get_length: expect a pointer to a dentry_t struct, but got a NULL pointer\n");
+        return -1;
+    }
+    return cast_pt[dentry->inode_num+1].inode.length;
+}
+
+
 /* int32_t read_file(int32_t fd, void* buf, int32_t nbytes);
  * Inputs: fd: The file descriptor. buf: The buffer to store the data. nbytes: The # bytes to read.
  * Return Value: Number of bytes read into the buffer if success. -1 if fail.
@@ -141,14 +155,14 @@ int32_t read_file(int32_t fd, void* buf, int32_t nbytes)
     int32_t bytes_read;
     uint32_t inode;
     uint32_t offset;
-    inode = file_descriptor_array[fd].inode;
-    offset = file_descriptor_array[fd].file_pos;
+    inode = PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].inode;
+    offset = PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_pos;
     /* Call read_data to read the data into the buffer.*/
     bytes_read = read_data(inode, offset, buf, nbytes);
     if (bytes_read == -1)
         return -1;
     /* Update the file position.*/
-    file_descriptor_array[fd].file_pos += bytes_read;
+    PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_pos += bytes_read;
     return bytes_read;
 }
 
@@ -163,7 +177,7 @@ int32_t read_dir(int32_t fd, void* buf, int32_t nbytes)
     int32_t length;
     dentry_t dentry;
     int8_t* file_name;
-    offset = file_descriptor_array[fd].file_pos;
+    offset = PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_pos;
     /* In this case, the index is out of the range of # directory entries.*/
     if (read_dentry_by_index(offset, &dentry) == -1)
         return 0;
@@ -174,7 +188,7 @@ int32_t read_dir(int32_t fd, void* buf, int32_t nbytes)
     /* Copy the file name into the buffer.*/
     strncpy((int8_t*)buf, file_name, FILENAME_LEN);
     /* Update the file position by 1.*/
-    file_descriptor_array[fd].file_pos ++;
+    PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_pos ++;
     type = dentry.filetype;
     file_size = cast_pt[dentry.inode_num+1].inode.length;
     return length;
@@ -238,6 +252,37 @@ int32_t write_dir (int32_t fd, const void* buf, int32_t nbytes)
 int32_t write_file (int32_t fd, const void* buf, int32_t nbytes)
 {
     return -1;
+}
+
+
+/*
+ * iint32_t file_loader(dentry_t* dentry)
+ * input: a pointer to dentry struct
+ * output: 0 if success; -1 otherwise
+ * effect: load the file to its virtual memory
+ * side effect: none
+ */
+int32_t file_loader(dentry_t* dentry)
+{
+    int32_t file_length;
+    int32_t i;
+    int32_t rest_length;
+    uint8_t* virtual_addr;
+    uint8_t file_data[HALF_BLOCK_SIZE];
+    virtual_addr = (uint8_t*) VIRTUAL_EXECUTE_START_ADDR;
+    if (NULL == dentry) {
+        printf("Error: in file_loader: expect a pointer to a dentry_t struct, but got a NULL pointer\n");
+        return -1;
+    }
+    file_length = get_length(dentry);
+    for (i = 0; (i+1) * HALF_BLOCK_SIZE < file_length; i++){
+        read_data(dentry->inode_num, i * HALF_BLOCK_SIZE, file_data, HALF_BLOCK_SIZE);
+        memcpy(&virtual_addr[HALF_BLOCK_SIZE*i], file_data, HALF_BLOCK_SIZE);
+    }
+    rest_length = file_length - i * HALF_BLOCK_SIZE;
+    read_data(dentry->inode_num, i * HALF_BLOCK_SIZE, file_data, rest_length);
+    memcpy(&virtual_addr[HALF_BLOCK_SIZE*i], file_data, rest_length);
+    return 0;
 }
 
 int32_t (*read_file_pt) (int32_t, void*, int32_t) = read_file;

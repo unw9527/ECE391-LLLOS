@@ -245,15 +245,7 @@ void launch_tests()
 	reset_cursor();
 	switch (test_counter){
 		case 0:
-			asm volatile ("                                               \n\
-        		movl $5, %%eax											  \n\
-				movl %0, %%ebx											  \n\
-				int $0x80											      \n\
-        		"                                                           \
-        	: /* no outputs */                                          	\
-        	: "g"((string))                                       			\
-        	: "eax", "%ebx", "memory", "cc"                                 \
-   		 	);
+			sys_execute((uint8_t*)"shell");
 			break;
 		default:
 			break;

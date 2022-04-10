@@ -99,7 +99,6 @@ int32_t RTC_write(int32_t fd, const void * buf, int32_t nbytes){
     if (RTC_RATE_1024 > rate || RTC_RATE_2 < rate) return -1;
     RTC_set_freq(rate);
     return 0;
-
 }
 
 
@@ -118,3 +117,7 @@ void RTC_set_freq(int32_t rate){
 
 }
 
+int32_t (*read_rtc_pt) (int32_t, void*, int32_t) = RTC_read;
+int32_t (*open_rtc_pt) (const uint8_t*) = RTC_open;
+int32_t (*close_rtc_pt) (int32_t) = RTC_close;
+int32_t (*write_rtc_pt) (int32_t, const void*, int32_t) = RTC_write;

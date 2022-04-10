@@ -10,6 +10,12 @@
  * task.  Negative returns from execute indicate that the desired program
  * could not be found.
  */ 
+
+extern int32_t jump_table_rtc[4];
+extern int32_t jump_table_file[4];
+extern int32_t jump_table_dir[4];
+extern int32_t jump_table_terminal[4];
+
 int32_t sys_halt (uint8_t status);
 int32_t sys_execute (const uint8_t* command);
 int32_t sys_read (int32_t fd, void* buf, int32_t nbytes);

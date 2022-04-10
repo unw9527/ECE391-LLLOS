@@ -1,7 +1,12 @@
-.globl jump_table_rtc, jump_table_file, jump_table_dir, system_call
+.globl jump_table_rtc, jump_table_file, jump_table_dir, jump_table_terminal, system_call
+
+.align 4
 
 jump_table_rtc:
-.align 4
+    .long open_rtc_pt
+    .long read_rtc_pt
+    .long close_rtc_pt
+    .long write_rtc_pt
 jump_table_file:
     .long open_file_pt
     .long read_file_pt
@@ -13,6 +18,13 @@ jump_table_dir:
     .long read_dir_pt
     .long close_dir_pt
     .long write_dir_pt
+
+jump_table_terminal:
+    .long open_terminal_pt
+    .long read_terminal_pt
+    .long close_terminal_pt
+    .long write_terminal_pt
+
 
 .text
 
@@ -41,6 +53,8 @@ system_call:
     jl fail
     cmpl $7, %eax
     jg fail
+    movw $0x18, %bx
+    movw %bx, %ds
     # Call the sub function through jump table.
     call *jump_table_syscall(, %eax, 4)
     jmp return_system_call
