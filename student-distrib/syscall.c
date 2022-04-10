@@ -36,10 +36,9 @@ int32_t sys_halt (uint8_t status)
     // !!! ebp of PCB
     asm volatile (
                  "mov %0, %%eax;"
-                 "mov %1, %%ebp;"
-                 "jmp RET_FROM_PROCESS;"
+                 "mov (%%ebp), %%ebp;"
                  :
-                 :"r"((uint32_t) status), "r"(PCB_array[NUM_PROCESS-1-process_counter].thread_info.ebp)
+                 :"r"((uint32_t) status)
                  :"%eax"
  	);
     return 0;
@@ -144,12 +143,12 @@ int32_t sys_execute (const uint8_t* command)
         movw %0, %%cx                                             \n\
         movw %%cx, %%ds                                           \n\
         iret                                                      \n\
-        RET_FROM_PROCESS:                                         \n\ 
+        RET_FROM_PROCESS:                                         \n\
         leave                                                     \n\
-        ret                                                       \n\             
+        ret                                                       \n\         
         "                                                           \
     : /* no output*/                                                \
-    : "g"((user_space_ss)), "g"((user_space_esp)), "g"((user_space_cs)), "g"((user_space_eip)) \
+    : "g"((user_space_ss)), "g"((user_space_esp)), "g"((user_space_cs)), "g"((user_space_eip))\
     : "memory", "%ecx"/* no register modification*/                 \
     );
     return 0; 

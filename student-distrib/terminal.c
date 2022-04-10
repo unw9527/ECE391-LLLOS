@@ -13,7 +13,7 @@ void clear_buffer(void) {
 }
 
 
-/* int32_t terminal_initial(void)
+/* int32_t terminal_open(void)
  * Inputs: void
  * Return Value: 0
  * Function: Initial the terminal */

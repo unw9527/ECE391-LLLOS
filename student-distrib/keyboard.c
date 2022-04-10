@@ -124,10 +124,13 @@ void echo(uint8_t ascii_value) {
     if (ascii_value == 0 || (ascii_value == BACKSPACE && buffer_index == 0))
         return;
     ascii = ascii_value;
-    if (((shift || (caps == 1)) && (ascii_value >= 0x61) && (ascii_value <= 0x7A)))
-        ascii = ascii_value - 0x20;
+    if ((ascii_value >= 0x61) && (ascii_value <= 0x7A)) {
+        if ((shift == 2? 1:shift) != caps)
+            ascii -= 0x20;
+    }
     else if (shift)
-        ascii = shift_ascii(ascii_value);
+            ascii = shift_ascii(ascii);
+
 
     putc(ascii);
     // determine whether the backspace is pressed
@@ -188,13 +191,23 @@ void keyboard_handler(void) {
         send_eoi(KEYBOARD_IRQ);
         return;
 
-    case 0x2A:          // shift pressed
-        shift = 1;
+    case 0x2A:          // left shift pressed
+        shift += 1;
         send_eoi(KEYBOARD_IRQ);
         return;
     
-    case 0xAA:          // shift released
-        shift = 0;
+    case 0xAA:          // left shift released
+        shift -= 1;
+        send_eoi(KEYBOARD_IRQ);
+        return;
+
+    case 0x36:          // right shift pressed
+        shift += 1;
+        send_eoi(KEYBOARD_IRQ);
+        return;
+    
+    case 0xB6:          // right shift released
+        shift -= 1;
         send_eoi(KEYBOARD_IRQ);
         return;
 
