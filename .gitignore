@@ -112,3 +112,6 @@ dkms.conf
 *.qcow
 source/
 
+./student-distrib/mp3.img
+./student-distrib/bootimg
+
