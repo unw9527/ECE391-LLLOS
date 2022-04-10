@@ -7,7 +7,7 @@
 extern void clear_buffer(void);
 
 // Initial the terminal
-extern int32_t terminal_initial(void);
+extern int32_t terminal_open(void);
 
 // Close the terminal
 extern int32_t terminal_close(int32_t fd);
