@@ -6,35 +6,46 @@
 #include "page.h"
 #include "x86_desc.h"
 
-/* int32_t open(const uint8_t* filename);
- * Inputs: filename: The name of the file.
- * Return Value: -1 if not success. 0 if success.
- * Function: Open the file and fill in the information about the file for further operation. */
-/* Side effect: none.*/
-
-int32_t sys_halt (uint8_t status)
-{
-    int i;
-    uint32_t ebp_val;
-    process_one_hot[process_counter] = 0;
+/* int32_t sys_halt (uint8_t status)
+ * Inputs: status -- the status of the halt process
+ * Return Value: 0
+ * Function: Halt the current process. If the current 
+ *           process is "shell", reboot the "shell"
+ * Side effect: none.
+ * 
+ */
+int32_t sys_halt (uint8_t status) {
+    int i;                                      /* Variable of the "for" loop.  */
+    uint32_t ebp_val;                           /* Store the ebp value of the parent process.  */
+    process_one_hot[process_counter] = 0;       /* Clear the assosiate process_one_hot entry.  */
     
+    /* Close the all the file descriptor (except for stdin and stdout).  */
     for (i = 2; i < DESP_NUM; i++) {
         if (PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[i].flags)
             sys_close(i);
+        /* Set the flags to 0.  */
         PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[i].flags = 0;
     }
 
+    /* Determine whether the current processor is shell     */
     if (PCB_array[NUM_PROCESS-1-process_counter].thread_info.parent_index == -1) {
         process_counter = -1;
-        sys_execute((uint8_t *) "shell");
+        sys_execute((uint8_t *) "shell");       // If the shell is close, reboot it
     }
+
     /* Restore parent paging */
     swap_page(PCB_array[NUM_PROCESS-1-process_counter].thread_info.parent_index);
+
+    /* Store the previous ebp value.    */
     ebp_val = PCB_array[NUM_PROCESS-1-process_counter].thread_info.ebp;
+
+    /* Update the process_counter.      */
     process_counter = PCB_array[NUM_PROCESS-1-process_counter].thread_info.parent_index;
-    // tss.esp0 = current pcb's esp
+
+    /* Restore the kernel stack pointer.    */
     tss.esp0 = STACK_BASE - 4 * KERNEL_STACK * process_counter - 4;
-    // !!! ebp of PCB
+
+    /* Restore the previous ebp.  */
     asm volatile (
                  "mov %0, %%eax;"
                  "mov %1, %%ebp;"
@@ -45,24 +56,27 @@ int32_t sys_halt (uint8_t status)
     return 0;
 }
 
-int32_t sys_execute (const uint8_t* command)
-{
-    int i;
-    int j;
-    uint8_t buf1[MAX_BUFFER];
-    uint8_t buf2[MAX_BUFFER];
+/* int32_t sys_execute (const uint8_t* command)
+ * Inputs: command -- space-separated command of execute
+ * Return Value: status
+ * Function: Execute the given process
+ * Side effect: none.
+ * 
+ */
+int32_t sys_execute (const uint8_t* command) {
+    int i, j;                           // Variable of the "for" loop. 
+    uint8_t buf1[MAX_BUFFER];           // Store the file name
+    uint8_t buf2[MAX_BUFFER];           // Store the file data
+
+    /* Store the file information   */
     dentry_t file_dentry;
     uint32_t inode_num;
     uint32_t entry_point = 0;
     int32_t prev_process_counter;
     uint16_t ss_val;
     uint32_t esp0_val;
-    uint32_t user_space_esp;
-    uint16_t user_space_ss;
-    uint16_t user_space_cs;
-    uint32_t user_space_eip;
-    int32_t return_val;
-    /* Step1. Obtain the file name and the arguments.*/
+    /* ----------------- Step1. Obtain the file name and the arguments ------------------*/
+
     /* buf1 contains the file name.*/
     for (i = 0; i < MAX_BUFFER; i++){
         if (command[i] == SPACE || command[i] == 0)
@@ -70,6 +84,7 @@ int32_t sys_execute (const uint8_t* command)
         buf1[i] = command[i];
     }
     buf1[i] = 0;
+
     /* This sequence of code is to store the argument into buf2*/
     if (command[i] == SPACE){
         for (j = 0; j < MAX_BUFFER; j++){
@@ -79,21 +94,26 @@ int32_t sys_execute (const uint8_t* command)
         }
         buf2[j] = 0;
     }
-    /* Step2. Check executable.*/
+
+    /* --------------------------- Step2. Check executable ----------------------------*/
+
     if (read_dentry_by_name(buf1, &file_dentry) == -1)
         return -1;
     inode_num = (uint32_t)file_dentry.inode_num;
+
     /* Now buf2 is used as the buffer to hold the read data.*/
     read_data(inode_num, 0, buf2, EXECUTE_LEN);
+
     /* If this is not an executable, return -1.*/
     if (buf2[0] != MAGIC1 || buf2[1] != MAGIC2 || buf2[2] != MAGIC3 || buf2[3] != MAGIC4)
         return -1;
-    /* Get the entrypoint.*/
-    for (i = 0; i <= 3; i++){
+
+    /* Get the entrypoint.  */
+    for (i = 0; i <= 3; i++) {
         entry_point = entry_point << 8;
-        entry_point |= buf2[HIGH_ADDR-i];
+        entry_point |= buf2[HIGH_ADDR - i];
     }
-    /* Step3. Swap the page.*/
+    /* --------------------------- Step3. Swap the page ----------------------------*/
     /* Check the free process index.*/
     for (i = 0; i <= 5; i++){
         if (process_one_hot[i] == 0){
@@ -103,15 +123,19 @@ int32_t sys_execute (const uint8_t* command)
             break;
         }
     }
+
     /* If no free process index, return -1.*/
     if (i == 6)
         return -1;
     swap_page(process_counter);
-    /* Step4. Load the executable into 0x08048000*/
+
+    /* --------------------------- Step4. Load the executable into 0x08048000 ----------------------------*/
     file_loader(&file_dentry);
-    /* Step5. Set up the PCB.*/
+
+    /* --------------------------- Step5. Set up the PCB ----------------------------*/
     set_up_PCB(process_counter, prev_process_counter);
-    /* Step6. Create the process and switch.*/
+
+    /* --------------------------- Step6. Create the process and switch ----------------------------*/
     /* Set the TSS's ss0 value.*/
     asm volatile ("                                               \n\
         movw %%ss, %0											  \n\
@@ -121,15 +145,12 @@ int32_t sys_execute (const uint8_t* command)
 	: "memory", "cc"                                                \
  	);
     tss.ss0 = ss_val;
+
     /* Set the esp0 value.*/
     esp0_val = STACK_BASE - 4 * KERNEL_STACK * process_counter - 4;
     tss.esp0 = esp0_val;
-    /* Get the value needed to push onto the stack.*/
-    user_space_esp = USER_SPACE_ESP;
-    /* espare already set.*/
-    user_space_eip = entry_point;
-    user_space_cs = USER_CS;
-    user_space_ss = USER_DS;
+
+    /* Modify the stack.    */
     asm volatile("                                                \n\
         pushw $0                                                  \n\
         pushw %0                                                  \n\
@@ -149,14 +170,18 @@ int32_t sys_execute (const uint8_t* command)
         ret                                                       \n\         
         "                                                           \
     : /* no output*/                                                \
-    : "g"((user_space_ss)), "g"((user_space_esp)), "g"((user_space_cs)), "g"((user_space_eip))\
+    : "g"((USER_DS)), "g"((USER_SPACE_ESP)), "g"((USER_CS)), "g"((entry_point))\
     : "memory", "%ecx"/* no register modification*/                 \
     );
     return 0; 
-
 }
 
 
+/* int32_t open(const uint8_t* filename);
+ * Inputs: filename: The name of the file.
+ * Return Value: -1 if not success. 0 if success.
+ * Function: Open the file and fill in the information about the file for further operation. */
+/* Side effect: none.*/
 int32_t sys_open (const uint8_t* filename)
 {
     int32_t fd;

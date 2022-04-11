@@ -66,7 +66,6 @@ int page_init()
  * effect: map the virtual memory of the current process to physical memory
  * side effect: none
  */
-
 int32_t swap_page(uint32_t process_ct){
     // enable paging at the 128MB position
     page_directory[PDE_VAL].mb_4_dir.P = 1;
