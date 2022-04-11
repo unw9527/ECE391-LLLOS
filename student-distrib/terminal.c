@@ -55,8 +55,9 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
         if (i < buffer_index)
             buf1[i] = line_buffer[i];
         line_buffer[i] = NULL;
+    buf1[buffer_index] = NEW_LINE;
     buffer_index = 0;   
-    return size;
+    return size + 1;
 }
 
 /* int32_t terminal_write(int32_t fd, void* buf, int32_t nbytes)
