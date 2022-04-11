@@ -15,7 +15,7 @@
 int32_t sys_halt (uint8_t status)
 {
     int i;
-
+    uint32_t ebp_val;
     process_one_hot[process_counter] = 0;
     
     for (i = 2; i < DESP_NUM; i++) {
@@ -30,15 +30,16 @@ int32_t sys_halt (uint8_t status)
     }
     /* Restore parent paging */
     swap_page(PCB_array[NUM_PROCESS-1-process_counter].thread_info.parent_index);
+    ebp_val = PCB_array[NUM_PROCESS-1-process_counter].thread_info.ebp;
     process_counter = PCB_array[NUM_PROCESS-1-process_counter].thread_info.parent_index;
     // tss.esp0 = current pcb's esp
     tss.esp0 = STACK_BASE - 4 * KERNEL_STACK * process_counter - 4;
     // !!! ebp of PCB
     asm volatile (
                  "mov %0, %%eax;"
-                 "mov (%%ebp), %%ebp;"
+                 "mov %1, %%ebp;"
                  :
-                 :"r"((uint32_t) status)
+                 :"r"((uint32_t) status), "r"(ebp_val)
                  :"%eax"
  	);
     return 0;
