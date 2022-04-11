@@ -60,6 +60,7 @@ int32_t sys_halt (uint8_t status) {
     asm volatile (
                  "mov %0, %%eax;"
                  "mov %1, %%ebp;"
+                 "jmp RET_FROM_PROCESS"
                  :
                  :"r"(extend_status), "r"(ebp_val)
                  :"%eax"
@@ -186,7 +187,7 @@ int32_t sys_execute (const uint8_t* command) {
     : "g"((USER_DS)), "g"((USER_SPACE_ESP)), "g"((USER_CS)), "g"((entry_point))\
     : "memory", "%ecx"/* no register modification*/                 \
     );
-    return 0; 
+    // return 0; 
 }
 
 
@@ -252,11 +253,13 @@ int32_t sys_close (int32_t fd)
 {
     int32_t (**pt)(int32_t);
     /* If fd corresponds to stdin and stdout, return -1.*/
-    if (fd == 0 || fd == 1)
+    if (fd == 0 || fd == 1 || fd < 0 || fd > 7)
         return -1;
     pt = (int32_t (**)(int32_t)) PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_op_pt[2];
     /* Call the specific close function.*/
     (**pt)(fd);
+    if (PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].flags == 0)
+        return -1;
     PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].flags = 0;
     return 0;
 }
@@ -270,6 +273,8 @@ int32_t sys_read (int32_t fd, void* buf, int32_t nbytes)
 {
     int32_t bytes_read;
     int32_t (**pt)(int32_t, void* , int32_t);
+    if (fd < 0 || fd > 7 || fd == 1)
+        return -1;
     if (PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].flags == 0)
         return -1;
     pt = (int32_t (**)(int32_t, void* , int32_t)) PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_op_pt[1];
@@ -287,6 +292,8 @@ int32_t sys_write(int32_t fd, const void* buf, int32_t nbytes)
 {
     int32_t bytes_written;
     int32_t (**pt)(int32_t, const void*, int32_t);
+    if (fd <= 0 || fd > 7)
+        return -1;
     if (PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].flags == 0)
         return -1;
     pt = (int32_t (**)(int32_t, const void*, int32_t)) PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_op_pt[3];

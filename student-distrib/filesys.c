@@ -20,6 +20,8 @@ int32_t read_dentry_by_name(const uint8_t* fname, dentry_t* dentry)
     uint32_t max_length;
     const int8_t* string;
     length = strlen((const int8_t*)fname);                           /* Get the length of the string.*/
+    if (length == 0)
+        return -1;
     for (i = 0; i < NUM_DIR_ENTRIES; i++){                           /* Go through all 63 directory entries. */
         string = (const int8_t*)&(cast_pt -> boot_block.direntries[i].filename);
         length_dir = strlen((const int8_t*)string);
