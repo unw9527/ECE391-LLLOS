@@ -44,7 +44,7 @@ int32_t sys_halt (uint8_t status) {
     process_counter = PCB_array[NUM_PROCESS-1-process_counter].thread_info.parent_index;
 
     /* Restore the kernel stack pointer.    */
-    tss.esp0 = STACK_BASE - 4 * KERNEL_STACK * process_counter - 4;
+    tss.esp0 = STACK_BASE - 4 * KERNEL_STACK * process_counter - 4;     // Make more space
 
     /* Check exception.*/
     if (exception_happen == 1){
@@ -129,7 +129,7 @@ int32_t sys_execute (const uint8_t* command) {
     }
     /* --------------------------- Step3. Swap the page ----------------------------*/
     /* Check the free process index.*/
-    for (i = 0; i <= 5; i++){
+    for (i = 0; i < NUM_PROCESS; i++){
         if (process_one_hot[i] == 0){
             process_one_hot[i] = 1;
             prev_process_counter = process_counter;
@@ -139,7 +139,7 @@ int32_t sys_execute (const uint8_t* command) {
     }
 
     /* If no free process index, return -1.*/
-    if (i == 6)
+    if (i == NUM_PROCESS)
         return -1;
     swap_page(process_counter);
 
@@ -161,7 +161,7 @@ int32_t sys_execute (const uint8_t* command) {
     tss.ss0 = ss_val;
 
     /* Set the esp0 value.*/
-    esp0_val = STACK_BASE - 4 * KERNEL_STACK * process_counter - 4;
+    esp0_val = STACK_BASE - 4 * KERNEL_STACK * process_counter - 4;     // Make more space
     tss.esp0 = esp0_val;
 
     /* Modify the stack.    */
