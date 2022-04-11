@@ -302,3 +302,42 @@ the DPL to 3. This causes the user program not able to call system call.
 
 Solution: Change dpl of system call idt entry to 3.
 
+<--------------------------------------------------------->
+                          BUG 4                      
+<--------------------------------------------------------->
+File: syscall.c
+
+Creator: Liu Peiyuan
+
+Description: Declare a very large variable inside the kernel stack and cause the info
+structure broken. Thus cause the file operation cannot work properly.
+
+Solution: Do not declare the variable but use the long global variable instead, even
+though the code looks a little bit complecated.
+
+<--------------------------------------------------------->
+                          BUG 5                      
+<--------------------------------------------------------->
+File: syscall.c
+
+Creator: Lin Ziyuan
+
+Description: In sys_execute, I tried to add the ebp into the PCB structure. However,
+we use a function call to implement the task. Thus the real ebp is the *ebp inside the
+function. Thus we cannot return to the correct point in system call linkage.
+
+Solution: movl (%ebp), variable instead of movl %ebp, variable.
+
+<--------------------------------------------------------->
+                          BUG 6                      
+<--------------------------------------------------------->
+File: syscall.c
+
+Creator: Liu Peiyuan
+
+Description: In sys_halt, first change the counter, than change the ebp value. This is
+bad because we actually want the ebp of the current PCB.
+
+Solution: Declare a varibale and assign it the value of the ebp of the current PCB.
+
+

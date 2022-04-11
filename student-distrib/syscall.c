@@ -4,6 +4,7 @@
 #include "terminal.h"
 #include "process.h"
 #include "page.h"
+#include "idt.h"
 #include "x86_desc.h"
 
 /* int32_t sys_halt (uint8_t status)
@@ -17,8 +18,8 @@
 int32_t sys_halt (uint8_t status) {
     int i;                                      /* Variable of the "for" loop.  */
     uint32_t ebp_val;                           /* Store the ebp value of the parent process.  */
+    uint32_t extend_status;
     process_one_hot[process_counter] = 0;       /* Clear the assosiate process_one_hot entry.  */
-    
     /* Close the all the file descriptor (except for stdin and stdout).  */
     for (i = 2; i < DESP_NUM; i++) {
         if (PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[i].flags)
@@ -45,12 +46,22 @@ int32_t sys_halt (uint8_t status) {
     /* Restore the kernel stack pointer.    */
     tss.esp0 = STACK_BASE - 4 * KERNEL_STACK * process_counter - 4;
 
+    /* Check exception.*/
+    if (exception_happen == 1){
+        exception_happen = 0;
+        extend_status = EXCEPTION_ERROR;
+    }
+
+    else{
+        extend_status = (uint32_t)status;
+    }
+
     /* Restore the previous ebp.  */
     asm volatile (
                  "mov %0, %%eax;"
                  "mov %1, %%ebp;"
                  :
-                 :"r"((uint32_t) status), "r"(ebp_val)
+                 :"r"(extend_status), "r"(ebp_val)
                  :"%eax"
  	);
     return 0;
@@ -67,7 +78,6 @@ int32_t sys_execute (const uint8_t* command) {
     int i, j;                           // Variable of the "for" loop. 
     uint8_t buf1[MAX_BUFFER];           // Store the file name
     uint8_t buf2[MAX_BUFFER];           // Store the file data
-
     /* Store the file information   */
     dentry_t file_dentry;
     uint32_t inode_num;
@@ -100,6 +110,9 @@ int32_t sys_execute (const uint8_t* command) {
     if (read_dentry_by_name(buf1, &file_dentry) == -1)
         return -1;
     inode_num = (uint32_t)file_dentry.inode_num;
+    for (i = 0; i <= 3; i++){
+        buf2[i] = 0;
+    }
 
     /* Now buf2 is used as the buffer to hold the read data.*/
     read_data(inode_num, 0, buf2, EXECUTE_LEN);
@@ -167,7 +180,7 @@ int32_t sys_execute (const uint8_t* command) {
         iret                                                      \n\
         RET_FROM_PROCESS:                                         \n\
         leave                                                     \n\
-        ret                                                       \n\         
+        ret                                                       \n\
         "                                                           \
     : /* no output*/                                                \
     : "g"((USER_DS)), "g"((USER_SPACE_ESP)), "g"((USER_CS)), "g"((entry_point))\

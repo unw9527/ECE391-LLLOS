@@ -9,6 +9,9 @@
 #define KEYBOARD_IDT            0x21        // The IDT entry of keyboard
 #define RTC_IDT                 0x28        // The IDT entry of RTC
 #define SYSTEM_IDT              0x80        // The IDT entry of system call
+#define EXCEPTION_ERROR          256
+
+extern int32_t exception_happen;
 
 /* The initial function of the IDT.         */
 void idt_initial(void);
