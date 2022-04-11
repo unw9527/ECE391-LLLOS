@@ -256,4 +256,49 @@ Description: The line buffer will hold more than 128 characters,
 Solution: Add the threshold of the line buffer array and decrement
           the buffer index by 1 when backspace is pressed.
 
+Checkpoint 3
+<--------------------------------------------------------->
+                          BUG 1                          
+<--------------------------------------------------------->
+File: syscall.c
+
+Time: 2022.4.9
+
+Creator: Lin Ziyuan
+
+Description: In sys_execute function, I forgot the little edian and I
+add a 0 padding in the wrong order. Then the iret cannot work properly
+because my ss and cs is strange.
+
+Solution: First pushw $0 and then pushw the segment register onto the
+stack.
+
+<--------------------------------------------------------->
+                          BUG 2                          
+<--------------------------------------------------------->
+File: syscall.c
+
+Time: 2022.4.9
+
+Creator: Lin Ziyuan
+
+Description: After sys_execute function, I find that I can enter the shell
+executable. However, I cannot process correctly. Then I add the breakpoint
+inside the user program. I found that I cannot enter the system linkage. This
+happens because I missed a 0 for the base address of the kernel stack. Then I
+set up the stack on a unmapped page. General protection error.
+
+Solution: Add the 0 before 8.
+
+<--------------------------------------------------------->
+                          BUG 3                          
+<--------------------------------------------------------->
+File: idt.c
+
+Creator: Lin Ziyuan
+
+Description: I added the system call entry in the IDT. However, I did not change
+the DPL to 3. This causes the user program not able to call system call.
+
+Solution: Change dpl of system call idt entry to 3.
 
