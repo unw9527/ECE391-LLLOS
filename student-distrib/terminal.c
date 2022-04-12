@@ -51,13 +51,13 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
         size = MAX_BUFFER;
     enter = 0;
 
-    for (i = 0; i < MAX_BUFFER; i++)        // store the line buffer to the buf
+    for (i = 0; i < MAX_BUFFER; i++){       // store the line buffer to the buf
         if (i < buffer_index)
             buf1[i] = line_buffer[i];
         line_buffer[i] = NULL;
-    buf1[buffer_index] = NEW_LINE;
-    buffer_index = 0;   
-    return size + 1;
+    }
+    buffer_index = 0;
+    return size;
 }
 
 /* int32_t terminal_write(int32_t fd, void* buf, int32_t nbytes)
@@ -74,7 +74,6 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes) {
     int i;
     for (i = 0; i < nbytes; i++)        // print the content of the buf
         putc(buf1[i]);
-    
     return nbytes;
 }
 

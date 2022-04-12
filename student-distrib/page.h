@@ -6,6 +6,8 @@
 #define BOUNDARY 4096
 #define SR 12
 #define PDE_VAL 0x08000000 >> 22
+#define USER_VIDEO_ADDR 0x08400000
+#define USER_VIDEO 0x08400000 >> 22    /* The video page directory entry.*/
 #define PHYSICAL_FRAME_ID   2 // 2nd frame corresponds to 8MB
 
 typedef struct kb_4_directory_entry{
@@ -68,8 +70,9 @@ typedef struct general_page_entry{
 } general_page_entry_t;
 
 /* Now, create page directory and page table.*/
-general_page_entry_t page_directory[NUM_PAGE_ENTRY] __attribute__((aligned (BOUNDARY)));
-general_page_entry_t page_table[NUM_PAGE_ENTRY] __attribute__((aligned (BOUNDARY)));
+extern general_page_entry_t page_directory[NUM_PAGE_ENTRY] __attribute__((aligned (BOUNDARY)));
+extern general_page_entry_t page_table[NUM_PAGE_ENTRY] __attribute__((aligned (BOUNDARY)));
+extern general_page_entry_t video_page_table[NUM_PAGE_ENTRY] __attribute__((aligned (BOUNDARY)));
 
 /* Here defines some extern functions used by the paging.*/
 
@@ -77,5 +80,6 @@ int page_init();
 int32_t swap_page(uint32_t process_ct);
 void flush_tlb();
 int en_pg(general_page_entry_t* pt);
+int32_t set_video_page();
 
 #endif

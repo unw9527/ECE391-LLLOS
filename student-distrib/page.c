@@ -7,6 +7,11 @@
  * Inputs: void
  * Return Value: none
  * Function: initialize the page */
+
+general_page_entry_t page_directory[NUM_PAGE_ENTRY] __attribute__((aligned (BOUNDARY)));
+general_page_entry_t page_table[NUM_PAGE_ENTRY] __attribute__((aligned (BOUNDARY)));
+general_page_entry_t video_page_table[NUM_PAGE_ENTRY] __attribute__((aligned (BOUNDARY)));
+
 int page_init()
 {
     int i;
@@ -76,6 +81,46 @@ int32_t swap_page(uint32_t process_ct){
     page_directory[PDE_VAL].mb_4_dir.Reserved = 0; // Need to set to 0
     page_directory[PDE_VAL].mb_4_dir.PBA = PHYSICAL_FRAME_ID + process_ct; 
     flush_tlb();
+    return 0;
+}
+
+/*
+ * int32_t set_video_page()
+ * input: none
+ * output: 0 if success; -1 otherwise
+ * effect: map a new page onto the vedio memory.
+ * side effect: Change the page direcotory and page.
+ */
+int32_t set_video_page()
+{
+    int i;
+    /* Set the page directory for video page table.*/
+    page_directory[USER_VIDEO].kb_4_dir.P = 1;
+    page_directory[USER_VIDEO].kb_4_dir.R_W = 1;
+    page_directory[USER_VIDEO].kb_4_dir.U_S = 1;
+    page_directory[USER_VIDEO].kb_4_dir.G = 0;
+    page_directory[USER_VIDEO].kb_4_dir.Reserved = 0;
+    /* The virtual address is just the physical address for kernel.*/
+    page_directory[USER_VIDEO].kb_4_dir.PTBA = (uint32_t)video_page_table >> SR;
+    /* Set the page table for video memory.*/
+    for (i = 0; i < NUM_PAGE_ENTRY; i++){
+        video_page_table[i].kb_4_page.P = 0;
+        video_page_table[i].kb_4_page.R_W = 1;
+        video_page_table[i].kb_4_page.U_S = 0;
+        video_page_table[i].kb_4_page.PWT = 0;
+        video_page_table[i].kb_4_page.PCD = 0;
+        video_page_table[i].kb_4_page.A = 0;
+        video_page_table[i].kb_4_page.D = 0;
+        video_page_table[i].kb_4_page.PAT = 0;
+        video_page_table[i].kb_4_page.G = 0;
+        video_page_table[i].kb_4_page.Avail = 0;
+        video_page_table[i].kb_4_page.PBA = i;
+    }
+    /* Map the 0 entry to the fixed virtual address.*/
+    video_page_table[0].kb_4_page.P = 1;
+    video_page_table[0].kb_4_page.U_S = 1;
+    /* Note that VIDEO % BOUNDARY = 0.*/
+    video_page_table[0].kb_4_page.PBA = VIDEO / BOUNDARY;
     return 0;
 }
 

@@ -30,11 +30,7 @@ jump_table_terminal:
 
 jump_table_syscall:
     # Use a padding.
-    .long 0, sys_halt, sys_execute, sys_read, sys_write, sys_open, sys_close, sys_getargs
-    # These 3 will be written in cp4.
-    # sys_vidmap,
-    # sys_set_handler,
-    # sys_sigreturn
+    .long 0, sys_halt, sys_execute, sys_read, sys_write, sys_open, sys_close, sys_getargs, sys_vidmap, sys_set_handler, sys_sigreturn
 
 system_call:
     # Save all the registers in the correct order.
@@ -51,7 +47,7 @@ system_call:
     # Check whether the system call number is valid.
     cmpl $1, %eax
     jl fail
-    cmpl $7, %eax
+    cmpl $10, %eax
     jg fail
     movw $0x18, %bx
     movw %bx, %ds

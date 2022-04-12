@@ -78,7 +78,8 @@ int32_t sys_halt (uint8_t status) {
 int32_t sys_execute (const uint8_t* command) {
     int i, j;                           // Variable of the "for" loop. 
     uint8_t buf1[MAX_BUFFER];           // Store the file name
-    uint8_t buf2[MAX_BUFFER];           // Store the file data
+    uint8_t buf2[EXECUTE_LEN+1];        // Store the file data
+    uint8_t buf3[MAX_BUFFER];           // Store arguments.
     /* Store the file information   */
     dentry_t file_dentry;
     uint32_t inode_num;
@@ -94,16 +95,23 @@ int32_t sys_execute (const uint8_t* command) {
             break;
         buf1[i] = command[i];
     }
-    buf1[i] = 0;
+    if (i < MAX_BUFFER)
+        buf1[i] = 0;
 
-    /* This sequence of code is to store the argument into buf2*/
+    /* This sequence of code is to store the argument into buf3.*/
     if (command[i] == SPACE){
         for (j = 0; j < MAX_BUFFER; j++){
             if (command[i+j+1] == 0)
                 break;
-            buf2[j] = command[i+j+1];
+            buf3[j] = command[i+j+1];
         }
-        buf2[j] = 0;
+        if (j < MAX_BUFFER)
+            buf3[j] = 0;
+    }
+    /* Check whether terminated with NULL.*/
+    else{
+        if (command[i] == 0)
+            buf3[0] = 0;
     }
 
     /* --------------------------- Step2. Check executable ----------------------------*/
@@ -147,7 +155,7 @@ int32_t sys_execute (const uint8_t* command) {
     file_loader(&file_dentry);
 
     /* --------------------------- Step5. Set up the PCB ----------------------------*/
-    set_up_PCB(process_counter, prev_process_counter);
+    set_up_PCB(process_counter, prev_process_counter, buf3);
 
     /* --------------------------- Step6. Create the process and switch ----------------------------*/
     /* Set the TSS's ss0 value.*/
@@ -301,7 +309,46 @@ int32_t sys_write(int32_t fd, const void* buf, int32_t nbytes)
     return bytes_written;
 }
 
+/* int32_t sys_getargs (uint8_t* buf, int32_t nbytes)
+ * Inputs: buf: The buffer to write. nbytes: #bytes to write.
+ * Return Value: 0 if success, -1 otherwise.
+ * Function: Copy the argument from kernel to user. */
+/* Side effect: none.*/
 int32_t sys_getargs (uint8_t* buf, int32_t nbytes)
+{
+    uint32_t length;
+    length = strlen((const int8_t*)PCB_array[NUM_PROCESS-1-process_counter].thread_info.arg_buf);
+    /* If the argument does not fit into buffer or null pointer or null string, return -1.*/
+    if (buf == 0 || length == 128 || PCB_array[NUM_PROCESS-1-process_counter].thread_info.arg_buf[0] == 0)
+        return -1;
+    strncpy((int8_t*)buf, (int8_t*)PCB_array[NUM_PROCESS-1-process_counter].thread_info.arg_buf, nbytes);
+    return 0;
+}
+
+/* int32_t sys_getargs sys_vidmap(uint8_t** screen_start)
+ * Inputs: screen_start: The address of the memory pointer.
+ * Return Value: 0 if success, -1 otherwise.
+ * Function: Map a virtual address to vedio memory and return the virtual address.*/
+/* Side effect: Change the pages.*/
+int32_t sys_vidmap(uint8_t** screen_start)
+{
+    /* Check for Null pointer.*/
+    if ((uint32_t)screen_start < PROCESS_START || (uint32_t)screen_start >= PROCESS_END)
+        return -1;
+    /* Create a page table for the user-level video memory.*/
+    set_video_page();
+    /* Set the screen start.*/
+    *screen_start = (uint8_t*) USER_VIDEO_ADDR;
+    return 0;
+}
+
+int32_t sys_set_handler (int32_t signum, void* handler)
 {
     return -1;
 }
+
+int32_t sys_sigreturn (void)
+{
+    return -1;
+}
+
