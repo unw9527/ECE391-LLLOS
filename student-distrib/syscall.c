@@ -187,7 +187,7 @@ int32_t sys_execute (const uint8_t* command) {
     : "g"((USER_DS)), "g"((USER_SPACE_ESP)), "g"((USER_CS)), "g"((entry_point))\
     : "memory", "%ecx"/* no register modification*/                 \
     );
-    // return 0; 
+    return 0; 
 }
 
 
