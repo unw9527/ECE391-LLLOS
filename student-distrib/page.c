@@ -57,8 +57,14 @@ int page_init()
         page_table[i].kb_4_page.PBA = i;                             /* The address of the pages, set to i to avoid further modification.*/
     }
     /* Then we change the page entries corresponds to video memory.*/
-    page_table[VIDEO/BOUNDARY].kb_4_page.P = 1;
-    page_table[VIDEO/BOUNDARY].kb_4_page.R_W = 1;
+    page_table[VIDEO/BOUNDARY + 0].kb_4_page.P = 1;
+    page_table[VIDEO/BOUNDARY + 0].kb_4_page.R_W = 1;
+    page_table[VIDEO/BOUNDARY + 1].kb_4_page.P = 1;
+    page_table[VIDEO/BOUNDARY + 1].kb_4_page.R_W = 1;
+    page_table[VIDEO/BOUNDARY + 2].kb_4_page.P = 1;
+    page_table[VIDEO/BOUNDARY + 2].kb_4_page.R_W = 1;
+    page_table[VIDEO/BOUNDARY + 3].kb_4_page.P = 1;
+    page_table[VIDEO/BOUNDARY + 3].kb_4_page.R_W = 1;
     /* Step3. Call the enable_page to en_pg to enable the paging.*/
     en_pg(page_directory);
     return 0;
@@ -122,6 +128,15 @@ int32_t set_video_page()
     /* Note that VIDEO % BOUNDARY = 0.*/
     video_page_table[0].kb_4_page.PBA = VIDEO / BOUNDARY;
     return 0;
+}
+
+void restore_vid_mem(void){
+    page_table[VIDEO / BOUNDARY].kb_4_page.PBA = (uint32_t)(VIDEO / BOUNDARY);
+    page_table[VIDEO / BOUNDARY].kb_4_page.U_S = 1;
+    page_table[VIDEO / BOUNDARY].kb_4_page.R_W = 1;
+    page_table[VIDEO / BOUNDARY].kb_4_page.P = 1;
+    flush_tlb();
+    return;
 }
 
 

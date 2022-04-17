@@ -21,7 +21,6 @@ void terminal_init(void) {
     reset_cursor();
     clear_buffer();
     curr_terminal = 0;
-    curr_terminal = 0;
     int i;
 	for (i = 0; i < MAX_TERMINAL; i++) {
          terminal[i].terminal_x = 0;
@@ -29,7 +28,9 @@ void terminal_init(void) {
          terminal[i].buffer_index = 0;
          terminal[i].terminal_prog_count = 0;
 	}
-
+    terminal[0].vid_mem = 0xB9000;
+    terminal[1].vid_mem = 0xBA000;
+    terminal[2].vid_mem = 0xBB000;
 	return;
 }
 
@@ -110,9 +111,13 @@ void switch_terminal(int32_t term_id)
 
     if (term_id == prev_terminal)
         return;
-    clear();
 
     curr_terminal = term_id;
+    restore_vid_mem();
+
+    memcpy((void*) terminal[prev_terminal].vid_mem, (const void*)VIDEO, 4096);
+
+    memcpy((void*)VIDEO, (const void*) terminal[curr_terminal].vid_mem, 4096);    
     
     if (terminal[curr_terminal].terminal_prog_count == 0) {
         sys_execute((uint8_t*)"shell");

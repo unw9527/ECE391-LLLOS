@@ -12,6 +12,8 @@
 #include "rtc.h"
 #include "keyboard.h"
 #include "filesys.h"
+#include "terminal.h"
+
 
 #define RUN_TESTS
 
