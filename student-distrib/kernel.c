@@ -144,6 +144,8 @@ void entry(unsigned long magic, unsigned long addr) {
     /* Init the paging.*/
     page_init();
 
+
+    terminal_init();
     /* Init the PIC */
     i8259_init();
 

@@ -9,6 +9,10 @@
 #define SPACE           0x20
 #define MAX_BUFFER      128
 
+#define F1 0x3B
+#define F2 0x3C
+#define F3 0x3D
+
 uint8_t enter;
 volatile uint8_t line_buffer[MAX_BUFFER];
 int32_t buffer_index;

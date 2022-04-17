@@ -19,6 +19,10 @@ int32_t sys_halt (uint8_t status) {
     int i;                                      /* Variable of the "for" loop.  */
     uint32_t ebp_val;                           /* Store the ebp value of the parent process.  */
     uint32_t extend_status;
+    if (terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1] != process_counter)
+        return 0;
+
+    terminal[curr_terminal].terminal_prog_count--;
     process_one_hot[process_counter] = 0;       /* Clear the assosiate process_one_hot entry.  */
     /* Close the all the file descriptor (except for stdin and stdout).  */
     for (i = 2; i < DESP_NUM; i++) {
@@ -29,19 +33,19 @@ int32_t sys_halt (uint8_t status) {
     }
 
     /* Determine whether the current processor is shell     */
-    if (PCB_array[NUM_PROCESS-1-process_counter].thread_info.parent_index == -1) {
+    if (terminal[curr_terminal].terminal_prog_count == 0) {
         process_counter = -1;
         sys_execute((uint8_t *) "shell");       // If the shell is close, reboot it
     }
 
     /* Restore parent paging */
-    swap_page(PCB_array[NUM_PROCESS-1-process_counter].thread_info.parent_index);
+    swap_page(terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1]);
 
     /* Store the previous ebp value.    */
     ebp_val = PCB_array[NUM_PROCESS-1-process_counter].thread_info.ebp;
 
     /* Update the process_counter.      */
-    process_counter = PCB_array[NUM_PROCESS-1-process_counter].thread_info.parent_index;
+    process_counter = terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1];
 
     /* Restore the kernel stack pointer.    */
     tss.esp0 = STACK_BASE - 4 * KERNEL_STACK * process_counter - 4;     // Make more space
@@ -149,13 +153,17 @@ int32_t sys_execute (const uint8_t* command) {
     /* If no free process index, return -1.*/
     if (i == NUM_PROCESS)
         return -1;
+
+    terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count] = process_counter;
+    terminal[curr_terminal].terminal_prog_count += 1;
+
     swap_page(process_counter);
 
     /* --------------------------- Step4. Load the executable into 0x08048000 ----------------------------*/
     file_loader(&file_dentry);
 
     /* --------------------------- Step5. Set up the PCB ----------------------------*/
-    set_up_PCB(process_counter, prev_process_counter, buf3);
+    set_up_PCB(process_counter, prev_process_counter, buf3, entry_point);
 
     /* --------------------------- Step6. Create the process and switch ----------------------------*/
     /* Set the TSS's ss0 value.*/
@@ -209,6 +217,10 @@ int32_t sys_open (const uint8_t* filename)
     int32_t fd;
     int32_t (**pt)(const uint8_t*);
     dentry_t dentry;
+
+    if (terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1] != process_counter)
+        return -1;
+
     /* If the file does not exists, return -1.*/
     if (read_dentry_by_name(filename, &dentry) == -1)
         return -1;
@@ -260,6 +272,10 @@ int32_t sys_open (const uint8_t* filename)
 int32_t sys_close (int32_t fd)
 {
     int32_t (**pt)(int32_t);
+
+    if (terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1] != process_counter)
+        return -1;
+
     /* If fd corresponds to stdin and stdout, return -1.*/
     if (fd == 0 || fd == 1 || fd < 0 || fd > 7)
         return -1;
@@ -281,6 +297,10 @@ int32_t sys_read (int32_t fd, void* buf, int32_t nbytes)
 {
     int32_t bytes_read;
     int32_t (**pt)(int32_t, void* , int32_t);
+
+    if (terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1] != process_counter)
+        return -1;
+
     if (fd < 0 || fd > 7 || fd == 1)
         return -1;
     if (PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].flags == 0)
@@ -301,6 +321,9 @@ int32_t sys_write(int32_t fd, const void* buf, int32_t nbytes)
     int32_t bytes_written;
     int32_t (**pt)(int32_t, const void*, int32_t);
     if (fd <= 0 || fd > 7)
+        return -1;
+
+    if (terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1] != process_counter)
         return -1;
     if (PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].flags == 0)
         return -1;

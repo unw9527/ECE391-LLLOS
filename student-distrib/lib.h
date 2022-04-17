@@ -13,7 +13,7 @@
 #include "types.h"
 
 int32_t printf(int8_t *format, ...);
-void putc(uint8_t c);
+void putc(uint8_t c, int32_t curr_terminal);
 int32_t puts(int8_t *s);
 int8_t *itoa(uint32_t value, int8_t* buf, int32_t radix);
 int8_t *strrev(int8_t* s);
@@ -22,7 +22,7 @@ void clear(void);
 void test_interrupts(void);
 
 void reset_cursor(void);
-void move_cursor(void);
+void move_cursor(int32_t curr_terminal);
 void vertical_scroll(void);
 
 void* memset(void* s, int32_t c, uint32_t n);

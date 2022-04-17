@@ -2,6 +2,7 @@
 #include "i8259.h"
 #include "keyboard.h"
 #include "tests.h"
+#include "terminal.h"
 
 // the key flag
 uint8_t caps;
@@ -121,7 +122,7 @@ uint8_t shift_ascii(uint8_t ascii_value) {
 
 void echo(uint8_t ascii_value) {
     uint8_t ascii;
-    if (ascii_value == 0 || (ascii_value == BACKSPACE && buffer_index == 0))
+    if (ascii_value == 0 || (ascii_value == BACKSPACE && terminal[curr_terminal].buffer_index == 0))
         return;
     ascii = ascii_value;
     if ((ascii_value >= 0x61) && (ascii_value <= 0x7A)) {
@@ -132,25 +133,25 @@ void echo(uint8_t ascii_value) {
             ascii = shift_ascii(ascii);
 
 
-    putc(ascii);
+    putc(ascii, curr_terminal);
     // determine whether the backspace is pressed
     if (ascii == BACKSPACE) {
-        if (buffer_index > 0) {                                 // decrement the line buffer
-            if (buffer_index <= MAX_BUFFER)
-                line_buffer[buffer_index - 1] = NEW_LINE;
-            buffer_index--;
+        if (terminal[curr_terminal].buffer_index > 0) {                                 // decrement the line buffer
+            if (terminal[curr_terminal].buffer_index <= MAX_BUFFER)
+                terminal[curr_terminal].line_buffer[terminal[curr_terminal].buffer_index - 1] = NEW_LINE;
+            terminal[curr_terminal].buffer_index--;
         }
     }
     else {
-        if (buffer_index < MAX_BUFFER - 1) {                    // increment the buffer_index and store the line buffer
-            line_buffer[buffer_index] = ascii;
-            line_buffer[buffer_index + 1] = NEW_LINE;
-            buffer_index++;
+        if (terminal[curr_terminal].buffer_index < MAX_BUFFER - 1) {                    // increment the buffer_index and store the line buffer
+            terminal[curr_terminal].line_buffer[terminal[curr_terminal].buffer_index] = ascii;
+            terminal[curr_terminal].line_buffer[terminal[curr_terminal].buffer_index + 1] = NEW_LINE;
+            terminal[curr_terminal].buffer_index++;
         }
         else {
-            buffer_index++;
+            terminal[curr_terminal].buffer_index++;
             if (enter) {
-                buffer_index = 0;
+                terminal[curr_terminal].buffer_index = 0;
                 enter = 0;
             }
         }
@@ -212,17 +213,55 @@ void keyboard_handler(void) {
         return;
 
     case 0x1C:          // Enter pressed
-        putc('\n');
+        putc('\n', curr_terminal);
         enter = 1;
         send_eoi(KEYBOARD_IRQ);
         return;
     case 0x9C:         // Enter released
         send_eoi(KEYBOARD_IRQ);
         return;
+
+    case 0x38:
+        alt = 1;
+        send_eoi(KEYBOARD_IRQ);
+        return;
+    case 0xB8:
+        alt = 0;
+        send_eoi(KEYBOARD_IRQ);
+        return;
     default:
         ascii_value = key_to_ascii(scan_code);
     }
     
+
+    if(alt && !shift) {
+        switch(scan_code)
+        {
+            case F1:
+                enter = 1;
+                send_eoi(KEYBOARD_IRQ);
+                switch_terminal(0);
+                return;
+
+            case F2:
+                enter = 1;
+                send_eoi(KEYBOARD_IRQ);
+                switch_terminal(1);
+                return;
+
+            case F3:
+                enter = 1;
+                send_eoi(KEYBOARD_IRQ);
+                switch_terminal(2);
+                return;
+
+            default:
+                send_eoi(KEYBOARD_IRQ);
+                return;
+        }
+
+    }
+
     /* ctrl + l */
     if (ctrl & (ascii_value == 0x6C)) {
         send_eoi(KEYBOARD_IRQ);
