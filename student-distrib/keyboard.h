@@ -8,6 +8,8 @@
 #define NEW_LINE        0x0A
 #define SPACE           0x20
 #define MAX_BUFFER      128
+#define MAX_WRITE       8192
+
 
 uint8_t enter;
 volatile uint8_t line_buffer[MAX_BUFFER];

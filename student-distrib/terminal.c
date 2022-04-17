@@ -69,7 +69,7 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
 int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes) {
     int8_t* buf1 = (int8_t *)buf;
 
-    if ((nbytes > MAX_BUFFER - 1) || (NULL == buf1))
+    if ((nbytes > MAX_WRITE) || (NULL == buf1))
         return -1;
     int i;
     for (i = 0; i < nbytes; i++)        // print the content of the buf
