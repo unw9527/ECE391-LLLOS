@@ -6,6 +6,7 @@
 #include "types.h"
 
 #define EXCEPTION_NUM           20          // The number of the exception
+#define PIT_IDT                 0x20        // The IDT entry of PIT
 #define KEYBOARD_IDT            0x21        // The IDT entry of keyboard
 #define RTC_IDT                 0x28        // The IDT entry of RTC
 #define SYSTEM_IDT              0x80        // The IDT entry of system call
@@ -51,5 +52,8 @@ void KEYBOARD_INT(void);
 
 /* The initial function of RTC.         */
 void RTC_INT(void);
+
+/* The initial function of PIT.         */
+void PIT_INT(void);
 
 #endif

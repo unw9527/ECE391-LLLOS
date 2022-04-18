@@ -13,6 +13,7 @@
 #include "keyboard.h"
 #include "filesys.h"
 #include "terminal.h"
+#include "scheduling.h"
 
 
 #define RUN_TESTS
@@ -152,6 +153,9 @@ void entry(unsigned long magic, unsigned long addr) {
     i8259_init();
 
     keyboard_initial();
+
+    // Init PIT
+    PIT_init();
 
     /* Init the RTC */
     RTC_init();

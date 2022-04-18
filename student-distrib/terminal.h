@@ -40,7 +40,7 @@ typedef struct terminal {
 } terminal_t;
 
 terminal_t  terminal[MAX_TERMINAL];
-int32_t     curr_terminal;
+int32_t     curr_terminal; // the terminal that is being displayed
 int32_t     total_prog_count;  
 #endif
 

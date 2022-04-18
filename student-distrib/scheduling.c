@@ -5,29 +5,47 @@
 #include "lib.h"
 #include "terminal.h"
 
+int32_t running_term = 0;
+
 /*
  * void pit_init(int hz)
- * Input: frequency
+ * Input: none
  * Return Value: none
  * Effect: setup the PIT
  */
-void pit_init(int hz)
+void PIT_init()
 {
-    int divisor = 1193180 / hz;   /* Calculate our divisor */
-    outb(0x36, 0x43);             /* Set our command byte 0x36 */
-    outb(divisor & 0xFF, 0x40);   /* Set low byte of divisor */
-    outb(divisor >> 8, 0x40);     /* Set high byte of divisor */
+    outb(RES_BYTE, COMMAND_REG);          /* Set our command byte 0x36 */
+    outb(DIVISOR & 0xFF, CHANNEL_0_DP);   /* Set low byte of divisor */
+    outb(DIVISOR >> 8, CHANNEL_0_DP);     /* Set high byte of divisor */
 }
 
 /*
- * void switch_process()
+ * void PIT_handler()
  * Input: none
  * Return Value: none
  * Effect: switch to different processes to execute for a slice of time
  */
-void switch_process(){
-    int next_term = (curr_terminal + 1) % MAX_TERMINAL;
+void PIT_handler(){
+    int32_t next_term = (running_term + 1) % MAX_TERMINAL;
+    int32_t display_pid = terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1]; // curr_pid refers to the terminal that is displayed
+    int32_t next_pid;
+    if (0 == terminal[next_term].terminal_prog_count){return;} // if no process is running on the next terminal, then do not switch
+    next_pid = terminal[next_term].prog_array[terminal[next_term].terminal_prog_count - 1];
+    disable_irq(KEYBOARD_IRQ);
 
+    if (next_pid == display_pid){
+        enable_irq(KEYBOARD_IRQ);
+        // restore_vid_mem();
+        // memcpy((void*) terminal[curr_terminal].vid_mem, (const void*)VIDEO, 4096);
+    }
+    else{
+        restore_vid_mem();
+        memcpy((void*)VIDEO, (const void*) terminal[next_term].vid_mem, 4096); 
+    }
+
+    running_term = next_term;
+    send_eoi(0); // 0 is the IRQ number of PIT
 }
 
 

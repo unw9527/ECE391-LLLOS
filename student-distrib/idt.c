@@ -8,6 +8,7 @@
 #include "i8259.h"
 #include "keyboard.h"
 #include "rtc.h"
+#include "scheduling.h"
 #include "syscall.h"
 
 int32_t exception_happen;
@@ -146,6 +147,9 @@ void interrupt_handler(uint32_t num)
 {
     switch (num)
     {
+        case 0:
+            PIT_handler();
+            break;
         case 1:
             keyboard_handler();
             break;
@@ -188,6 +192,7 @@ void idt_initial(void) {
     SET_IDT_ENTRY(idt[KEYBOARD_IDT], KEYBOARD_INT);
     SET_IDT_ENTRY(idt[RTC_IDT], RTC_INT);
     SET_IDT_ENTRY(idt[SYSTEM_IDT], system_call);
+    SET_IDT_ENTRY(idt[PIT_IDT], PIT_INT);
 
     for (i = 0; i < EXCEPTION_NUM; i++) {                            /* We first set all the exceptions to be present.*/
         idt[i].seg_selector = KERNEL_CS;
@@ -215,4 +220,6 @@ void idt_initial(void) {
     idt[RTC_IDT].present = 1;
     idt[SYSTEM_IDT].present = 1;
     idt[SYSTEM_IDT].dpl = 3;
+    idt[PIT_IDT].reserved3 = 0; // change from TRAP to INTR
+    idt[PIT_IDT].present = 1;
 }
