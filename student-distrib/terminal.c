@@ -28,9 +28,9 @@ void terminal_init(void) {
          terminal[i].buffer_index = 0;
          terminal[i].terminal_prog_count = 0;
 	}
-    terminal[0].vid_mem = 0xB9000;
-    terminal[1].vid_mem = 0xBA000;
-    terminal[2].vid_mem = 0xBB000;
+    terminal[0].vid_mem = TERM_1_PHYS_ADDR;
+    terminal[1].vid_mem = TERM_2_PHYS_ADDR;
+    terminal[2].vid_mem = TERM_3_PHYS_ADDR;
 	return;
 }
 
@@ -92,6 +92,8 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes) {
     int8_t* buf1 = (int8_t *)buf;
     sti();
     if ((nbytes > MAX_BUFFER - 1) || (NULL == buf1))
+
+    if ((nbytes > MAX_WRITE) || (NULL == buf1))
         return -1;
     int i;
     for (i = 0; i < nbytes; i++)        // print the content of the buf

@@ -341,3 +341,20 @@ bad because we actually want the ebp of the current PCB.
 Solution: Declare a varibale and assign it the value of the ebp of the current PCB.
 
 
+Checkpoint 4
+<--------------------------------------------------------->
+                          BUG 1                          
+<--------------------------------------------------------->
+File: terminal.c
+
+Time: 2022.4.16
+
+Creator: Liu Peiyuan
+
+Description: When I was testing the "cat" system call, it worked
+for cat created.txt, but failed for any other file. It must be
+something wrong with the sys_getargs or sys_write (terminal write).
+
+Solution: I found that the terminal_write limit the output size into 
+128  (the same as the input buffer), which is wrong. So I increased the 
+output size and it worked for all other files.

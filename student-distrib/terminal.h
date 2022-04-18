@@ -5,7 +5,10 @@
 #include "keyboard.h"
 #include "process.h"
 
-#define MAX_TERMINAL 3
+#define MAX_TERMINAL        3
+#define TERM_1_PHYS_ADDR    0xB9000
+#define TERM_2_PHYS_ADDR    0xBA000
+#define TERM_3_PHYS_ADDR    0xBB000
 
 extern void clear_buffer(void);
 

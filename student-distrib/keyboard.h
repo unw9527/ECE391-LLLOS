@@ -8,6 +8,8 @@
 #define NEW_LINE        0x0A
 #define SPACE           0x20
 #define MAX_BUFFER      128
+#define MAX_WRITE       8192
+
 
 #define F1 0x3B
 #define F2 0x3C
