@@ -1,5 +1,9 @@
 .globl en_pg
 
+# enable the page
+# Input: None
+# Return Value: 0
+# Function: Enable paging
 en_pg:
     pushl %ebp
     movl %esp, %ebp

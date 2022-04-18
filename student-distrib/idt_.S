@@ -5,6 +5,8 @@
 .globl ALIGNMENT_CHECK_EXCEPTION, MACHINE_CHECK_EXCEPTION, FLOATING_POINT_EXCEPTION
 .globl KEYBOARD_INT, RTC_INT
 
+
+# The exception jump table
 DEVIDE_ERROR_EXCEPTION:
     cli
     pushl $0                                                          # Push the EXCP value onto the stack.
@@ -85,8 +87,7 @@ FLOATING_POINT_EXCEPTION:
 
 
 
-
-
+# The interrupt jump table
 KEYBOARD_INT:
     sti
     pushl $0xFFFFFFFE                                                 # Push the opposite value to the stack.
@@ -96,6 +97,8 @@ RTC_INT:
     pushl $0xFFFFFFF7
     jmp COMMON_INT
 
+
+# Exception handler
 COMMON_EXCP:                                                         # This is the common exception code.
     pushl %eax
     movl 4(%esp), %eax                                               # Let eax stores the value of INT vector.
@@ -111,6 +114,7 @@ COMMON_EXCP:                                                         # This is t
     sti
     iret
 
+# Interrupt handler
 COMMON_INT:
     pushl %eax
     movl 4(%esp), %eax
