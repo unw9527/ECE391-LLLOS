@@ -56,8 +56,9 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
             buf1[i] = line_buffer[i];
         line_buffer[i] = NULL;
     }
+    buf1[buffer_index] = NEW_LINE;
     buffer_index = 0;
-    return size;
+    return size+1;                          // Add 1 for the space for new line
 }
 
 /* int32_t terminal_write(int32_t fd, void* buf, int32_t nbytes)
@@ -81,3 +82,5 @@ int32_t (*read_terminal_pt) (int32_t, void*, int32_t) = terminal_read;
 int32_t (*open_terminal_pt) (const uint8_t*) = terminal_open;
 int32_t (*close_terminal_pt) (int32_t) = terminal_close;
 int32_t (*write_terminal_pt) (int32_t, const void*, int32_t) = terminal_write;
+
+

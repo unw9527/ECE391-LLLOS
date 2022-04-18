@@ -325,7 +325,7 @@ int32_t sys_getargs (uint8_t* buf, int32_t nbytes)
     return 0;
 }
 
-/* int32_t sys_getargs sys_vidmap(uint8_t** screen_start)
+/* int32_t sys_vidmap(uint8_t** screen_start)
  * Inputs: screen_start: The address of the memory pointer.
  * Return Value: 0 if success, -1 otherwise.
  * Function: Map a virtual address to vedio memory and return the virtual address.*/
