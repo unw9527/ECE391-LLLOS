@@ -157,14 +157,14 @@ int32_t read_file(int32_t fd, void* buf, int32_t nbytes)
     int32_t bytes_read;
     uint32_t inode;
     uint32_t offset;
-    inode = PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].inode;
-    offset = PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_pos;
+    inode = PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].inode;
+    offset = PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].file_pos;
     /* Call read_data to read the data into the buffer.*/
     bytes_read = read_data(inode, offset, buf, nbytes);
     if (bytes_read == -1)
         return -1;
     /* Update the file position.*/
-    PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_pos += bytes_read;
+    PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].file_pos += bytes_read;
     return bytes_read;
 }
 
@@ -179,7 +179,7 @@ int32_t read_dir(int32_t fd, void* buf, int32_t nbytes)
     int32_t length;
     dentry_t dentry;
     int8_t* file_name;
-    offset = PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_pos;
+    offset = PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].file_pos;
     /* In this case, the index is out of the range of # directory entries.*/
     if (read_dentry_by_index(offset, &dentry) == -1)
         return 0;
@@ -190,7 +190,7 @@ int32_t read_dir(int32_t fd, void* buf, int32_t nbytes)
     /* Copy the file name into the buffer.*/
     strncpy((int8_t*)buf, file_name, FILENAME_LEN);
     /* Update the file position by 1.*/
-    PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_pos ++;
+    PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].file_pos ++;
     type = dentry.filetype;
     file_size = cast_pt[dentry.inode_num+1].inode.length;
     return length;

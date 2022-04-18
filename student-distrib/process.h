@@ -32,10 +32,17 @@ typedef struct PCB
     };
 } PCB_t;
 
+typedef struct task_struct_t
+{
+    struct task_struct_t* prev;
+    struct task_struct_t* next;
+    PCB_t* curr_pcb;
+} task_struct_t;
+
 int32_t set_up_PCB(int32_t process_ct, int32_t prev_process_ct, uint8_t* buf, uint32_t entry_point);
 
 extern PCB_t* PCB_array;
-extern int32_t process_counter;
+extern int32_t pid;
 extern uint8_t process_one_hot[NUM_PROCESS];
 
 #endif

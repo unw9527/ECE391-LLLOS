@@ -19,22 +19,22 @@ int32_t sys_halt (uint8_t status) {
     int i;                                      /* Variable of the "for" loop.  */
     uint32_t ebp_val;                           /* Store the ebp value of the parent process.  */
     uint32_t extend_status;
-    if (terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1] != process_counter)
+    if (terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1] != pid)
         return 0;
 
     terminal[curr_terminal].terminal_prog_count--;
-    process_one_hot[process_counter] = 0;       /* Clear the assosiate process_one_hot entry.  */
+    process_one_hot[pid] = 0;       /* Clear the assosiate process_one_hot entry.  */
     /* Close the all the file descriptor (except for stdin and stdout).  */
     for (i = 2; i < DESP_NUM; i++) {
-        if (PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[i].flags)
+        if (PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[i].flags)
             sys_close(i);
         /* Set the flags to 0.  */
-        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[i].flags = 0;
+        PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[i].flags = 0;
     }
 
     /* Determine whether the current processor is shell     */
     if (terminal[curr_terminal].terminal_prog_count == 0) {
-        process_counter = -1;
+        pid = -1;
         sys_execute((uint8_t *) "shell");       // If the shell is close, reboot it
     }
 
@@ -42,13 +42,13 @@ int32_t sys_halt (uint8_t status) {
     swap_page(terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1]);
 
     /* Store the previous ebp value.    */
-    ebp_val = PCB_array[NUM_PROCESS-1-process_counter].thread_info.ebp;
+    ebp_val = PCB_array[NUM_PROCESS-1-pid].thread_info.ebp;
 
-    /* Update the process_counter.      */
-    process_counter = terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1];
+    /* Update the pid.      */
+    pid = terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1];
 
     /* Restore the kernel stack pointer.    */
-    tss.esp0 = STACK_BASE - 4 * KERNEL_STACK * process_counter - 4;     // Make more space
+    tss.esp0 = STACK_BASE - 4 * KERNEL_STACK * pid - 4;     // Make more space
 
     /* Check exception.*/
     if (exception_happen == 1){
@@ -88,7 +88,7 @@ int32_t sys_execute (const uint8_t* command) {
     dentry_t file_dentry;
     uint32_t inode_num;
     uint32_t entry_point = 0;
-    int32_t prev_process_counter;
+    int32_t prev_pid;
     uint16_t ss_val;
     uint32_t esp0_val;
     /* ----------------- Step1. Obtain the file name and the arguments ------------------*/
@@ -144,8 +144,8 @@ int32_t sys_execute (const uint8_t* command) {
     for (i = 0; i < NUM_PROCESS; i++){
         if (process_one_hot[i] == 0){
             process_one_hot[i] = 1;
-            prev_process_counter = process_counter;
-            process_counter = i;
+            prev_pid = pid;
+            pid = i;
             break;
         }
     }
@@ -154,16 +154,16 @@ int32_t sys_execute (const uint8_t* command) {
     if (i == NUM_PROCESS)
         return -1;
 
-    terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count] = process_counter;
+    terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count] = pid;
     terminal[curr_terminal].terminal_prog_count += 1;
 
-    swap_page(process_counter);
+    swap_page(pid);
 
     /* --------------------------- Step4. Load the executable into 0x08048000 ----------------------------*/
     file_loader(&file_dentry);
 
     /* --------------------------- Step5. Set up the PCB ----------------------------*/
-    set_up_PCB(process_counter, prev_process_counter, buf3, entry_point);
+    set_up_PCB(pid, prev_pid, buf3, entry_point);
 
     /* --------------------------- Step6. Create the process and switch ----------------------------*/
     /* Set the TSS's ss0 value.*/
@@ -177,7 +177,7 @@ int32_t sys_execute (const uint8_t* command) {
     tss.ss0 = ss_val;
 
     /* Set the esp0 value.*/
-    esp0_val = STACK_BASE - 4 * KERNEL_STACK * process_counter - 4;     // Make more space
+    esp0_val = STACK_BASE - 4 * KERNEL_STACK * pid - 4;     // Make more space
     tss.esp0 = esp0_val;
 
     /* Modify the stack.    */
@@ -218,14 +218,14 @@ int32_t sys_open (const uint8_t* filename)
     int32_t (**pt)(const uint8_t*);
     dentry_t dentry;
 
-    if (terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1] != process_counter)
+    if (terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1] != pid)
         return -1;
 
     /* If the file does not exists, return -1.*/
     if (read_dentry_by_name(filename, &dentry) == -1)
         return -1;
     for (fd = 2; fd <= 7; fd++){
-        if (PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].flags == 0){
+        if (PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].flags == 0){
             break;
         }
     }
@@ -236,30 +236,30 @@ int32_t sys_open (const uint8_t* filename)
     {
     /* The rtc.*/
     case 0:
-        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_op_pt = (int32_t*)jump_table_rtc;
-        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].inode = 0;
-        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_pos = 0;
-        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].flags = 1;
+        PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].file_op_pt = (int32_t*)jump_table_rtc;
+        PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].inode = 0;
+        PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].file_pos = 0;
+        PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].flags = 1;
         break;
     /* The directory.*/
     case 1:
-        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_op_pt = (int32_t*)jump_table_dir;
-        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].inode = 0;
-        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_pos = 0;
-        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].flags = 1;
+        PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].file_op_pt = (int32_t*)jump_table_dir;
+        PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].inode = 0;
+        PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].file_pos = 0;
+        PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].flags = 1;
         break;
     /* The regular file.*/
     case 2:
-        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_op_pt = (int32_t*)jump_table_file;
-        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].inode = dentry.inode_num;
-        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_pos = 0;
-        PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].flags = 1;
+        PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].file_op_pt = (int32_t*)jump_table_file;
+        PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].inode = dentry.inode_num;
+        PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].file_pos = 0;
+        PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].flags = 1;
         break;
     default:
         break;
     }
     /* Call the specific open operation.*/
-    pt = (int32_t (**)(const uint8_t*)) PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_op_pt[0];
+    pt = (int32_t (**)(const uint8_t*)) PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].file_op_pt[0];
     (**pt)(filename);
     return fd;
 }
@@ -273,18 +273,18 @@ int32_t sys_close (int32_t fd)
 {
     int32_t (**pt)(int32_t);
 
-    if (terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1] != process_counter)
+    if (terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1] != pid)
         return -1;
 
     /* If fd corresponds to stdin and stdout, return -1.*/
     if (fd == 0 || fd == 1 || fd < 0 || fd > 7)
         return -1;
-    pt = (int32_t (**)(int32_t)) PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_op_pt[2];
+    pt = (int32_t (**)(int32_t)) PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].file_op_pt[2];
     /* Call the specific close function.*/
     (**pt)(fd);
-    if (PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].flags == 0)
+    if (PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].flags == 0)
         return -1;
-    PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].flags = 0;
+    PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].flags = 0;
     return 0;
 }
 
@@ -298,14 +298,14 @@ int32_t sys_read (int32_t fd, void* buf, int32_t nbytes)
     int32_t bytes_read;
     int32_t (**pt)(int32_t, void* , int32_t);
 
-    if (terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1] != process_counter)
+    if (terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1] != pid)
         return -1;
 
     if (fd < 0 || fd > 7 || fd == 1)
         return -1;
-    if (PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].flags == 0)
+    if (PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].flags == 0)
         return -1;
-    pt = (int32_t (**)(int32_t, void* , int32_t)) PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_op_pt[1];
+    pt = (int32_t (**)(int32_t, void* , int32_t)) PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].file_op_pt[1];
     /* Call the specific read function.*/
     bytes_read = (**pt) (fd, buf, nbytes);
     return bytes_read;
@@ -323,11 +323,11 @@ int32_t sys_write(int32_t fd, const void* buf, int32_t nbytes)
     if (fd <= 0 || fd > 7)
         return -1;
 
-    if (terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1] != process_counter)
+    if (terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1] != pid)
         return -1;
-    if (PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].flags == 0)
+    if (PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].flags == 0)
         return -1;
-    pt = (int32_t (**)(int32_t, const void*, int32_t)) PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_op_pt[3];
+    pt = (int32_t (**)(int32_t, const void*, int32_t)) PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].file_op_pt[3];
     bytes_written = (**pt) (fd, buf, nbytes);
     return bytes_written;
 }
@@ -340,11 +340,11 @@ int32_t sys_write(int32_t fd, const void* buf, int32_t nbytes)
 int32_t sys_getargs (uint8_t* buf, int32_t nbytes)
 {
     uint32_t length;
-    length = strlen((const int8_t*)PCB_array[NUM_PROCESS-1-process_counter].thread_info.arg_buf);
+    length = strlen((const int8_t*)PCB_array[NUM_PROCESS-1-pid].thread_info.arg_buf);
     /* If the argument does not fit into buffer or null pointer or null string, return -1.*/
-    if (buf == 0 || length == 128 || PCB_array[NUM_PROCESS-1-process_counter].thread_info.arg_buf[0] == 0)
+    if (buf == 0 || length == 128 || PCB_array[NUM_PROCESS-1-pid].thread_info.arg_buf[0] == 0)
         return -1;
-    strncpy((int8_t*)buf, (int8_t*)PCB_array[NUM_PROCESS-1-process_counter].thread_info.arg_buf, nbytes);
+    strncpy((int8_t*)buf, (int8_t*)PCB_array[NUM_PROCESS-1-pid].thread_info.arg_buf, nbytes);
     return 0;
 }
 

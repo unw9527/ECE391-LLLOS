@@ -125,9 +125,9 @@ void switch_terminal(int32_t term_id)
         sys_execute((uint8_t*)"shell");
     }
     else {
-        process_counter = terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count-1];
-        // swap_page(process_counter);
-        // tss.esp0 = STACK_BASE - 4 * KERNEL_STACK * process_counter - 4;
+        pid = terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count-1];
+        // swap_page(pid);
+        // tss.esp0 = STACK_BASE - 4 * KERNEL_STACK * pid - 4;
         // asm volatile("                                                \n\
         //     pushw $0                                                  \n\
         //     pushw %0                                                  \n\
@@ -144,7 +144,7 @@ void switch_terminal(int32_t term_id)
         //     iret                                                      \n\
         //     "                                                           \
         // : /* no output*/                                                \
-        // : "g"((USER_DS)), "g"((USER_SPACE_ESP)), "g"((USER_CS)), "g"(PCB_array[NUM_PROCESS-1-process_counter].thread_info.entry_point)\
+        // : "g"((USER_DS)), "g"((USER_SPACE_ESP)), "g"((USER_CS)), "g"(PCB_array[NUM_PROCESS-1-pid].thread_info.entry_point)\
         // : "memory", "%ecx"/* no register modification*/                 \
         // );
     }
