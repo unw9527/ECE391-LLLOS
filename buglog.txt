@@ -358,3 +358,34 @@ something wrong with the sys_getargs or sys_write (terminal write).
 Solution: I found that the terminal_write limit the output size into 
 128  (the same as the input buffer), which is wrong. So I increased the 
 output size and it worked for all other files.
+
+<--------------------------------------------------------->
+                          BUG 2                          
+<--------------------------------------------------------->
+File: page.c
+
+Time: 2022.4.12
+
+Creator: Lin Ziyuan
+
+Description: After blinking of the fish, the kernel crushes. It loops
+again and other functions are also broken. The strange part is that I
+have already dealed with the exception.
+
+Solution: After I use gdb, I found that the paging for vedio memory broken.
+The reason is I use <= rather than = and some variables is overwritten.
+
+<--------------------------------------------------------->
+                          BUG 3                          
+<--------------------------------------------------------->
+File: syscall.S
+
+Time: 2022.4.12
+
+Creator: Lin Ziyuan
+
+Description: I find I cannot go into the sys_getargs and sys_vidmap. The 
+exception happens when I tried to go into them.
+
+Solution: I find I did not add these two functions in jump table so I added
+them.
