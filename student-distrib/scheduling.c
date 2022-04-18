@@ -3,8 +3,7 @@
 #include "page.h"
 #include "process.h"
 #include "lib.h"
-
-static int curr_process = 0;
+#include "terminal.h"
 
 /*
  * void pit_init(int hz)
@@ -27,5 +26,8 @@ void pit_init(int hz)
  * Effect: switch to different processes to execute for a slice of time
  */
 void switch_process(){
+    int next_term = (curr_terminal + 1) % MAX_TERMINAL;
 
 }
+
+
