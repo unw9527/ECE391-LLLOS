@@ -16,8 +16,8 @@ int32_t running_term = 0;
 void PIT_init()
 {
     outb(RES_BYTE, COMMAND_REG);          /* Set our command byte 0x36 */
-    outb(DIVISOR & 0xFF, CHANNEL_0_DP);   /* Set low byte of divisor */
-    outb(DIVISOR >> 8, CHANNEL_0_DP);     /* Set high byte of divisor */
+    outb(DIVISOR & MASK, CHANNEL_0_DP);   /* Set low byte of divisor */
+    outb(DIVISOR >> 8, CHANNEL_0_DP);     /* Right shift for one byte */
 }
 
 /*

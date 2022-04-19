@@ -6,9 +6,10 @@
 #include "process.h"
 
 #define DIVISOR (int)(1193180 / 100) // 100 as recommended online
-#define COMMAND_REG 0x43
-#define RES_BYTE    0x36
+#define COMMAND_REG     0x43
+#define RES_BYTE        0x36
 #define CHANNEL_0_DP    0x40
+#define MASK            0xFF
 
 // initialize PIT
 extern void PIT_init();

@@ -189,10 +189,10 @@ void idt_initial(void) {
     SET_IDT_ENTRY(idt[17], ALIGNMENT_CHECK_EXCEPTION);
     SET_IDT_ENTRY(idt[18], MACHINE_CHECK_EXCEPTION);
     SET_IDT_ENTRY(idt[19], FLOATING_POINT_EXCEPTION);
+    SET_IDT_ENTRY(idt[PIT_IDT], PIT_INT);
     SET_IDT_ENTRY(idt[KEYBOARD_IDT], KEYBOARD_INT);
     SET_IDT_ENTRY(idt[RTC_IDT], RTC_INT);
     SET_IDT_ENTRY(idt[SYSTEM_IDT], system_call);
-    SET_IDT_ENTRY(idt[PIT_IDT], PIT_INT);
 
     for (i = 0; i < EXCEPTION_NUM; i++) {                            /* We first set all the exceptions to be present.*/
         idt[i].seg_selector = KERNEL_CS;
