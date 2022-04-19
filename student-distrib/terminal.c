@@ -97,7 +97,8 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes) {
         return -1;
     int i;
     for (i = 0; i < nbytes; i++)        // print the content of the buf
-        putc(buf1[i], curr_terminal);
+        if (curr_terminal == 0) 
+            putc(buf1[i], curr_terminal);
     return nbytes;
 }
 
