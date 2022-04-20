@@ -6,6 +6,7 @@
 #include "page.h"
 #include "idt.h"
 #include "x86_desc.h"
+#include "scheduling.h"
 
 /* int32_t sys_halt (uint8_t status)
  * Inputs: status -- the status of the halt process
@@ -19,10 +20,11 @@ int32_t sys_halt (uint8_t status) {
     int i;                                      /* Variable of the "for" loop.  */
     uint32_t ebp_val;                           /* Store the ebp value of the parent process.  */
     uint32_t extend_status;
-    if (terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1] != pid)
-        return 0;
-
-    terminal[curr_terminal].terminal_prog_count--;
+    cli();
+    // if (terminal[running_term].prog_array[terminal[running_term].terminal_prog_count - 1] != pid)
+    //     return 0;
+    int32_t running_term1 = PCB_array[NUM_PROCESS-1-pid].thread_info.terminal_id;
+    terminal[running_term1].terminal_prog_count--;
     process_one_hot[pid] = 0;       /* Clear the assosiate process_one_hot entry.  */
     /* Close the all the file descriptor (except for stdin and stdout).  */
     for (i = 2; i < DESP_NUM; i++) {
@@ -33,19 +35,19 @@ int32_t sys_halt (uint8_t status) {
     }
 
     /* Determine whether the current processor is shell     */
-    if (terminal[curr_terminal].terminal_prog_count == 0) {
+    if (terminal[running_term1].terminal_prog_count == 0) {
         pid = -1;
         sys_execute((uint8_t *) "shell");       // If the shell is close, reboot it
     }
 
     /* Restore parent paging */
-    swap_page(terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1]);
+    swap_page(terminal[running_term1].prog_array[terminal[running_term1].terminal_prog_count - 1]);
 
     /* Store the previous ebp value.    */
     ebp_val = PCB_array[NUM_PROCESS-1-pid].thread_info.ebp;
 
     /* Update the pid.      */
-    pid = terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1];
+    pid = terminal[running_term1].prog_array[terminal[running_term1].terminal_prog_count - 1];
 
     /* Restore the kernel stack pointer.    */
     tss.esp0 = STACK_BASE - 4 * KERNEL_STACK * pid - 4;     // Make more space
@@ -59,7 +61,7 @@ int32_t sys_halt (uint8_t status) {
     else{
         extend_status = (uint32_t)status;
     }
-
+    sti();
     /* Restore the previous ebp.  */
     asm volatile (
                  "mov %0, %%eax;"
@@ -91,8 +93,8 @@ int32_t sys_execute (const uint8_t* command) {
     int32_t prev_pid;
     uint16_t ss_val;
     uint32_t esp0_val;
+    cli();
     /* ----------------- Step1. Obtain the file name and the arguments ------------------*/
-
     /* buf1 contains the file name.*/
     for (i = 0; i < MAX_BUFFER; i++){
         if (command[i] == SPACE || command[i] == 0)
@@ -153,17 +155,23 @@ int32_t sys_execute (const uint8_t* command) {
     /* If no free process index, return -1.*/
     if (i == NUM_PROCESS)
         return -1;
-
-    terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count] = pid;
-    terminal[curr_terminal].terminal_prog_count += 1;
-
+    
+    if (terminal[running_term].enter_flag) {
+        terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count] = pid;
+        terminal[curr_terminal].terminal_prog_count += 1;
+        terminal[curr_terminal].enter_flag = 0;
+    }
+    else {
+        terminal[running_term].prog_array[terminal[running_term].terminal_prog_count] = pid;
+        terminal[running_term].terminal_prog_count += 1;
+    }
     swap_page(pid);
 
     /* --------------------------- Step4. Load the executable into 0x08048000 ----------------------------*/
     file_loader(&file_dentry);
 
     /* --------------------------- Step5. Set up the PCB ----------------------------*/
-    set_up_PCB(pid, prev_pid, buf3, entry_point);
+    set_up_PCB(pid, prev_pid, buf3, entry_point, running_term);
 
     /* --------------------------- Step6. Create the process and switch ----------------------------*/
     /* Set the TSS's ss0 value.*/
@@ -218,9 +226,6 @@ int32_t sys_open (const uint8_t* filename)
     int32_t (**pt)(const uint8_t*);
     dentry_t dentry;
 
-    if (terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1] != pid)
-        return -1;
-
     /* If the file does not exists, return -1.*/
     if (read_dentry_by_name(filename, &dentry) == -1)
         return -1;
@@ -273,9 +278,6 @@ int32_t sys_close (int32_t fd)
 {
     int32_t (**pt)(int32_t);
 
-    if (terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1] != pid)
-        return -1;
-
     /* If fd corresponds to stdin and stdout, return -1.*/
     if (fd == 0 || fd == 1 || fd < 0 || fd > 7)
         return -1;
@@ -297,9 +299,6 @@ int32_t sys_read (int32_t fd, void* buf, int32_t nbytes)
 {
     int32_t bytes_read;
     int32_t (**pt)(int32_t, void* , int32_t);
-
-    if (terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1] != pid)
-        return -1;
 
     if (fd < 0 || fd > 7 || fd == 1)
         return -1;
@@ -323,10 +322,9 @@ int32_t sys_write(int32_t fd, const void* buf, int32_t nbytes)
     if (fd <= 0 || fd > 7)
         return -1;
 
-    if (terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1] != pid)
-        return -1;
     if (PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].flags == 0)
         return -1;
+    // printf("rt = %d\n", running_term);
     pt = (int32_t (**)(int32_t, const void*, int32_t)) PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].file_op_pt[3];
     bytes_written = (**pt) (fd, buf, nbytes);
     return bytes_written;

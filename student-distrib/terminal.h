@@ -35,6 +35,7 @@ typedef struct terminal {
          int32_t    vid_mem;
          int32_t    terminal_prog_count;
          int32_t    prog_array[6];
+         int32_t    enter_flag;
          volatile uint8_t    line_buffer[MAX_BUFFER];
          volatile int32_t    buffer_index;
 } terminal_t;

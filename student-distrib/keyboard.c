@@ -3,6 +3,8 @@
 #include "keyboard.h"
 #include "tests.h"
 #include "terminal.h"
+#include "page.h"
+#include "scheduling.h"
 
 // the key flag
 uint8_t caps;
@@ -238,19 +240,16 @@ void keyboard_handler(void) {
         switch(scan_code)
         {
             case F1:
-                enter = 1;
                 send_eoi(KEYBOARD_IRQ);
                 switch_terminal(0);
                 return;
 
             case F2:
-                enter = 1;
                 send_eoi(KEYBOARD_IRQ);
                 switch_terminal(1);
                 return;
 
             case F3:
-                enter = 1;
                 send_eoi(KEYBOARD_IRQ);
                 switch_terminal(2);
                 return;

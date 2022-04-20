@@ -3,6 +3,7 @@
 #include "page.h"
 #include "x86_desc.h"
 #include "syscall.h"
+#include "scheduling.h"
 /* void clear_buffer(void)
  * Inputs: void
  * Return Value: none
@@ -23,6 +24,7 @@ void terminal_init(void) {
     curr_terminal = 0;
     int i;
 	for (i = 0; i < MAX_TERMINAL; i++) {
+         terminal[i].enter_flag = 0;
          terminal[i].terminal_x = 0;
          terminal[i].terminal_y = 0;
          terminal[i].buffer_index = 0;
@@ -68,17 +70,19 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
     if (NULL == buf1) 
         return -1;
     while(!enter);                          // wait for enter to press
-    size = terminal[curr_terminal].buffer_index;
+    terminal[curr_terminal].enter_flag = 1;
+    running_term = curr_terminal;
+    size = terminal[running_term].buffer_index;
     if (size > MAX_BUFFER)                  // only support the number smaller than the max buffer
         size = MAX_BUFFER;
     enter = 0;
 
     for (i = 0; i < MAX_BUFFER; i++){       // store the line buffer to the buf
-        if (i < terminal[curr_terminal].buffer_index)
-            buf1[i] = terminal[curr_terminal].line_buffer[i];
-        terminal[curr_terminal].line_buffer[i] = NULL;
+        if (i < terminal[running_term].buffer_index)
+            buf1[i] = terminal[running_term].line_buffer[i];
+        terminal[running_term].line_buffer[i] = NULL;
     }
-    terminal[curr_terminal].buffer_index = 0;
+    terminal[running_term].buffer_index = 0;
     return size;
 }
 
@@ -90,15 +94,14 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
  * Function: write the line buffer to the terminal */
 int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes) {
     int8_t* buf1 = (int8_t *)buf;
-    sti();
-    if ((nbytes > MAX_BUFFER - 1) || (NULL == buf1))
 
     if ((nbytes > MAX_WRITE) || (NULL == buf1))
         return -1;
     int i;
-    for (i = 0; i < nbytes; i++)        // print the content of the buf
-        if (curr_terminal == 0) 
-            putc(buf1[i], curr_terminal);
+    cli();
+    for (i = 0; i < nbytes; i++) {        // print the content of the buf
+        putc(buf1[i], running_term);
+    }
     return nbytes;
 }
 
@@ -122,35 +125,14 @@ void switch_terminal(int32_t term_id)
 
     memcpy((void*)VIDEO, (const void*) terminal[curr_terminal].vid_mem, 4096);    
     
-    if (terminal[curr_terminal].terminal_prog_count == 0) {
-        sys_execute((uint8_t*)"shell");
-    }
-    else {
-        pid = terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count-1];
-        // swap_page(pid);
-        // tss.esp0 = STACK_BASE - 4 * KERNEL_STACK * pid - 4;
-        // asm volatile("                                                \n\
-        //     pushw $0                                                  \n\
-        //     pushw %0                                                  \n\
-        //     pushl %1                                                  \n\
-        //     pushfl                                                    \n\
-        //     popl %%ecx                                                \n\
-        //     orl $0x200,%%ecx                                          \n\
-        //     pushl %%ecx                                               \n\
-        //     pushw $0                                                  \n\
-        //     pushw %2                                                  \n\
-        //     pushl %3                                                  \n\
-        //     movw %0, %%cx                                             \n\
-        //     movw %%cx, %%ds                                           \n\
-        //     iret                                                      \n\
-        //     "                                                           \
-        // : /* no output*/                                                \
-        // : "g"((USER_DS)), "g"((USER_SPACE_ESP)), "g"((USER_CS)), "g"(PCB_array[NUM_PROCESS-1-pid].thread_info.entry_point)\
-        // : "memory", "%ecx"/* no register modification*/                 \
-        // );
-    }
+    // if (terminal[curr_terminal].terminal_prog_count == 0) {
+    //     sys_execute((uint8_t*)"shell");
+    // }
+    // else {
+    pid = terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count-1];
+    // }
     
-    move_cursor(curr_terminal);
+    move_cursor();
 
     return;
 }

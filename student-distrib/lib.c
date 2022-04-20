@@ -24,7 +24,7 @@ void clear(void) {
  * Inputs: void
  * Return Value: none
  * Function: move the cursor to the supposed position */
-void move_cursor(int32_t curr_terminal) {
+void move_cursor(void) {
     uint16_t pos = terminal[curr_terminal].terminal_y * NUM_COLS + terminal[curr_terminal].terminal_x;
     outb(0x0F, 0x3D4);
     outb((uint8_t) (pos & 0xFF), 0x3D5);
@@ -39,7 +39,7 @@ void move_cursor(int32_t curr_terminal) {
 void reset_cursor(void) {
     terminal[curr_terminal].terminal_x = 0;
     terminal[curr_terminal].terminal_y = 0;
-    move_cursor(curr_terminal);
+    move_cursor();
     return;
 }
 
@@ -213,44 +213,53 @@ void backspace(void) {
     *(uint8_t *)(video_mem + ((NUM_COLS * terminal[curr_terminal].terminal_y + terminal[curr_terminal].terminal_x) << 1)) = ' ';
     *(uint8_t *)(video_mem + ((NUM_COLS * terminal[curr_terminal].terminal_y + terminal[curr_terminal].terminal_x) << 1) + 1) = ATTRIB;
 
-    move_cursor(curr_terminal);
+    move_cursor();
 }
 
 /* void putc(uint8_t c);
  * Inputs: uint_8* c = character to print
  * Return Value: void
  *  Function: Output a character to the console */
-void putc(uint8_t c, int32_t curr_terminal) {
-    if (curr_terminal < 0 || curr_terminal > 2 || c == 0) return;
+void putc(uint8_t c, int32_t tid) {
+    int i;
+    if (tid < 0 || tid > 2 || c == 0) return;
 
     if (c == BACK_SPACE) {        // backspace
         backspace();
         return;
     }
 
-    if (terminal[curr_terminal].terminal_x == NUM_COLS - 1) {         // Determine whether the vertical scroll is needed
-        terminal[curr_terminal].terminal_x = 0;
-        if (terminal[curr_terminal].terminal_y == NUM_ROWS - 1)
+    if (terminal[tid].terminal_x == NUM_COLS - 1) {         // Determine whether the vertical scroll is needed
+        terminal[tid].terminal_x = 0;
+        if (terminal[tid].terminal_y == NUM_ROWS - 1)
             vertical_scroll();
         else 
-            terminal[curr_terminal].terminal_y++;
+            terminal[tid].terminal_y++;
     }
 
     if (c == '\n' || c == '\r') {           
-        terminal[curr_terminal].terminal_x = 0;
-        if (terminal[curr_terminal].terminal_y == NUM_ROWS - 1)
+        terminal[tid].terminal_x = 0;
+        if (terminal[tid].terminal_y == NUM_ROWS - 1)
             vertical_scroll();
         else 
-            terminal[curr_terminal].terminal_y++;
+            terminal[tid].terminal_y++;
     } 
-    else {                              
-        *(uint8_t *)(video_mem + ((NUM_COLS * terminal[curr_terminal].terminal_y + terminal[curr_terminal].terminal_x) << 1)) = c;
-        *(uint8_t *)(video_mem + ((NUM_COLS * terminal[curr_terminal].terminal_y + terminal[curr_terminal].terminal_x) << 1) + 1) = ATTRIB;
-        terminal[curr_terminal].terminal_x++;
-        terminal[curr_terminal].terminal_x %= NUM_COLS;
-        terminal[curr_terminal].terminal_y = (terminal[curr_terminal].terminal_y + (terminal[curr_terminal].terminal_x / NUM_COLS)) % NUM_ROWS;
+    else { 
+        if (PCB_array[NUM_PROCESS-1-pid].thread_info.terminal_id == tid) {
+            if (tid == curr_terminal) {                        
+                *(uint8_t *)(video_mem + ((NUM_COLS * terminal[tid].terminal_y + terminal[tid].terminal_x) << 1)) = c;
+                *(uint8_t *)(video_mem + ((NUM_COLS * terminal[tid].terminal_y + terminal[tid].terminal_x) << 1) + 1) = ATTRIB;
+            }
+            else {
+                *(uint8_t *)(video_mem + 0x1000 * (tid + 1) + ((NUM_COLS * terminal[tid].terminal_y + terminal[tid].terminal_x) << 1)) = c;
+                *(uint8_t *)(video_mem + 0x1000 * (tid + 1) + ((NUM_COLS * terminal[tid].terminal_y + terminal[tid].terminal_x) << 1) + 1) = ATTRIB;
+            }
+            terminal[tid].terminal_x++;
+            terminal[tid].terminal_x %= NUM_COLS;
+            terminal[tid].terminal_y = (terminal[tid].terminal_y + (terminal[tid].terminal_x / NUM_COLS)) % NUM_ROWS;
+        }
     }
-    move_cursor(curr_terminal);
+    move_cursor();
 }
 
 /* int8_t* itoa(uint32_t value, int8_t* buf, int32_t radix);

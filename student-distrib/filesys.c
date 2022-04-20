@@ -1,6 +1,8 @@
 #include "filesys.h"
 #include "lib.h"
 #include "process.h"
+#include "scheduling.h"
+#include "terminal.h"
 
 int32_t type;
 int32_t file_size;
@@ -157,6 +159,7 @@ int32_t read_file(int32_t fd, void* buf, int32_t nbytes)
     int32_t bytes_read;
     uint32_t inode;
     uint32_t offset;
+    
     inode = PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].inode;
     offset = PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].file_pos;
     /* Call read_data to read the data into the buffer.*/

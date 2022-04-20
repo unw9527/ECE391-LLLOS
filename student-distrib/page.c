@@ -1,7 +1,7 @@
 #include "page.h"
 #include "lib.h"
-
-
+#include "terminal.h"
+#include "scheduling.h"
 
 /* void page_init();
  * Inputs: void
@@ -94,7 +94,7 @@ int32_t swap_page(uint32_t process_ct){
  * int32_t set_video_page()
  * input: none
  * output: 0 if success; -1 otherwise
- * effect: map a new page onto the vedio memory.
+ * effect: map a new page onto the video memory.
  * side effect: Change the page direcotory and page.
  */
 int32_t set_video_page()
@@ -126,7 +126,10 @@ int32_t set_video_page()
     video_page_table[0].kb_4_page.P = 1;
     video_page_table[0].kb_4_page.U_S = 1;
     /* Note that VIDEO % BOUNDARY = 0.*/
-    video_page_table[0].kb_4_page.PBA = VIDEO / BOUNDARY;
+    if (curr_terminal == running_term)
+        video_page_table[0].kb_4_page.PBA = VIDEO / BOUNDARY;
+    else
+        video_page_table[0].kb_4_page.PBA = VIDEO / BOUNDARY + running_term + 1;
     return 0;
 }
 
@@ -139,6 +142,23 @@ void restore_vid_mem(void){
     return;
 }
 
+void store_vid_mem(int32_t term_id){
+    if(curr_terminal == term_id) {
+        page_table[VIDEO / BOUNDARY].kb_4_page.PBA = (uint32_t)(VIDEO / BOUNDARY);
+        page_table[VIDEO / BOUNDARY].kb_4_page.U_S = 1;
+        page_table[VIDEO / BOUNDARY].kb_4_page.R_W = 1;
+        page_table[VIDEO / BOUNDARY].kb_4_page.P = 1;
+    }
+    else {
+        page_table[VIDEO / BOUNDARY + term_id + 1].kb_4_page.PBA = (uint32_t)(VIDEO / BOUNDARY + term_id + 1);
+        page_table[VIDEO / BOUNDARY + term_id + 1].kb_4_page.U_S = 1;
+        page_table[VIDEO / BOUNDARY + term_id + 1].kb_4_page.R_W = 1;
+        page_table[VIDEO / BOUNDARY + term_id + 1].kb_4_page.P = 1;
+    }
+    flush_tlb();
+
+    return;
+}
 
 /*
  * void flush_tlb()

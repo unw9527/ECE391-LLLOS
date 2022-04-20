@@ -21,6 +21,7 @@ typedef struct thread_info
     file_descriptor_entry_t file_array[DESP_NUM];
     uint8_t arg_buf[MAX_BUFFER];
     int32_t padding;
+    int32_t terminal_id;
     uint32_t entry_point;
 } thread_info_t;
 
@@ -39,7 +40,7 @@ typedef struct task_struct_t
     PCB_t* curr_pcb;
 } task_struct_t;
 
-int32_t set_up_PCB(int32_t process_ct, int32_t prev_process_ct, uint8_t* buf, uint32_t entry_point);
+int32_t set_up_PCB(int32_t process_ct, int32_t prev_process_ct, uint8_t* buf, uint32_t entry_point, int32_t terminal_id);
 
 extern PCB_t* PCB_array;
 extern int32_t pid;

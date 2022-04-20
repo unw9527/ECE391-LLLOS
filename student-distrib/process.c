@@ -19,7 +19,7 @@ uint8_t process_one_hot[NUM_PROCESS];
  * Function: Setup the PCB array based on the process id and the previous process id
  * Side effect: none.
  */
-int32_t set_up_PCB(int32_t process_ct, int32_t prev_process_ct, uint8_t* buf, uint32_t entry_point)
+int32_t set_up_PCB(int32_t process_ct, int32_t prev_process_ct, uint8_t* buf, uint32_t entry_point, int32_t terminal_id)
 {
     int i;
     /* Store the current process id and the previous process id.    */
@@ -29,6 +29,7 @@ int32_t set_up_PCB(int32_t process_ct, int32_t prev_process_ct, uint8_t* buf, ui
 
     PCB_array[NUM_PROCESS-1-pid].thread_info.entry_point = entry_point;
 
+    PCB_array[NUM_PROCESS-1-pid].thread_info.terminal_id = terminal_id;
     /* Store the stdin of the file descriptor array. */
     PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[0].file_op_pt = (int32_t*)jump_table_terminal;
     PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[0].file_pos = 0;
