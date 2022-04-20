@@ -86,16 +86,16 @@ FLOATING_POINT_EXCEPTION:
 
 
 PIT_INT:
-    sti
+    cli
     pushl $0xFFFFFFFF
     jmp   COMMON_INT
 
 KEYBOARD_INT:
-    sti
+    cli
     pushl $0xFFFFFFFE                                                 # Push the opposite value to the stack.
     jmp COMMON_INT                                                   # Jump to common interrupt.
 RTC_INT:
-    sti
+    cli
     pushl $0xFFFFFFF7
     jmp COMMON_INT
 
@@ -133,4 +133,5 @@ do_INT:
     popal
     popl %eax
     addl $4, %esp
+    sti
     iret

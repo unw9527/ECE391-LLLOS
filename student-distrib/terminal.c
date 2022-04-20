@@ -21,7 +21,6 @@ void terminal_init(void) {
     clear();
     reset_cursor();
     clear_buffer();
-    curr_terminal = 0;
     int i;
 	for (i = 0; i < MAX_TERMINAL; i++) {
          terminal[i].enter_flag = 0;
@@ -69,13 +68,13 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
     int8_t* buf1 = (int8_t *)buf;           // transform the type of the buffer
     if (NULL == buf1) 
         return -1;
-    while(!enter);                          // wait for enter to press
-    terminal[curr_terminal].enter_flag = 1;
-    running_term = curr_terminal;
+    sti();
+    while(!enter_flag[running_term]);                          // wait for enter to press
+    cli();
     size = terminal[running_term].buffer_index;
     if (size > MAX_BUFFER)                  // only support the number smaller than the max buffer
         size = MAX_BUFFER;
-    enter = 0;
+    enter_flag[running_term] = 0;
 
     for (i = 0; i < MAX_BUFFER; i++){       // store the line buffer to the buf
         if (i < terminal[running_term].buffer_index)
@@ -98,7 +97,6 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes) {
     if ((nbytes > MAX_WRITE) || (NULL == buf1))
         return -1;
     int i;
-    cli();
     for (i = 0; i < nbytes; i++) {        // print the content of the buf
         putc(buf1[i], running_term);
     }
@@ -107,7 +105,6 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes) {
 
 void switch_terminal(int32_t term_id)
 {   
-    printf("Terminal %d\n", term_id);
     int32_t prev_terminal;
 
     if( term_id < 0 || term_id > 2)
@@ -129,10 +126,10 @@ void switch_terminal(int32_t term_id)
     //     sys_execute((uint8_t*)"shell");
     // }
     // else {
-    pid = terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count-1];
+    // pid = terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count-1];
     // }
     
-    move_cursor();
+    move_cursor(curr_terminal);
 
     return;
 }

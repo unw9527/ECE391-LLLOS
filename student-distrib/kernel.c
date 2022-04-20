@@ -147,18 +147,19 @@ void entry(unsigned long magic, unsigned long addr) {
     /* Init the paging.*/
     page_init();
 
-
-    terminal_init();
     /* Init the PIC */
     i8259_init();
-
     keyboard_initial();
+    /* Init the RTC */
+    RTC_init();
+
+    terminal_init();
+
+
 
     // Init PIT
     PIT_init();
 
-    /* Init the RTC */
-    RTC_init();
     /* Initialize devices, memory, filesystem, enable device interrupts on the
      * PIC, any other initialization stuff... */
 

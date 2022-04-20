@@ -18,7 +18,7 @@
 uint8_t enter;
 volatile uint8_t line_buffer[MAX_BUFFER];
 int32_t buffer_index;
-
+volatile uint8_t enter_flag[3];
 extern void keyboard_initial(void);
 extern void keyboard_handler(void);
 

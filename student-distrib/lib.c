@@ -24,8 +24,8 @@ void clear(void) {
  * Inputs: void
  * Return Value: none
  * Function: move the cursor to the supposed position */
-void move_cursor(void) {
-    uint16_t pos = terminal[curr_terminal].terminal_y * NUM_COLS + terminal[curr_terminal].terminal_x;
+void move_cursor(int32_t tid) {
+    uint16_t pos = terminal[tid].terminal_y * NUM_COLS + terminal[tid].terminal_x;
     outb(0x0F, 0x3D4);
     outb((uint8_t) (pos & 0xFF), 0x3D5);
     outb(0x0E, 0x3D4);
@@ -39,7 +39,7 @@ void move_cursor(void) {
 void reset_cursor(void) {
     terminal[curr_terminal].terminal_x = 0;
     terminal[curr_terminal].terminal_y = 0;
-    move_cursor();
+    move_cursor(curr_terminal);
     return;
 }
 
@@ -213,7 +213,7 @@ void backspace(void) {
     *(uint8_t *)(video_mem + ((NUM_COLS * terminal[curr_terminal].terminal_y + terminal[curr_terminal].terminal_x) << 1)) = ' ';
     *(uint8_t *)(video_mem + ((NUM_COLS * terminal[curr_terminal].terminal_y + terminal[curr_terminal].terminal_x) << 1) + 1) = ATTRIB;
 
-    move_cursor();
+    move_cursor(curr_terminal);
 }
 
 /* void putc(uint8_t c);
@@ -245,21 +245,13 @@ void putc(uint8_t c, int32_t tid) {
             terminal[tid].terminal_y++;
     } 
     else { 
-        if (PCB_array[NUM_PROCESS-1-pid].thread_info.terminal_id == tid) {
-            if (tid == curr_terminal) {                        
-                *(uint8_t *)(video_mem + ((NUM_COLS * terminal[tid].terminal_y + terminal[tid].terminal_x) << 1)) = c;
-                *(uint8_t *)(video_mem + ((NUM_COLS * terminal[tid].terminal_y + terminal[tid].terminal_x) << 1) + 1) = ATTRIB;
-            }
-            else {
-                *(uint8_t *)(video_mem + 0x1000 * (tid + 1) + ((NUM_COLS * terminal[tid].terminal_y + terminal[tid].terminal_x) << 1)) = c;
-                *(uint8_t *)(video_mem + 0x1000 * (tid + 1) + ((NUM_COLS * terminal[tid].terminal_y + terminal[tid].terminal_x) << 1) + 1) = ATTRIB;
-            }
-            terminal[tid].terminal_x++;
-            terminal[tid].terminal_x %= NUM_COLS;
-            terminal[tid].terminal_y = (terminal[tid].terminal_y + (terminal[tid].terminal_x / NUM_COLS)) % NUM_ROWS;
-        }
+        *(uint8_t *)(video_mem + ((NUM_COLS * terminal[tid].terminal_y + terminal[tid].terminal_x) << 1)) = c;
+        *(uint8_t *)(video_mem + ((NUM_COLS * terminal[tid].terminal_y + terminal[tid].terminal_x) << 1) + 1) = ATTRIB;
+        terminal[tid].terminal_x++;
+        terminal[tid].terminal_x %= NUM_COLS;
+        terminal[tid].terminal_y = (terminal[tid].terminal_y + (terminal[tid].terminal_x / NUM_COLS)) % NUM_ROWS;
     }
-    move_cursor();
+    move_cursor(tid);
 }
 
 /* int8_t* itoa(uint32_t value, int8_t* buf, int32_t radix);

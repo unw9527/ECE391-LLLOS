@@ -21,5 +21,9 @@ extern int32_t RTC_write(int32_t fd, const void * buf, int32_t nbytes);
 extern int32_t RTC_close(int32_t fd);
 extern void RTC_set_freq(int32_t rate);
 
+extern int rtc_active[3];
+extern int rtc_flag[3];
+extern int rtc_counter[3];
+
 #endif
 

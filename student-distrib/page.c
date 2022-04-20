@@ -59,12 +59,16 @@ int page_init()
     /* Then we change the page entries corresponds to video memory.*/
     page_table[VIDEO/BOUNDARY + 0].kb_4_page.P = 1;
     page_table[VIDEO/BOUNDARY + 0].kb_4_page.R_W = 1;
+    page_table[VIDEO/BOUNDARY + 0].kb_4_page.U_S = 1;
     page_table[VIDEO/BOUNDARY + 1].kb_4_page.P = 1;
     page_table[VIDEO/BOUNDARY + 1].kb_4_page.R_W = 1;
+    page_table[VIDEO/BOUNDARY + 1].kb_4_page.U_S = 1;
     page_table[VIDEO/BOUNDARY + 2].kb_4_page.P = 1;
     page_table[VIDEO/BOUNDARY + 2].kb_4_page.R_W = 1;
+    page_table[VIDEO/BOUNDARY + 2].kb_4_page.U_S = 1;
     page_table[VIDEO/BOUNDARY + 3].kb_4_page.P = 1;
     page_table[VIDEO/BOUNDARY + 3].kb_4_page.R_W = 1;
+    page_table[VIDEO/BOUNDARY + 3].kb_4_page.U_S = 1;
     /* Step3. Call the enable_page to en_pg to enable the paging.*/
     en_pg(page_directory);
     return 0;
@@ -97,7 +101,7 @@ int32_t swap_page(uint32_t process_ct){
  * effect: map a new page onto the video memory.
  * side effect: Change the page direcotory and page.
  */
-int32_t set_video_page()
+void set_video_page()
 {
     int i;
     /* Set the page directory for video page table.*/
@@ -110,9 +114,9 @@ int32_t set_video_page()
     page_directory[USER_VIDEO].kb_4_dir.PTBA = (uint32_t)video_page_table >> SR;
     /* Set the page table for video memory.*/
     for (i = 0; i < NUM_PAGE_ENTRY; i++){
-        video_page_table[i].kb_4_page.P = 0;
+        video_page_table[i].kb_4_page.P = 1;
         video_page_table[i].kb_4_page.R_W = 1;
-        video_page_table[i].kb_4_page.U_S = 0;
+        video_page_table[i].kb_4_page.U_S = 1;
         video_page_table[i].kb_4_page.PWT = 0;
         video_page_table[i].kb_4_page.PCD = 0;
         video_page_table[i].kb_4_page.A = 0;
@@ -125,12 +129,22 @@ int32_t set_video_page()
     /* Map the 0 entry to the fixed virtual address.*/
     video_page_table[0].kb_4_page.P = 1;
     video_page_table[0].kb_4_page.U_S = 1;
+    video_page_table[0].kb_4_page.R_W = 1;
+    // video_page_table[1].kb_4_page.P = 1;
+    // video_page_table[1].kb_4_page.U_S = 1;
+    // video_page_table[1].kb_4_page.R_W = 1;
+    // video_page_table[2].kb_4_page.P = 1;
+    // video_page_table[2].kb_4_page.U_S = 1;
+    // video_page_table[2].kb_4_page.R_W = 1;
+    // video_page_table[3].kb_4_page.P = 1;
+    // video_page_table[3].kb_4_page.U_S = 1;
+    // video_page_table[3].kb_4_page.R_W = 1;
     /* Note that VIDEO % BOUNDARY = 0.*/
     if (curr_terminal == running_term)
-        video_page_table[0].kb_4_page.PBA = VIDEO / BOUNDARY;
+        video_page_table[0].kb_4_page.PBA = (uint32_t)(VIDEO / BOUNDARY);
     else
-        video_page_table[0].kb_4_page.PBA = VIDEO / BOUNDARY + running_term + 1;
-    return 0;
+        video_page_table[0].kb_4_page.PBA = (uint32_t)(VIDEO / BOUNDARY + running_term + 1);
+    return;
 }
 
 void restore_vid_mem(void){
@@ -150,10 +164,10 @@ void store_vid_mem(int32_t term_id){
         page_table[VIDEO / BOUNDARY].kb_4_page.P = 1;
     }
     else {
-        page_table[VIDEO / BOUNDARY + term_id + 1].kb_4_page.PBA = (uint32_t)(VIDEO / BOUNDARY + term_id + 1);
-        page_table[VIDEO / BOUNDARY + term_id + 1].kb_4_page.U_S = 1;
-        page_table[VIDEO / BOUNDARY + term_id + 1].kb_4_page.R_W = 1;
-        page_table[VIDEO / BOUNDARY + term_id + 1].kb_4_page.P = 1;
+        page_table[VIDEO / BOUNDARY].kb_4_page.PBA = (uint32_t)(VIDEO / BOUNDARY + term_id + 1);
+        page_table[VIDEO / BOUNDARY].kb_4_page.U_S = 1;
+        page_table[VIDEO / BOUNDARY].kb_4_page.R_W = 1;
+        page_table[VIDEO / BOUNDARY].kb_4_page.P = 1;
     }
     flush_tlb();
 

@@ -94,6 +94,9 @@ void keyboard_initial(void) {
     alt  = 0;                                                                   /* To indicate the alt.*/
     shift = 0; 
     enter = 0;                                                                 /* To indicate the shift pressed.*/
+    enter_flag[0] = 0;
+    enter_flag[1] = 0;
+    enter_flag[2] = 0;
     enable_irq(KEYBOARD_IRQ);
 }
 
@@ -169,7 +172,6 @@ void echo(uint8_t ascii_value) {
  * Side Effects: none
  */
 void keyboard_handler(void) {
-    cli();
     uint8_t scan_code = inb(KEYBOARD_PORT);
     uint8_t ascii_value;
     
@@ -216,7 +218,7 @@ void keyboard_handler(void) {
 
     case 0x1C:          // Enter pressed
         putc('\n', curr_terminal);
-        enter = 1;
+        enter_flag[curr_terminal] = 1;
         send_eoi(KEYBOARD_IRQ);
         return;
     case 0x9C:         // Enter released
@@ -235,23 +237,25 @@ void keyboard_handler(void) {
         ascii_value = key_to_ascii(scan_code);
     }
     
-
     if(alt && !shift) {
         switch(scan_code)
         {
             case F1:
-                send_eoi(KEYBOARD_IRQ);
                 switch_terminal(0);
+                store_vid_mem(running_term);
+                send_eoi(KEYBOARD_IRQ);
                 return;
 
             case F2:
-                send_eoi(KEYBOARD_IRQ);
                 switch_terminal(1);
+                store_vid_mem(running_term);
+                send_eoi(KEYBOARD_IRQ);
                 return;
 
             case F3:
-                send_eoi(KEYBOARD_IRQ);
                 switch_terminal(2);
+                store_vid_mem(running_term);
+                send_eoi(KEYBOARD_IRQ);
                 return;
 
             default:
@@ -261,6 +265,7 @@ void keyboard_handler(void) {
 
     }
 
+    restore_vid_mem();
     /* ctrl + l */
     if (ctrl & (ascii_value == 0x6C)) {
         send_eoi(KEYBOARD_IRQ);
@@ -289,7 +294,6 @@ void keyboard_handler(void) {
         echo(ascii_value);
         echo(ascii_value);
     }
-    
+    store_vid_mem(running_term);
     send_eoi(KEYBOARD_IRQ);
-    sti();
 }

@@ -19,35 +19,37 @@
 int32_t sys_halt (uint8_t status) {
     int i;                                      /* Variable of the "for" loop.  */
     uint32_t ebp_val;                           /* Store the ebp value of the parent process.  */
+    uint32_t esp_val;
     uint32_t extend_status;
+    int32_t  pid1;
     cli();
-    // if (terminal[running_term].prog_array[terminal[running_term].terminal_prog_count - 1] != pid)
-    //     return 0;
-    int32_t running_term1 = PCB_array[NUM_PROCESS-1-pid].thread_info.terminal_id;
-    terminal[running_term1].terminal_prog_count--;
-    process_one_hot[pid] = 0;       /* Clear the assosiate process_one_hot entry.  */
+
+    pid1 = terminal[running_term].prog_array[terminal[running_term].terminal_prog_count-1];
+    terminal[running_term].terminal_prog_count--;
+    process_one_hot[pid1] = 0;       /* Clear the assosiate process_one_hot entry.  */
     /* Close the all the file descriptor (except for stdin and stdout).  */
     for (i = 2; i < DESP_NUM; i++) {
-        if (PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[i].flags)
+        if (PCB_array[NUM_PROCESS-1-pid1].thread_info.file_array[i].flags)
             sys_close(i);
         /* Set the flags to 0.  */
-        PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[i].flags = 0;
+        PCB_array[NUM_PROCESS-1-pid1].thread_info.file_array[i].flags = 0;
     }
 
     /* Determine whether the current processor is shell     */
-    if (terminal[running_term1].terminal_prog_count == 0) {
+    if (terminal[running_term].terminal_prog_count == 0) {
         pid = -1;
         sys_execute((uint8_t *) "shell");       // If the shell is close, reboot it
     }
 
     /* Restore parent paging */
-    swap_page(terminal[running_term1].prog_array[terminal[running_term1].terminal_prog_count - 1]);
+    swap_page(terminal[running_term].prog_array[terminal[running_term].terminal_prog_count - 1]);
 
     /* Store the previous ebp value.    */
-    ebp_val = PCB_array[NUM_PROCESS-1-pid].thread_info.ebp;
+    ebp_val = PCB_array[NUM_PROCESS-1-pid1].thread_info.ebp;
+    esp_val = PCB_array[NUM_PROCESS-1-pid1].thread_info.esp;
 
     /* Update the pid.      */
-    pid = terminal[running_term1].prog_array[terminal[running_term1].terminal_prog_count - 1];
+    pid = terminal[running_term].prog_array[terminal[running_term].terminal_prog_count - 1];
 
     /* Restore the kernel stack pointer.    */
     tss.esp0 = STACK_BASE - 4 * KERNEL_STACK * pid - 4;     // Make more space
@@ -66,9 +68,10 @@ int32_t sys_halt (uint8_t status) {
     asm volatile (
                  "mov %0, %%eax;"
                  "mov %1, %%ebp;"
+                 "mov %2, %%esp;"
                  "jmp RET_FROM_PROCESS"
                  :
-                 :"r"(extend_status), "r"(ebp_val)
+                 :"r"(extend_status), "r"(ebp_val), "r"(esp_val)
                  :"%eax"
  	);
     return 0;
@@ -82,6 +85,7 @@ int32_t sys_halt (uint8_t status) {
  * 
  */
 int32_t sys_execute (const uint8_t* command) {
+    cli();
     int i, j;                           // Variable of the "for" loop. 
     uint8_t buf1[MAX_BUFFER];           // Store the file name
     uint8_t buf2[EXECUTE_LEN+1];        // Store the file data
@@ -93,7 +97,6 @@ int32_t sys_execute (const uint8_t* command) {
     int32_t prev_pid;
     uint16_t ss_val;
     uint32_t esp0_val;
-    cli();
     /* ----------------- Step1. Obtain the file name and the arguments ------------------*/
     /* buf1 contains the file name.*/
     for (i = 0; i < MAX_BUFFER; i++){
@@ -156,15 +159,9 @@ int32_t sys_execute (const uint8_t* command) {
     if (i == NUM_PROCESS)
         return -1;
     
-    if (terminal[running_term].enter_flag) {
-        terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count] = pid;
-        terminal[curr_terminal].terminal_prog_count += 1;
-        terminal[curr_terminal].enter_flag = 0;
-    }
-    else {
-        terminal[running_term].prog_array[terminal[running_term].terminal_prog_count] = pid;
-        terminal[running_term].terminal_prog_count += 1;
-    }
+    terminal[running_term].prog_array[terminal[running_term].terminal_prog_count] = pid;
+    terminal[running_term].terminal_prog_count += 1;
+
     swap_page(pid);
 
     /* --------------------------- Step4. Load the executable into 0x08048000 ----------------------------*/
@@ -173,19 +170,27 @@ int32_t sys_execute (const uint8_t* command) {
     /* --------------------------- Step5. Set up the PCB ----------------------------*/
     set_up_PCB(pid, prev_pid, buf3, entry_point, running_term);
 
+    if (schedule) {
+        PCB_array[NUM_PROCESS-1-pid].thread_info.curr_esp = curr_esp;
+        PCB_array[NUM_PROCESS-1-pid].thread_info.curr_ebp = curr_ebp;
+        schedule = 0;
+    }
+    else{
+        PCB_array[NUM_PROCESS-1-pid].thread_info.curr_esp = 0;
+        PCB_array[NUM_PROCESS-1-pid].thread_info.curr_ebp = 0;
+    }
+
+    asm volatile("                         \n\
+                movl   %%esp, %%eax      \n\
+                "
+                :"=a"(PCB_array[NUM_PROCESS-1-pid].thread_info.esp)
+    );
     /* --------------------------- Step6. Create the process and switch ----------------------------*/
     /* Set the TSS's ss0 value.*/
-    asm volatile ("                                               \n\
-        movw %%ss, %0											  \n\
-    	"                                                           \
-	: /* no outputs */                                          	\
-	: "g"((ss_val))                                                 \
-	: "memory", "cc"                                                \
- 	);
-    tss.ss0 = ss_val;
+    tss.ss0 = KERNEL_DS;
 
     /* Set the esp0 value.*/
-    esp0_val = STACK_BASE - 4 * KERNEL_STACK * pid - 4;     // Make more space
+    esp0_val = STACK_BASE - 4 * KERNEL_STACK * pid - 4;
     tss.esp0 = esp0_val;
 
     /* Modify the stack.    */
@@ -321,7 +326,8 @@ int32_t sys_write(int32_t fd, const void* buf, int32_t nbytes)
     int32_t (**pt)(int32_t, const void*, int32_t);
     if (fd <= 0 || fd > 7)
         return -1;
-
+    int32_t pid1 = terminal[running_term].prog_array[terminal[running_term].terminal_prog_count-1];
+    
     if (PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].flags == 0)
         return -1;
     // printf("rt = %d\n", running_term);
@@ -360,7 +366,7 @@ int32_t sys_vidmap(uint8_t** screen_start)
     set_video_page();
     /* Set the screen start.*/
     *screen_start = (uint8_t*) USER_VIDEO_ADDR;
-    return 0;
+    return USER_VIDEO_ADDR;
 }
 
 /* int32_t sys_set_handler (int32_t signum, void* handler) */

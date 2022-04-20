@@ -51,7 +51,7 @@ int32_t set_up_PCB(int32_t process_ct, int32_t prev_process_ct, uint8_t* buf, ui
     asm volatile("                         \n\
                 movl   (%%ebp), %%eax      \n\
                 "
-                :"=a"(PCB_array[NUM_PROCESS-1-pid].thread_info.ebp) 
+                :"=a"(PCB_array[NUM_PROCESS-1-pid].thread_info.ebp)
     );
     return 0;
 }

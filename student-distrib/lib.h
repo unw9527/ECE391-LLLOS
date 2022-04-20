@@ -22,7 +22,7 @@ void clear(void);
 void test_interrupts(void);
 
 void reset_cursor(void);
-void move_cursor();
+void move_cursor(int32_t tid);
 void vertical_scroll(void);
 
 void* memset(void* s, int32_t c, uint32_t n);
