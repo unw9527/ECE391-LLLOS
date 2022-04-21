@@ -71,6 +71,7 @@ int page_init()
     page_table[VIDEO/BOUNDARY + 3].kb_4_page.U_S = 1;
     /* Step3. Call the enable_page to en_pg to enable the paging.*/
     en_pg(page_directory);
+    flush_tlb();
     return 0;
 }
 
@@ -144,6 +145,7 @@ void set_video_page()
         video_page_table[0].kb_4_page.PBA = (uint32_t)(VIDEO / BOUNDARY);
     else
         video_page_table[0].kb_4_page.PBA = (uint32_t)(VIDEO / BOUNDARY + running_term + 1);
+    flush_tlb();
     return;
 }
 
