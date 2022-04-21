@@ -4,8 +4,8 @@
 #include "lib.h"
 #include "terminal.h"
 
-static int screen_x;
-static int screen_y;
+// static int screen_x;
+// static int screen_y;
 static char* video_mem = (char *)VIDEO;
 
 /* void clear(void);
@@ -191,10 +191,12 @@ format_char_switch:
  *    Function: Output a string to the console */
 int32_t puts(int8_t* s) {
     register int32_t index = 0;
+    cli();
     while (s[index] != '\0') {
         putc(s[index], curr_terminal);
         index++;
     }
+    sti();
     return index;
 }
 
@@ -221,27 +223,33 @@ void backspace(void) {
  * Return Value: void
  *  Function: Output a character to the console */
 void putc(uint8_t c, int32_t tid) {
-    if (tid < 0 || tid > 2 || c == 0) return;
+    cli();
+    if (tid < 0 || tid > 2 || c == 0) {
+        sti();
+        return;
+    }
 
     if (c == BACK_SPACE) {        // backspace
         backspace();
+        sti();
         return;
     }
 
     if (terminal[tid].terminal_x == NUM_COLS - 1) {         // Determine whether the vertical scroll is needed
         terminal[tid].terminal_x = 0;
-        if (terminal[tid].terminal_y == NUM_ROWS - 1)
+        terminal[tid].terminal_y++;
+        if (terminal[tid].terminal_y == NUM_ROWS){
             vertical_scroll();
-        else 
-            terminal[tid].terminal_y++;
+            terminal[tid].terminal_y--;
+        }
     }
-
     if (c == '\n' || c == '\r') {           
         terminal[tid].terminal_x = 0;
-        if (terminal[tid].terminal_y == NUM_ROWS - 1)
+        terminal[tid].terminal_y++;
+        if (terminal[tid].terminal_y == NUM_ROWS){
             vertical_scroll();
-        else 
-            terminal[tid].terminal_y++;
+            terminal[tid].terminal_y--;
+        }
     } 
     else { 
         *(uint8_t *)(video_mem + ((NUM_COLS * terminal[tid].terminal_y + terminal[tid].terminal_x) << 1)) = c;
@@ -251,6 +259,7 @@ void putc(uint8_t c, int32_t tid) {
         terminal[tid].terminal_y = (terminal[tid].terminal_y + (terminal[tid].terminal_x / NUM_COLS)) % NUM_ROWS;
     }
     move_cursor(curr_terminal);
+    sti();
 }
 
 /* int8_t* itoa(uint32_t value, int8_t* buf, int32_t radix);

@@ -23,7 +23,7 @@ void terminal_init(void) {
     clear_buffer();
     int i;
 	for (i = 0; i < MAX_TERMINAL; i++) {
-         terminal[i].enter_flag = 0;
+        //  terminal[i].enter_flag = 0;
          terminal[i].terminal_x = 0;
          terminal[i].terminal_y = 0;
          terminal[i].buffer_index = 0;
@@ -82,6 +82,7 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
         terminal[running_term].line_buffer[i] = NULL;
     }
     terminal[running_term].buffer_index = 0;
+    sti();
     return size;
 }
 

@@ -127,6 +127,7 @@ uint8_t shift_ascii(uint8_t ascii_value) {
 
 void echo(uint8_t ascii_value) {
     uint8_t ascii;
+    cli();
     if (ascii_value == 0 || (ascii_value == BACKSPACE && terminal[curr_terminal].buffer_index == 0))
         return;
     ascii = ascii_value;
@@ -161,6 +162,7 @@ void echo(uint8_t ascii_value) {
             }
         }
     }
+    sti();
 }
 
 
@@ -174,64 +176,76 @@ void echo(uint8_t ascii_value) {
 void keyboard_handler(void) {
     uint8_t scan_code = inb(KEYBOARD_PORT);
     uint8_t ascii_value;
-    
+    cli();
     switch (scan_code)
     {
     case 0x3A:          // CAPS LOCK pressed
         caps = caps ^ 1;
         send_eoi(KEYBOARD_IRQ);
+        sti();
         return;
 
     case 0xBA:          // CAPS LOCK released
         send_eoi(KEYBOARD_IRQ);
+        sti();
         return;
 
     case 0x1D:          // ctrl pressed
         ctrl = 1;
         send_eoi(KEYBOARD_IRQ);
+        sti();
         return;
 
     case 0x9D:          // ctrl released
         ctrl = 0;
         send_eoi(KEYBOARD_IRQ);
+        sti();
         return;
 
     case 0x2A:          // left shift pressed
         shift += 1;
         send_eoi(KEYBOARD_IRQ);
+        sti();
         return;
     
     case 0xAA:          // left shift released
         shift -= 1;
         send_eoi(KEYBOARD_IRQ);
+        sti();
         return;
 
     case 0x36:          // right shift pressed
         shift += 1;
         send_eoi(KEYBOARD_IRQ);
+        sti();
         return;
     
     case 0xB6:          // right shift released
         shift -= 1;
         send_eoi(KEYBOARD_IRQ);
+        sti();
         return;
 
     case 0x1C:          // Enter pressed
         putc('\n', curr_terminal);
         enter_flag[curr_terminal] = 1;
         send_eoi(KEYBOARD_IRQ);
+        sti();
         return;
     case 0x9C:         // Enter released
         send_eoi(KEYBOARD_IRQ);
+        sti();
         return;
 
     case 0x38:
         alt = 1;
         send_eoi(KEYBOARD_IRQ);
+        sti();
         return;
     case 0xB8:
         alt = 0;
         send_eoi(KEYBOARD_IRQ);
+        sti();
         return;
     default:
         ascii_value = key_to_ascii(scan_code);
@@ -244,22 +258,26 @@ void keyboard_handler(void) {
                 switch_terminal(0);
                 store_vid_mem(running_term);
                 send_eoi(KEYBOARD_IRQ);
+                sti();
                 return;
 
             case F2:
                 switch_terminal(1);
                 store_vid_mem(running_term);
                 send_eoi(KEYBOARD_IRQ);
+                sti();
                 return;
 
             case F3:
                 switch_terminal(2);
                 store_vid_mem(running_term);
                 send_eoi(KEYBOARD_IRQ);
+                sti();
                 return;
 
             default:
                 send_eoi(KEYBOARD_IRQ);
+                sti();
                 return;
         }
 
@@ -273,7 +291,8 @@ void keyboard_handler(void) {
         clear();                            // clear the creen
         reset_cursor();     
         buffer_index = 0;                   // reset the buffer index
-        enter = 0;                           
+        enter = 0;  
+        sti();                         
         return;                            
     }
 
@@ -284,6 +303,7 @@ void keyboard_handler(void) {
         refresh_and_test();                 // change test
         buffer_index = 0;                   // reset the buffer index
         enter = 0;
+        sti();
         return;
     }
 
@@ -293,7 +313,9 @@ void keyboard_handler(void) {
         echo(ascii_value);
         echo(ascii_value);
         echo(ascii_value);
+        sti();
     }
     store_vid_mem(running_term);
     send_eoi(KEYBOARD_IRQ);
+    sti();
 }

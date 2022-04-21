@@ -65,11 +65,8 @@ void PIT_handler(){
     }
 
     set_video_page();
-
-    store_vid_mem(running_term);  
-    
     swap_page(next_pid);
-    
+    store_vid_mem(running_term);  
     tss.ss0 = KERNEL_DS;
     tss.esp0 = STACK_BASE - 4 * KERNEL_STACK * next_pid - 4;
     send_eoi(0);
