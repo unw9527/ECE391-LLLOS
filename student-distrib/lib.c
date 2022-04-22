@@ -3,7 +3,7 @@
 
 #include "lib.h"
 #include "terminal.h"
-
+#include "scheduling.h"
 // static int screen_x;
 // static int screen_y;
 static char* video_mem = (char *)VIDEO;
@@ -259,7 +259,6 @@ void putc(uint8_t c, int32_t tid) {
         terminal[tid].terminal_y = (terminal[tid].terminal_y + (terminal[tid].terminal_x / NUM_COLS)) % NUM_ROWS;
     }
     move_cursor(curr_terminal);
-    sti();
 }
 
 /* int8_t* itoa(uint32_t value, int8_t* buf, int32_t radix);

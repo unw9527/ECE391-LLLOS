@@ -68,7 +68,6 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
     int8_t* buf1 = (int8_t *)buf;           // transform the type of the buffer
     if (NULL == buf1) 
         return -1;
-    sti();
     while(!enter_flag[running_term]);                          // wait for enter to press
     cli();
     size = terminal[running_term].buffer_index;
@@ -77,13 +76,13 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
     enter_flag[running_term] = 0;
 
     for (i = 0; i < MAX_BUFFER; i++){       // store the line buffer to the buf
-        if (i < terminal[running_term].buffer_index)
+        if (i < terminal[running_term].buffer_index) 
             buf1[i] = terminal[running_term].line_buffer[i];
         terminal[running_term].line_buffer[i] = NULL;
     }
+    buf1[terminal[running_term].buffer_index] = NEW_LINE;
     terminal[running_term].buffer_index = 0;
-    sti();
-    return size;
+    return size+1;
 }
 
 /* int32_t terminal_write(int32_t fd, void* buf, int32_t nbytes)

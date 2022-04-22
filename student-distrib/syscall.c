@@ -21,18 +21,18 @@ int32_t sys_halt (uint8_t status) {
     uint32_t ebp_val;                           /* Store the ebp value of the parent process.  */
     uint32_t esp_val;
     uint32_t extend_status;
-    int32_t  pid1;
+    int32_t  pid;
     cli();
 
-    pid1 = terminal[running_term].prog_array[terminal[running_term].terminal_prog_count-1];
+    pid = terminal[running_term].prog_array[terminal[running_term].terminal_prog_count-1];
     terminal[running_term].terminal_prog_count--;
-    process_one_hot[pid1] = 0;       /* Clear the assosiate process_one_hot entry.  */
+    process_one_hot[pid] = 0;       /* Clear the assosiate process_one_hot entry.  */
     /* Close the all the file descriptor (except for stdin and stdout).  */
     for (i = 2; i < DESP_NUM; i++) {
-        if (PCB_array[NUM_PROCESS-1-pid1].thread_info.file_array[i].flags)
+        if (PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[i].flags)
             sys_close(i);
         /* Set the flags to 0.  */
-        PCB_array[NUM_PROCESS-1-pid1].thread_info.file_array[i].flags = 0;
+        PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[i].flags = 0;
     }
 
     /* Determine whether the current processor is shell     */
@@ -45,8 +45,8 @@ int32_t sys_halt (uint8_t status) {
     swap_page(terminal[running_term].prog_array[terminal[running_term].terminal_prog_count - 1]);
 
     /* Store the previous ebp value.    */
-    ebp_val = PCB_array[NUM_PROCESS-1-pid1].thread_info.ebp;
-    esp_val = PCB_array[NUM_PROCESS-1-pid1].thread_info.esp;
+    ebp_val = PCB_array[NUM_PROCESS-1-pid].thread_info.ebp;
+    esp_val = PCB_array[NUM_PROCESS-1-pid].thread_info.esp;
 
     /* Update the pid.      */
     pid = terminal[running_term].prog_array[terminal[running_term].terminal_prog_count - 1];
@@ -95,8 +95,6 @@ int32_t sys_execute (const uint8_t* command) {
     uint32_t inode_num;
     uint32_t entry_point = 0;
     int32_t prev_pid;
-    uint16_t ss_val;
-    uint32_t esp0_val;
     /* ----------------- Step1. Obtain the file name and the arguments ------------------*/
     /* buf1 contains the file name.*/
     for (i = 0; i < MAX_BUFFER; i++){
@@ -190,8 +188,7 @@ int32_t sys_execute (const uint8_t* command) {
     tss.ss0 = KERNEL_DS;
 
     /* Set the esp0 value.*/
-    esp0_val = STACK_BASE - 4 * KERNEL_STACK * pid - 4;
-    tss.esp0 = esp0_val;
+    tss.esp0 = STACK_BASE - 4 * KERNEL_STACK * pid - 4;
 
     /* Modify the stack.    */
     asm volatile("                                                \n\
@@ -326,8 +323,7 @@ int32_t sys_write(int32_t fd, const void* buf, int32_t nbytes)
     int32_t (**pt)(int32_t, const void*, int32_t);
     if (fd <= 0 || fd > 7)
         return -1;
-    int32_t pid1 = terminal[running_term].prog_array[terminal[running_term].terminal_prog_count-1];
-    
+
     if (PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].flags == 0)
         return -1;
     // printf("rt = %d\n", running_term);
@@ -344,6 +340,7 @@ int32_t sys_write(int32_t fd, const void* buf, int32_t nbytes)
 int32_t sys_getargs (uint8_t* buf, int32_t nbytes)
 {
     uint32_t length;
+
     length = strlen((const int8_t*)PCB_array[NUM_PROCESS-1-pid].thread_info.arg_buf);
     /* If the argument does not fit into buffer or null pointer or null string, return -1.*/
     if (buf == 0 || length == 128 || PCB_array[NUM_PROCESS-1-pid].thread_info.arg_buf[0] == 0)

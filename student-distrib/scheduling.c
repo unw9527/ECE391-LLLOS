@@ -5,6 +5,7 @@
 #include "lib.h"
 #include "terminal.h"
 #include "x86_desc.h"
+#include "syscall.h"
 
 /*
  * void pit_init(int hz)
@@ -33,8 +34,6 @@ void PIT_handler(){
     // int32_t display_pid = terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1]; // curr_pid refers to the terminal that is displayed
     int32_t run_pid;
     int32_t next_pid;
-    uint32_t ss_val;
-    uint32_t entry_point;
      // 0 is the IRQ number of PIT
     if (terminal[running_term].terminal_prog_count == 0) {
         schedule = 1;

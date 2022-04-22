@@ -137,8 +137,6 @@ void echo(uint8_t ascii_value) {
     }
     else if (shift)
             ascii = shift_ascii(ascii);
-
-
     putc(ascii, curr_terminal);
     // determine whether the backspace is pressed
     if (ascii == BACKSPACE) {
@@ -156,10 +154,10 @@ void echo(uint8_t ascii_value) {
         }
         else {
             terminal[curr_terminal].buffer_index++;
-            if (enter) {
-                terminal[curr_terminal].buffer_index = 0;
-                enter = 0;
-            }
+            // if (enter) {
+            //     terminal[curr_terminal].buffer_index = 0;
+            //     enter = 0;
+            // }
         }
     }
     sti();
@@ -176,7 +174,6 @@ void echo(uint8_t ascii_value) {
 void keyboard_handler(void) {
     uint8_t scan_code = inb(KEYBOARD_PORT);
     uint8_t ascii_value;
-    cli();
     switch (scan_code)
     {
     case 0x3A:          // CAPS LOCK pressed
@@ -227,12 +224,17 @@ void keyboard_handler(void) {
         return;
 
     case 0x1C:          // Enter pressed
-        putc('\n', curr_terminal);
+        ascii_value = 0x0A;
         enter_flag[curr_terminal] = 1;
+        restore_vid_mem();
+        putc('\n', curr_terminal);
+        store_vid_mem(running_term);
         send_eoi(KEYBOARD_IRQ);
         sti();
         return;
     case 0x9C:         // Enter released
+        restore_vid_mem();
+        store_vid_mem(running_term);
         send_eoi(KEYBOARD_IRQ);
         sti();
         return;
@@ -317,5 +319,4 @@ void keyboard_handler(void) {
     }
     store_vid_mem(running_term);
     send_eoi(KEYBOARD_IRQ);
-    sti();
 }

@@ -104,7 +104,6 @@ int32_t swap_page(uint32_t process_ct){
  */
 void set_video_page()
 {
-    int i;
     /* Set the page directory for video page table.*/
     page_directory[USER_VIDEO].kb_4_dir.P = 1;
     page_directory[USER_VIDEO].kb_4_dir.R_W = 1;
@@ -112,25 +111,25 @@ void set_video_page()
     page_directory[USER_VIDEO].kb_4_dir.G = 0;
     page_directory[USER_VIDEO].kb_4_dir.Reserved = 0;
     /* The virtual address is just the physical address for kernel.*/
-    page_directory[USER_VIDEO].kb_4_dir.PTBA = (uint32_t)video_page_table >> SR;
+    page_directory[USER_VIDEO].kb_4_dir.PTBA = (uint32_t)page_table >> SR;
     /* Set the page table for video memory.*/
-    for (i = 0; i < NUM_PAGE_ENTRY; i++){
-        video_page_table[i].kb_4_page.P = 1;
-        video_page_table[i].kb_4_page.R_W = 1;
-        video_page_table[i].kb_4_page.U_S = 1;
-        video_page_table[i].kb_4_page.PWT = 0;
-        video_page_table[i].kb_4_page.PCD = 0;
-        video_page_table[i].kb_4_page.A = 0;
-        video_page_table[i].kb_4_page.D = 0;
-        video_page_table[i].kb_4_page.PAT = 0;
-        video_page_table[i].kb_4_page.G = 0;
-        video_page_table[i].kb_4_page.Avail = 0;
-        video_page_table[i].kb_4_page.PBA = i;
-    }
-    /* Map the 0 entry to the fixed virtual address.*/
-    video_page_table[0].kb_4_page.P = 1;
-    video_page_table[0].kb_4_page.U_S = 1;
-    video_page_table[0].kb_4_page.R_W = 1;
+    // for (i = 0; i < NUM_PAGE_ENTRY; i++){
+    //     video_page_table[i].kb_4_page.P = 1;
+    //     video_page_table[i].kb_4_page.R_W = 1;
+    //     video_page_table[i].kb_4_page.U_S = 1;
+    //     video_page_table[i].kb_4_page.PWT = 0;
+    //     video_page_table[i].kb_4_page.PCD = 0;
+    //     video_page_table[i].kb_4_page.A = 0;
+    //     video_page_table[i].kb_4_page.D = 0;
+    //     video_page_table[i].kb_4_page.PAT = 0;
+    //     video_page_table[i].kb_4_page.G = 0;
+    //     video_page_table[i].kb_4_page.Avail = 0;
+    //     video_page_table[i].kb_4_page.PBA = i;
+    // }
+    // /* Map the 0 entry to the fixed virtual address.*/
+    page_table[0].kb_4_page.P = 1;
+    page_table[0].kb_4_page.U_S = 1;
+    page_table[0].kb_4_page.R_W = 1;
     // video_page_table[1].kb_4_page.P = 1;
     // video_page_table[1].kb_4_page.U_S = 1;
     // video_page_table[1].kb_4_page.R_W = 1;
@@ -142,9 +141,9 @@ void set_video_page()
     // video_page_table[3].kb_4_page.R_W = 1;
     /* Note that VIDEO % BOUNDARY = 0.*/
     if (curr_terminal == running_term)
-        video_page_table[0].kb_4_page.PBA = (uint32_t)(VIDEO / BOUNDARY);
+        page_table[0].kb_4_page.PBA = (uint32_t)(VIDEO / BOUNDARY);
     else
-        video_page_table[0].kb_4_page.PBA = (uint32_t)(VIDEO / BOUNDARY + running_term + 1);
+        page_table[0].kb_4_page.PBA = (uint32_t)(VIDEO / BOUNDARY + running_term + 1);
     flush_tlb();
     return;
 }
