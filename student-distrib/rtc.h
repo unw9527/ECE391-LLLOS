@@ -13,7 +13,7 @@
 // mp3.5
 #define MAX_FREQ    8192
 #define MIN_FREQ    2
-#define FREQ_COEF   32 // based on trial
+#define FREQ_COEF   4 // based on trial
 
 volatile int32_t RTC_intr;
 // initialize RTC
