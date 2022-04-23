@@ -2,13 +2,18 @@
 #define _RTC_H
 #define CMOS_PORT_0 0x70
 #define CMOS_PORT_1 0x71
-#define REG_A 0x8A
-#define REG_B 0x8B
-#define REG_C 0x0C
+#define REG_A       0x8A
+#define REG_B       0x8B
+#define REG_C       0x0C
 
 // mp3.2
-#define RTC_RATE_2 0xf // 2 Hz
-#define RTC_RATE_1024 0x6 // 1024 Hz
+#define RTC_RATE_2      0xf // 2 Hz
+#define RTC_RATE_1024   0x6 // 1024 Hz
+
+// mp3.5
+#define MAX_FREQ    8192
+#define MIN_FREQ    2
+#define FREQ_COEF   32 // based on trial
 
 volatile int32_t RTC_intr;
 // initialize RTC

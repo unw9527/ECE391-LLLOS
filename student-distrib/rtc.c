@@ -134,7 +134,7 @@ int32_t RTC_write(int32_t fd, const void * buf, int32_t nbytes){
     freq = *((int32_t*)buf);
 
     /* Check if frequency is in valid range */
-    if (freq < 2 || freq > 8192)
+    if (freq < MIN_FREQ || freq > MAX_FREQ)
       return -1;
 
     /* Check if frequency is a power of 2 */
@@ -142,7 +142,7 @@ int32_t RTC_write(int32_t fd, const void * buf, int32_t nbytes){
     if (valid_freq != 1)
       return -1;
 
-    rtc_counter[running_term] = 1024/freq/4;
+    rtc_counter[running_term] = MAX_FREQ / FREQ_COEF / freq;
 
     rtc_init_counter[running_term] = rtc_counter[running_term];
 
