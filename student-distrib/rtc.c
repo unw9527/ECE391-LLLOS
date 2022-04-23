@@ -53,7 +53,7 @@ void RTC_handler()
     inb(CMOS_PORT_1);
     RTC_intr = 1;
     send_eoi(8); // IRQ 8
-    for (i = 0; i < 3; i++)
+    for (i = 0; i < 3; i++) // three terminals
     {
         rtc_counter[i]--;
         /* Check if counter has reached zero */
@@ -127,7 +127,7 @@ int32_t RTC_write(int32_t fd, const void * buf, int32_t nbytes){
       return -1;
 
     /* Check for size */
-    if (nbytes != 4)
+    if (nbytes != 4) // 4 bytes
       return -1;
 
     /* Get the frequency value */
