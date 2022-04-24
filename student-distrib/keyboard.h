@@ -21,6 +21,7 @@ int32_t buffer_index;
 volatile uint8_t enter_flag[3];
 extern void keyboard_initial(void);
 extern void keyboard_handler(void);
+extern void echo(uint8_t ascii);
 
 
 #endif

@@ -5,12 +5,17 @@
 #include "terminal.h"
 #include "page.h"
 #include "scheduling.h"
+#include "history.h"
 
 // the key flag
 uint8_t caps;
 uint8_t shift;
 uint8_t alt;
 uint8_t ctrl;
+uint8_t uparrow;
+uint8_t is_prev_up;
+int32_t start_x;
+int32_t start_y;
 
 typedef struct key                                                              /* The first entry is the scan code and the second is the ascii.*/
 {
@@ -97,6 +102,10 @@ void keyboard_initial(void) {
     enter_flag[0] = 0;
     enter_flag[1] = 0;
     enter_flag[2] = 0;
+    curr_buf_id = 0;
+    curr_history_id = 0;
+    uparrow = 0;
+    is_prev_up = 0;
     enable_irq(KEYBOARD_IRQ);
 }
 
@@ -141,9 +150,12 @@ void echo(uint8_t ascii_value) {
     // determine whether the backspace is pressed
     if (ascii == BACKSPACE) {
         if (terminal[curr_terminal].buffer_index > 0) {                                 // decrement the line buffer
-            if (terminal[curr_terminal].buffer_index <= MAX_BUFFER)
+            if (terminal[curr_terminal].buffer_index <= MAX_BUFFER){
                 terminal[curr_terminal].line_buffer[terminal[curr_terminal].buffer_index - 1] = NEW_LINE;
+                history_holder[curr_history_id][curr_buf_id] = NEW_LINE;
+            }
             terminal[curr_terminal].buffer_index--;
+            curr_buf_id--;
         }
     }
     else {
@@ -151,9 +163,14 @@ void echo(uint8_t ascii_value) {
             terminal[curr_terminal].line_buffer[terminal[curr_terminal].buffer_index] = ascii;
             terminal[curr_terminal].line_buffer[terminal[curr_terminal].buffer_index + 1] = NEW_LINE;
             terminal[curr_terminal].buffer_index++;
+            // store history
+            history_holder[curr_history_id][curr_buf_id] = ascii;
+            history_holder[curr_history_id][curr_buf_id + 1] = NEW_LINE;
+            curr_buf_id++;
         }
         else {
             terminal[curr_terminal].buffer_index++;
+            curr_buf_id++;
             // if (enter) {
             //     terminal[curr_terminal].buffer_index = 0;
             //     enter = 0;
@@ -224,6 +241,8 @@ void keyboard_handler(void) {
         return;
 
     case 0x1C:          // Enter pressed
+        uparrow = 0;
+        is_prev_up = 0;
         ascii_value = 0x0A;
         enter_flag[curr_terminal] = 1;
         restore_vid_mem();
@@ -233,6 +252,7 @@ void keyboard_handler(void) {
         sti();
         return;
     case 0x9C:         // Enter released
+        update_history();
         restore_vid_mem();
         store_vid_mem(running_term);
         send_eoi(KEYBOARD_IRQ);
@@ -246,6 +266,31 @@ void keyboard_handler(void) {
         return;
     case 0xB8:
         alt = 0;
+        send_eoi(KEYBOARD_IRQ);
+        sti();
+        return;
+    case 0x48: // up arrow pressed 
+        if (0 == uparrow){
+            start_x = terminal[curr_terminal].terminal_x;
+            start_y = terminal[curr_terminal].terminal_y;
+        }
+        uparrow = 1;
+        is_prev_up = 1;
+        retrieve_history_up(start_x, start_y);
+        send_eoi(KEYBOARD_IRQ);
+        sti();
+        return;
+    case 0xC8: // up arrow released 
+        send_eoi(KEYBOARD_IRQ);
+        sti();
+        return;
+    case 0x50: // down arrow pressed
+        retrieve_history_down(start_x, start_y, is_prev_up);
+        is_prev_up = 0;
+        send_eoi(KEYBOARD_IRQ);
+        sti();
+        return;
+    case 0xD0: // down arrow released
         send_eoi(KEYBOARD_IRQ);
         sti();
         return;
