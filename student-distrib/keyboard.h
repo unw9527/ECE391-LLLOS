@@ -9,6 +9,7 @@
 #define SPACE           0x20
 #define MAX_BUFFER      128
 #define MAX_WRITE       8192
+#define ORIGIN_X        7
 
 
 #define F1 0x3B
