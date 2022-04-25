@@ -31,6 +31,7 @@ void update_history(){
         history_loop = 1;
     }
     retrieve_history_id = curr_history_id - 1;
+    terminal[curr_terminal].buffer_index = 0;
     sti();
 }
 
@@ -142,8 +143,8 @@ void retrieve_history_down(int32_t start_x, int32_t start_y, uint8_t is_up){
         store_vid_mem(running_term);
         terminal[curr_terminal].line_buffer[j] = history_holder[retrieve_history_id][j];
     }
-    terminal[curr_terminal].line_buffer[j + 1] = NEW_LINE;
-    terminal[curr_terminal].buffer_index = j + 1;
+    // terminal[curr_terminal].line_buffer[j + 1] = NEW_LINE;
+    terminal[curr_terminal].buffer_index = j;
     count--;
 
     sti();
