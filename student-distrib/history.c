@@ -85,8 +85,8 @@ void retrieve_history_up(int32_t start_x, int32_t start_y, uint8_t is_up){
         store_vid_mem(running_term);
         terminal[curr_terminal].line_buffer[j] = history_holder[retrieve_history_id][j];
     }
-    terminal[curr_terminal].line_buffer[j + 1] = NEW_LINE;
-    terminal[curr_terminal].buffer_index = j + 1;
+    // terminal[curr_terminal].line_buffer[j + 1] = NEW_LINE;
+    terminal[curr_terminal].buffer_index = j;
     retrieve_history_id--;
     if ((retrieve_history_id < 0) && history_loop) retrieve_history_id = MAX_HISTORY - 1;
     count++;
