@@ -76,6 +76,10 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
         size = MAX_BUFFER;
     enter_flag[running_term] = 0;
 
+    if (curr_history_id == MAX_HISTORY){
+        update_history(1);
+    }
+
     for (i = 0; i < MAX_BUFFER; i++){       // store the line buffer to the buf
         if (i < terminal[running_term].buffer_index){ 
             buf1[i] = terminal[running_term].line_buffer[i];
@@ -87,8 +91,7 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
     buf1[terminal[running_term].buffer_index] = NEW_LINE;
     // story history
     history_holder[curr_history_id][terminal[running_term].buffer_index] = NEW_LINE;
-    update_history();
-    // curr_buf_id = terminal[running_term].buffer_index;
+    update_history(0);
     terminal[running_term].buffer_index = 0;
     return size+1;
 }

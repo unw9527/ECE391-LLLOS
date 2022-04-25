@@ -14,7 +14,6 @@ uint8_t alt;
 uint8_t ctrl;
 uint8_t uparrow; // determines whether uparrow if pressed (1) or not (0) for a new command. Only record the starting coordinate if we have not pressed up
 uint8_t normal_key; // any keys that can be displayed
-uint8_t is_up; // 1 represents the last arrow key is up; 0 for down
 int32_t start_x;
 int32_t start_y;
 
@@ -103,11 +102,9 @@ void keyboard_initial(void) {
     enter_flag[0] = 0;
     enter_flag[1] = 0;
     enter_flag[2] = 0;
-    // curr_buf_id = 0;
     curr_history_id = 0;
     uparrow = 0;
     normal_key = 0;
-    is_up = 1;
     enable_irq(KEYBOARD_IRQ);
 }
 
@@ -154,10 +151,8 @@ void echo(uint8_t ascii_value) {
         if (terminal[curr_terminal].buffer_index > 0) {                                 // decrement the line buffer
             if (terminal[curr_terminal].buffer_index <= MAX_BUFFER){
                 terminal[curr_terminal].line_buffer[terminal[curr_terminal].buffer_index - 1] = NEW_LINE;
-                // history_holder[curr_history_id][curr_buf_id] = NEW_LINE;
             }
             terminal[curr_terminal].buffer_index--;
-            // curr_buf_id--;
         }
     }
     else {
@@ -165,18 +160,9 @@ void echo(uint8_t ascii_value) {
             terminal[curr_terminal].line_buffer[terminal[curr_terminal].buffer_index] = ascii;
             terminal[curr_terminal].line_buffer[terminal[curr_terminal].buffer_index + 1] = NEW_LINE;
             terminal[curr_terminal].buffer_index++;
-            // store history
-            // history_holder[curr_history_id][curr_buf_id] = ascii;
-            // history_holder[curr_history_id][curr_buf_id + 1] = NEW_LINE;
-            // curr_buf_id++;
         }
         else {
             terminal[curr_terminal].buffer_index++;
-            // curr_buf_id++;
-            // if (enter) {
-            //     terminal[curr_terminal].buffer_index = 0;
-            //     enter = 0;
-            // }
         }
     }
     sti();
@@ -280,8 +266,7 @@ void keyboard_handler(void) {
         uparrow = 1;
         
         if (0 == normal_key){
-            retrieve_history_up(start_x, start_y, is_up);
-            is_up = 1;
+            retrieve_history_up(start_x, start_y);
         }
         
         sti();
@@ -294,8 +279,7 @@ void keyboard_handler(void) {
         send_eoi(KEYBOARD_IRQ);
         
         if (0 == normal_key) {
-            retrieve_history_down(start_x, start_y, is_up);
-            is_up = 0;
+            retrieve_history_down(start_x, start_y);
         }
 
         sti();
