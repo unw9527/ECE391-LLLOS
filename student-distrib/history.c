@@ -9,8 +9,8 @@ static int count = 0; // #id we have retrieved
 
 
 /*
- * void update_history()
- * Input: none
+ * void update_history(int32_t is_max_history)
+ * Input: int32_t is_max_history: 1 if curr_history_id = MAX_HISTORY; 0 otherwise
  * Output: none
  * Function: update curr_history_id
  * Side effect: modify history_loop
@@ -76,14 +76,14 @@ void retrieve_history_up(int32_t start_x, int32_t start_y){
         }
     }
     
-    if ((0 < start_y) && (0 < start_x)){
-        while ((terminal[curr_terminal].terminal_x != start_x) || (terminal[curr_terminal].terminal_y != start_y)){
-            store_vid_mem(curr_terminal);
-            putc(BACK_SPACE, curr_terminal);
-            // echo(BACK_SPACE);
-            store_vid_mem(running_term);        
-        }
+    while ((terminal[curr_terminal].terminal_x != start_x) || (terminal[curr_terminal].terminal_y != start_y)){
+        if (terminal[curr_terminal].terminal_x == ORIGIN_X) break; // avoid an infinite loop
+        store_vid_mem(curr_terminal);
+        putc(BACK_SPACE, curr_terminal);
+        // echo(BACK_SPACE);
+        store_vid_mem(running_term);        
     }
+
     
 
     memset((uint8_t*) terminal[curr_terminal].line_buffer, 0, MAX_BUFFER); // clear the line buffer, otherwise will get "no such command" error
@@ -121,13 +121,13 @@ void retrieve_history_down(int32_t start_x, int32_t start_y){
         retrieve_history_id++;
         count--;
     }
-    if ((0 < start_y) && (0 < start_x)){
-            while ((terminal[curr_terminal].terminal_x != start_x) || (terminal[curr_terminal].terminal_y != start_y)){
-            store_vid_mem(curr_terminal);
-            putc(BACK_SPACE, curr_terminal);
-            // echo(BACK_SPACE);
-            store_vid_mem(running_term);        
-        }
+    
+    while ((terminal[curr_terminal].terminal_x != start_x) || (terminal[curr_terminal].terminal_y != start_y)){
+        if (terminal[curr_terminal].terminal_x == ORIGIN_X) break; // avoid an infinite loop
+        store_vid_mem(curr_terminal);
+        putc(BACK_SPACE, curr_terminal);
+        // echo(BACK_SPACE);
+        store_vid_mem(running_term);        
     }
 
     if (0 == count) {

@@ -77,7 +77,7 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
     enter_flag[running_term] = 0;
 
     if (curr_history_id == MAX_HISTORY){
-        update_history(1);
+        update_history(1); // 1 means we need to reset curr_history_id to 0
     }
 
     for (i = 0; i < MAX_BUFFER; i++){       // store the line buffer to the buf

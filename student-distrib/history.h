@@ -4,7 +4,8 @@
 #include "terminal.h"
 #include "lib.h"
 
-#define MAX_HISTORY     3
+#define MAX_HISTORY     20
+#define ORIGIN_X        7
 
 uint8_t history_holder[MAX_HISTORY][MAX_BUFFER];
 int curr_history_id;
