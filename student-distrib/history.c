@@ -3,7 +3,7 @@
 #include "page.h"
 #include "scheduling.h"
 
-// static int history_loop = 0; // determine whether the history buffer contains MAX_HISTORY histories
+static int history_loop = 0; // determine whether the history buffer contains MAX_HISTORY histories
 static int retrieve_history_id; // the id of the history we want to print
 static int count = 0; // #id we have retrieved
 
@@ -27,13 +27,6 @@ void update_history(int32_t is_max_history){
             sti();
             return;
         }
-        // if (curr_history_id < MAX_HISTORY){
-        //     curr_history_id++;
-        // }
-        // else{
-        //     curr_history_id = 0;
-        //     history_loop = 1;
-        // }
         curr_history_id++;
         retrieve_history_id = curr_history_id;
         terminal[curr_terminal].buffer_index = 0;
@@ -77,7 +70,6 @@ void retrieve_history_up(int32_t start_x, int32_t start_y){
     }
     
     while ((terminal[curr_terminal].terminal_x != start_x) || (terminal[curr_terminal].terminal_y != start_y)){
-        if (terminal[curr_terminal].terminal_x == ORIGIN_X) break; // avoid an infinite loop
         store_vid_mem(curr_terminal);
         putc(BACK_SPACE, curr_terminal);
         // echo(BACK_SPACE);
@@ -120,14 +112,16 @@ void retrieve_history_down(int32_t start_x, int32_t start_y){
     if (count > 0){
         retrieve_history_id++;
         count--;
-    }
-    
-    while ((terminal[curr_terminal].terminal_x != start_x) || (terminal[curr_terminal].terminal_y != start_y)){
-        if (terminal[curr_terminal].terminal_x == ORIGIN_X) break; // avoid an infinite loop
-        store_vid_mem(curr_terminal);
-        putc(BACK_SPACE, curr_terminal);
-        // echo(BACK_SPACE);
-        store_vid_mem(running_term);        
+        memset((uint8_t*) terminal[curr_terminal].line_buffer, 0, MAX_BUFFER); // clear the line buffer, otherwise will get "no such command" error
+
+        terminal[curr_terminal].buffer_index = 0;
+
+        while ((terminal[curr_terminal].terminal_x != start_x) || (terminal[curr_terminal].terminal_y != start_y)){
+            store_vid_mem(curr_terminal);
+            putc(BACK_SPACE, curr_terminal);
+            // echo(BACK_SPACE);
+            store_vid_mem(running_term);        
+        }
     }
 
     if (0 == count) {
@@ -138,8 +132,6 @@ void retrieve_history_down(int32_t start_x, int32_t start_y){
     if (MAX_HISTORY == retrieve_history_id){
         retrieve_history_id = 0;
     }
-
-    memset((uint8_t*) terminal[curr_terminal].line_buffer, 0, MAX_BUFFER); // clear the line buffer, otherwise will get "no such command" error
 
     for (j = 0; j < MAX_BUFFER; j++){
         if (history_holder[retrieve_history_id][j] == NEW_LINE) break;
