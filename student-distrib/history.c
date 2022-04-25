@@ -56,9 +56,9 @@ void retrieve_history_up(int32_t start_x, int32_t start_y, uint8_t is_up){
 
     memset((uint8_t*) terminal[curr_terminal].line_buffer, 0, MAX_BUFFER); // clear the line buffer, otherwise will get "no such command" error
 
-    // if (is_up == 0){
-    //     retrieve_history_id--;
-    // }
+    if (is_up == 0){
+        retrieve_history_id--;
+    }
 
     for (j = 0; j < MAX_BUFFER; j++){
         if (history_holder[retrieve_history_id][j] == NEW_LINE) break;
