@@ -3,10 +3,18 @@
 #include "page.h"
 #include "scheduling.h"
 
-static int history_loop = 0;
-static int retrieve_history_id;
-static int count = 0;
+static int history_loop = 0; // determine whether the history buffer contains MAX_HISTORY histories
+static int retrieve_history_id; // the id of the history we want to print
+static int count = 0; // #id we have retrieved
 
+
+/*
+ * void update_history()
+ * Input: none
+ * Output: none
+ * Function: update curr_history_id
+ * Side effect: modify history_loop
+ */
 void update_history(){
     cli();
     if (0 == terminal[curr_terminal].buffer_index){ // if nothing is typed
@@ -26,6 +34,15 @@ void update_history(){
     sti();
 }
 
+
+/*
+ * void retrieve_history_up(int32_t start_x, int32_t start_y, uint8_t is_up)
+ * Input: the starting coordinate (x and y); 
+ *        is_up: whether the last arrow key pressed is up
+ * Output: none
+ * Function: store the history to line buffer of the current terminal when up is pressed
+ * Side effect: clear the history that is already printed
+ */
 void retrieve_history_up(int32_t start_x, int32_t start_y, uint8_t is_up){
     int j;
     cli();
@@ -77,6 +94,15 @@ void retrieve_history_up(int32_t start_x, int32_t start_y, uint8_t is_up){
 }
 
 
+
+/*
+ * void retrieve_history_down(int32_t start_x, int32_t start_y, uint8_t is_up)
+ * Input: the starting coordinate (x and y); 
+ *        is_up: whether the last arrow key pressed is up
+ * Output: none
+ * Function: store the history to line buffer of the current terminal when down is pressed
+ * Side effect: clear the history that is already printed
+ */
 void retrieve_history_down(int32_t start_x, int32_t start_y, uint8_t is_up){
     int j;
     cli();
