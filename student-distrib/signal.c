@@ -1,13 +1,13 @@
 #include "signal.h"
-#include "process.h"
 #include "dynamic_alloc.h"
+#include "process.h"
 
 sighand_t sighand_array[NUM_PROCESS];
 
 int32_t sighand_init()
 {
     int32_t i;
-    for (i = 0; i < NUM_DIR_ENTRIES; i++){
+    for (i = 0; i < NUM_PROCESS; i++){
         sighand_array[i].count = 6;
         sighand_array[i].action[0].sa_handler = div_zero_default;
         sighand_array[i].action[1].sa_handler = segfault_default;
@@ -22,6 +22,7 @@ int32_t sighand_init()
         sighand_array[i].action[4].sig_mask = ALL_MASK;
         sighand_array[i].action[5].sig_mask = ALL_MASK;
     }
+    return 0;
 }
 
 void div_zero_default()

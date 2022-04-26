@@ -21,10 +21,8 @@ int32_t sys_halt (uint8_t status) {
     uint32_t ebp_val;                           /* Store the ebp value of the parent process.  */
     uint32_t esp_val;
     uint32_t extend_status;
-    int32_t  pid;
     cli();
 
-    pid = terminal[running_term].prog_array[terminal[running_term].terminal_prog_count-1];
     terminal[running_term].terminal_prog_count--;
     process_one_hot[pid] = 0;       /* Clear the assosiate process_one_hot entry.  */
     /* Close the all the file descriptor (except for stdin and stdout).  */
@@ -37,7 +35,6 @@ int32_t sys_halt (uint8_t status) {
 
     /* Determine whether the current processor is shell     */
     if (terminal[running_term].terminal_prog_count == 0) {
-        pid = -1;
         sys_execute((uint8_t *) "shell");       // If the shell is close, reboot it
     }
 
@@ -167,7 +164,7 @@ int32_t sys_execute (const uint8_t* command) {
 
     /* --------------------------- Step5. Set up the PCB ----------------------------*/
     set_up_PCB(pid, prev_pid, buf3, entry_point, running_term);
-
+    /* I do not think we need this.*/
     if (schedule) {
         PCB_array[NUM_PROCESS-1-pid].thread_info.curr_esp = curr_esp;
         PCB_array[NUM_PROCESS-1-pid].thread_info.curr_ebp = curr_ebp;

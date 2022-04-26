@@ -82,6 +82,7 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
     }
     buf1[terminal[running_term].buffer_index] = NEW_LINE;
     terminal[running_term].buffer_index = 0;
+    sti();
     return size+1;
 }
 

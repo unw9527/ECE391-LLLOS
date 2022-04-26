@@ -1,7 +1,7 @@
 #ifndef _SIGNAL_H
 #define _SIGNAL_H
+
 #include "types.h"
-#include "process.h"
 #define QUEUE_SIZE 10
 #define MAX_SIGNAL 32
 #define EXCEPTION_RESC 0
@@ -26,8 +26,8 @@ typedef struct sigpending
 
 typedef struct sigaction
 {
-    void* sa_handler;                                                /* The function pointer to run as handler.*/
-    uint32_t sig_mask;                                               /* The one-mask for the signals to be masked during the hander execution.*/
+    void* sa_handler;                                                
+    uint32_t sig_mask;                                              
 } sigaction_t;
 
 typedef struct sighand
@@ -42,7 +42,7 @@ typedef struct sigpending_head
     sigpending_t* tail;
 } sigpending_head_t;
 
-extern sighand_t sighand_array[NUM_PROCESS];
+extern sighand_t sighand_array[6];
 
 void div_zero_default();
 void segfault_default();

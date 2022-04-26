@@ -62,10 +62,11 @@ void PIT_handler(){
         send_eoi(0);
         return;
     }
-
+    /* Change the pid here.*/
+    pid = next_pid;
     set_video_page();
     swap_page(next_pid);
-    store_vid_mem(running_term);  
+    store_vid_mem(running_term);
     tss.ss0 = KERNEL_DS;
     tss.esp0 = STACK_BASE - 4 * KERNEL_STACK * next_pid - 4;
     send_eoi(0);
