@@ -2,7 +2,7 @@ CFLAGS += -g -Wall -nostdlib -ffreestanding
 LDFLAGS += -g -nostdlib -ffreestanding
 CC = gcc
 
-ALL: cat grep hello ls pingpong counter shell sigtest testprint syserr
+ALL: cat grep hello ls pingpong counter shell sigtest testprint syserr echo clear
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
@@ -20,7 +20,7 @@ ALL: cat grep hello ls pingpong counter shell sigtest testprint syserr
 clean::
 	rm -f *~ *.o
 
-clear: clean
+clear1: clean
 	rm -f *.converted
 	rm -f *.exe
 	rm -f to_fsdir/*
