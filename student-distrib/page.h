@@ -5,10 +5,15 @@
 #define NUM_PAGE_ENTRY 1024
 #define BOUNDARY 4096
 #define SR 12
+#define KERNEL_END 0x00800000
 #define PDE_VAL 0x08000000 >> 22
 #define USER_VIDEO_ADDR 0x08400000
 #define USER_VIDEO 0x08400000 >> 22    /* The video page directory entry.*/
 #define PHYSICAL_FRAME_ID   2 // 2nd frame corresponds to 8MB
+#define REST_PAGE_TABLE 24
+#define BASE_OFFSET_PAGE_TABLE 8192
+#define BASE_OFFSET_PAGE_DIR 8
+
 
 typedef struct kb_4_directory_entry{
     struct{
@@ -73,6 +78,7 @@ typedef struct general_page_entry{
 extern general_page_entry_t page_directory[NUM_PAGE_ENTRY] __attribute__((aligned (BOUNDARY)));
 extern general_page_entry_t page_table[NUM_PAGE_ENTRY] __attribute__((aligned (BOUNDARY)));
 extern general_page_entry_t video_page_table[NUM_PAGE_ENTRY] __attribute__((aligned (BOUNDARY)));
+extern general_page_entry_t rest_page_table[REST_PAGE_TABLE][NUM_PAGE_ENTRY]__attribute__((aligned (BOUNDARY)));
 
 /* Here defines some extern functions used by the paging.*/
 

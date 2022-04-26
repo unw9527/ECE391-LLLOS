@@ -10,6 +10,7 @@
 #include "rtc.h"
 #include "scheduling.h"
 #include "syscall.h"
+#include "signal.h"
 
 int32_t exception_happen;
 /* void* exception_handler(uint32_t num);
@@ -21,104 +22,71 @@ void exception_handler(uint32_t num) {
     switch (num)
     {
     case 0:
-        exception_happen = 1;
         printf("Devide Error Exception\n");
-        sys_halt(0);
+        signal_update(DIV_ZERO);
         break;
     case 1:
-        exception_happen = 1;
         printf("Debug Exception\n");
-        sys_halt(0);
         break;
     case 2:
-        exception_happen = 1;
         printf("NMI Interrupt\n");
-        sys_halt(0);
         break;
     case 3:
-        exception_happen = 1;
         printf("Breakpoint Exception\n");
-        sys_halt(0);
         break;
     case 4:
-        exception_happen = 1;
         printf("Overflow Exception\n");
-        sys_halt(0);
         break;
     case 5:
-        exception_happen = 1;
         printf("BOUND Range Exceeded Exception\n");
-        sys_halt(0);
         break;
     case 6:
-        exception_happen = 1;
         printf("Invalid Opcode Exception\n");
-        sys_halt(0);
         break;
     case 7:
-        exception_happen = 1;
         printf("Device Not Available Exception\n");
-        sys_halt(0);
         break;
     case 8:
-        exception_happen = 1;
         printf("Double Fault Exception\n");
-        sys_halt(0);
         break;
     case 9:
-        exception_happen = 1;
         printf("Coprocessor Segment Overrun\n");
-        sys_halt(0);
         break;
     case 10:
-        exception_happen = 1;
         printf("Invalid TSS Exception\n");
-        sys_halt(0);
         break;
     case 11:
-        exception_happen = 1;
         printf("Segment Not Present\n");
-        sys_halt(0);
         break;
     case 12:
-        exception_happen = 1;
         printf("Stack Fault Exception\n");
-        sys_halt(0);
         break;
     case 13:
-        exception_happen = 1;
         printf("General Protection Exception\n");
-        sys_halt(0);
         break;
     case 14:
-        exception_happen = 1;
         printf("Page-Fault Exception\n");
-        sys_halt(0);
         break;
     case 16:
-        exception_happen = 1;
         printf("x87 FPU Floating-Point Error\n");
-        sys_halt(0);
         break;
     case 17:
-        exception_happen = 1;
         printf("Alignment Check Exception\n");
 
-        sys_halt(0);
         break;
     case 18:
-        exception_happen = 1;
         printf("Machine-Check Exception\n");
-        sys_halt(0);
         break;
     case 19:
-        exception_happen = 1;
         printf("SIMD Floating-Point Exception\n");
-        sys_halt(0);
         break;
     default:
         break;
     }
+    exception_happen = 1;
+    if (num)
+        signal_update(SEGFAULT);
+    return;
 }
 
 /* void* interrupt_handler(uint32_t num);

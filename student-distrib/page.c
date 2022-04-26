@@ -11,10 +11,12 @@
 general_page_entry_t page_directory[NUM_PAGE_ENTRY] __attribute__((aligned (BOUNDARY)));
 general_page_entry_t page_table[NUM_PAGE_ENTRY] __attribute__((aligned (BOUNDARY)));
 general_page_entry_t video_page_table[NUM_PAGE_ENTRY] __attribute__((aligned (BOUNDARY)));
+general_page_entry_t rest_page_table[REST_PAGE_TABLE][NUM_PAGE_ENTRY]__attribute__((aligned (BOUNDARY)));
 
 int page_init()
 {
     int i;
+    int j;
     /* Step 1. Initialize the page directory.
     First set all the directory entries to be the same.*/
     for (i = 0; i < NUM_PAGE_ENTRY; i++){
@@ -69,7 +71,27 @@ int page_init()
     page_table[VIDEO/BOUNDARY + 3].kb_4_page.P = 1;
     page_table[VIDEO/BOUNDARY + 3].kb_4_page.R_W = 1;
     page_table[VIDEO/BOUNDARY + 3].kb_4_page.U_S = 1;
-    /* Step3. Call the enable_page to en_pg to enable the paging.*/
+
+    /* Step3. Now we set 32 MB ~ 128MB.*/
+    for (i = 0; i < REST_PAGE_TABLE; i++){
+        page_directory[i+BASE_OFFSET_PAGE_DIR].kb_4_dir.P = 1;
+        page_directory[i+BASE_OFFSET_PAGE_DIR].kb_4_dir.PTBA =(uint32_t)(&rest_page_table[i]) >> SR;
+        for (j = 0; j < NUM_PAGE_ENTRY; j++){
+            rest_page_table[i][j].kb_4_page.P = 1;
+            rest_page_table[i][j].kb_4_page.R_W = 1;
+            rest_page_table[i][j].kb_4_page.U_S = 0;
+            rest_page_table[i][j].kb_4_page.PWT = 0;
+            rest_page_table[i][j].kb_4_page.PCD = 0;
+            rest_page_table[i][j].kb_4_page.A = 0;
+            rest_page_table[i][j].kb_4_page.D = 0;
+            rest_page_table[i][j].kb_4_page.PAT = 0;
+            rest_page_table[i][j].kb_4_page.G = 0;
+            rest_page_table[i][j].kb_4_page.Avail = 0;
+            rest_page_table[i][j].kb_4_page.PBA = BASE_OFFSET_PAGE_TABLE + NUM_PAGE_ENTRY * i + j;
+        }
+    }
+
+    /* Step4. Call the enable_page to en_pg to enable the paging.*/
     en_pg(page_directory);
     flush_tlb();
     return 0;

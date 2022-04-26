@@ -14,6 +14,7 @@
 #include "filesys.h"
 #include "terminal.h"
 #include "scheduling.h"
+#include "dynamic_alloc.h"
 
 
 #define RUN_TESTS
@@ -155,10 +156,11 @@ void entry(unsigned long magic, unsigned long addr) {
 
     terminal_init();
 
+    /* Init the mem_map array.*/
+    mem_map_init();
+    /* Init the slab caches.*/
+    kmem_cache_init();
 
-
-    // Init PIT
-    PIT_init();
 
     /* Initialize devices, memory, filesystem, enable device interrupts on the
      * PIC, any other initialization stuff... */

@@ -7,6 +7,8 @@
 #include "syscall.h"
 #include "filesys.h"
 #include "process.h"
+#include "scheduling.h"
+#include "dynamic_alloc.h"
 
 #define PASS 1
 #define FAIL 0
@@ -28,184 +30,184 @@ static inline void assertion_failure(){
 }
 
 
-/* Checkpoint 1 tests */
+// /* Checkpoint 1 tests */
 
-/* IDT Test - Example
- * 
- * Asserts that first 10 IDT entries are not NULL
- * Inputs: None
- * Outputs: PASS/FAIL
- * Side Effects: None
- * Coverage: Load IDT, IDT definition
- * Files: x86_desc.h/S
- */
-int idt_test(){
-	TEST_HEADER;
+// /* IDT Test - Example
+//  * 
+//  * Asserts that first 10 IDT entries are not NULL
+//  * Inputs: None
+//  * Outputs: PASS/FAIL
+//  * Side Effects: None
+//  * Coverage: Load IDT, IDT definition
+//  * Files: x86_desc.h/S
+//  */
+// int idt_test(){
+// 	TEST_HEADER;
 
-	int i;
-	int result = PASS;
-	for (i = 0; i < 10; ++i){
-		if ((idt[i].offset_15_00 == NULL) && 
-			(idt[i].offset_31_16 == NULL)){
-			assertion_failure();
-			result = FAIL;
-		}
-	}
-	asm volatile("int $0");
-	return result;
-}
+// 	int i;
+// 	int result = PASS;
+// 	for (i = 0; i < 10; ++i){
+// 		if ((idt[i].offset_15_00 == NULL) && 
+// 			(idt[i].offset_31_16 == NULL)){
+// 			assertion_failure();
+// 			result = FAIL;
+// 		}
+// 	}
+// 	asm volatile("int $0");
+// 	return result;
+// }
 
-/* int idt_exp_test(void);
- * Inputs: void
- * Outputs: PASS/FAIL
- * Side Effects: None
- * Coverage: test exceptions 
- * Files: x86_desc.h/S
- */
-int idt_exp_test() {
-	int result = PASS;
-	TEST_HEADER;
-	asm volatile("int $0");
-	asm volatile("int $1");
-	asm volatile("int $2");
-	asm volatile("int $3");
-	asm volatile("int $4");
-	asm volatile("int $5");
-	asm volatile("int $6");
-	asm volatile("int $7");
-	asm volatile("int $8");
-	asm volatile("int $9");
-	asm volatile("int $10");
-	asm volatile("int $11");
-	asm volatile("int $12");
-	asm volatile("int $13");
-	asm volatile("int $14");
-	asm volatile("int $16");
-	asm volatile("int $17");
-	asm volatile("int $18");
-	asm volatile("int $19");	
-	return result;
-}
+// /* int idt_exp_test(void);
+//  * Inputs: void
+//  * Outputs: PASS/FAIL
+//  * Side Effects: None
+//  * Coverage: test exceptions 
+//  * Files: x86_desc.h/S
+//  */
+// int idt_exp_test() {
+// 	int result = PASS;
+// 	TEST_HEADER;
+// 	asm volatile("int $0");
+// 	asm volatile("int $1");
+// 	asm volatile("int $2");
+// 	asm volatile("int $3");
+// 	asm volatile("int $4");
+// 	asm volatile("int $5");
+// 	asm volatile("int $6");
+// 	asm volatile("int $7");
+// 	asm volatile("int $8");
+// 	asm volatile("int $9");
+// 	asm volatile("int $10");
+// 	asm volatile("int $11");
+// 	asm volatile("int $12");
+// 	asm volatile("int $13");
+// 	asm volatile("int $14");
+// 	asm volatile("int $16");
+// 	asm volatile("int $17");
+// 	asm volatile("int $18");
+// 	asm volatile("int $19");	
+// 	return result;
+// }
 
-/* int page_content_test1(void);
- * Inputs: void
- * Outputs: PASS/FAIL
- * Side Effects: None
- * Coverage: test page directory entry 0
- * Files: x86_desc.h/S
- */
-int page_content_test1(){
-	TEST_HEADER;
-	printf("We will show first 2 entries of directory and first entry of page table. We will also print the page corresponds to video memory.\n");
-	int result = PASS;
-	printf("Page directory, entry0:\n");
-	printf("P:%x\nRW:%x\nU_S:%x\nPWT:%x\nPCD:%x\nA:%x\nReserved:%x\nPS:%x\nG:%x\nAvail:%x\nPTBA:%x\n", page_directory[0].kb_4_dir.P,
-	page_directory[0].kb_4_dir.R_W, page_directory[0].kb_4_dir.U_S, page_directory[0].kb_4_dir.PWT, page_directory[0].kb_4_dir.PCD, 
-	page_directory[0].kb_4_dir.A, page_directory[0].kb_4_dir.Reserved, page_directory[0].kb_4_dir.PS, page_directory[0].kb_4_dir.G,
-	page_directory[0].kb_4_dir.Avail, page_directory[0].kb_4_dir.PTBA);
-	return result;
-}
+// /* int page_content_test1(void);
+//  * Inputs: void
+//  * Outputs: PASS/FAIL
+//  * Side Effects: None
+//  * Coverage: test page directory entry 0
+//  * Files: x86_desc.h/S
+//  */
+// int page_content_test1(){
+// 	TEST_HEADER;
+// 	printf("We will show first 2 entries of directory and first entry of page table. We will also print the page corresponds to video memory.\n");
+// 	int result = PASS;
+// 	printf("Page directory, entry0:\n");
+// 	printf("P:%x\nRW:%x\nU_S:%x\nPWT:%x\nPCD:%x\nA:%x\nReserved:%x\nPS:%x\nG:%x\nAvail:%x\nPTBA:%x\n", page_directory[0].kb_4_dir.P,
+// 	page_directory[0].kb_4_dir.R_W, page_directory[0].kb_4_dir.U_S, page_directory[0].kb_4_dir.PWT, page_directory[0].kb_4_dir.PCD, 
+// 	page_directory[0].kb_4_dir.A, page_directory[0].kb_4_dir.Reserved, page_directory[0].kb_4_dir.PS, page_directory[0].kb_4_dir.G,
+// 	page_directory[0].kb_4_dir.Avail, page_directory[0].kb_4_dir.PTBA);
+// 	return result;
+// }
 
-/* int page_content_test2(void);
- * Inputs: void
- * Outputs: PASS/FAIL
- * Side Effects: None
- * Coverage: test page directory entry 1
- * Files: x86_desc.h/S
- */
-int page_content_test2(){
-	TEST_HEADER;
-	int result = PASS;
-	printf("Page directory, entry1:\n");
-	printf("P:%x\nRW:%x\nU_S:%x\nPWT:%x\nPCD:%x\nA:%x\nD:%x\nPS:%x\nG:%x\nAvail:%x\nPAT:\nReserved:%x\nPBA:%x\n", page_directory[1].mb_4_dir.P,
-	page_directory[1].mb_4_dir.R_W, page_directory[1].mb_4_dir.U_S, page_directory[1].mb_4_dir.PWT, page_directory[1].mb_4_dir.PCD, 
-	page_directory[1].mb_4_dir.A, page_directory[1].mb_4_dir.PS, page_directory[1].mb_4_dir.PS, page_directory[1].mb_4_dir.G,
-	page_directory[1].mb_4_dir.Avail, page_directory[1].mb_4_dir.PAT, page_directory[1].mb_4_dir.Reserved, page_directory[1].mb_4_dir.PBA);
-	return result;
-}
+// /* int page_content_test2(void);
+//  * Inputs: void
+//  * Outputs: PASS/FAIL
+//  * Side Effects: None
+//  * Coverage: test page directory entry 1
+//  * Files: x86_desc.h/S
+//  */
+// int page_content_test2(){
+// 	TEST_HEADER;
+// 	int result = PASS;
+// 	printf("Page directory, entry1:\n");
+// 	printf("P:%x\nRW:%x\nU_S:%x\nPWT:%x\nPCD:%x\nA:%x\nD:%x\nPS:%x\nG:%x\nAvail:%x\nPAT:\nReserved:%x\nPBA:%x\n", page_directory[1].mb_4_dir.P,
+// 	page_directory[1].mb_4_dir.R_W, page_directory[1].mb_4_dir.U_S, page_directory[1].mb_4_dir.PWT, page_directory[1].mb_4_dir.PCD, 
+// 	page_directory[1].mb_4_dir.A, page_directory[1].mb_4_dir.PS, page_directory[1].mb_4_dir.PS, page_directory[1].mb_4_dir.G,
+// 	page_directory[1].mb_4_dir.Avail, page_directory[1].mb_4_dir.PAT, page_directory[1].mb_4_dir.Reserved, page_directory[1].mb_4_dir.PBA);
+// 	return result;
+// }
 
-/* int page_content_test3(void);
- * Inputs: void
- * Outputs: PASS/FAIL
- * Side Effects: None
- * Coverage: test page table entry 0
- * Files: x86_desc.h/S 1 
- */
-int page_content_test3(){
-	TEST_HEADER;
-	int result = PASS;
-	printf("Page table, entry0:\n");
-	printf("P:%x\nRW:%x\nU_S:%x\nPWT:%x\nPCD:%x\nA:%x\nD:%x\nPAT:%x\nG:%x\nAvail:%x\nPBA:%x\n", page_table[0].kb_4_page.P,
-	page_table[0].kb_4_page.R_W, page_table[0].kb_4_page.U_S, page_table[0].kb_4_page.PWT, page_table[0].kb_4_page.PCD,
-	page_table[0].kb_4_page.A, page_table[0].kb_4_page.D, page_table[0].kb_4_page.PAT, page_table[0].kb_4_page.G,
-	page_table[0].kb_4_page.Avail, page_table[0].kb_4_page.PBA);
-	return result;
-}
+// /* int page_content_test3(void);
+//  * Inputs: void
+//  * Outputs: PASS/FAIL
+//  * Side Effects: None
+//  * Coverage: test page table entry 0
+//  * Files: x86_desc.h/S 1 
+//  */
+// int page_content_test3(){
+// 	TEST_HEADER;
+// 	int result = PASS;
+// 	printf("Page table, entry0:\n");
+// 	printf("P:%x\nRW:%x\nU_S:%x\nPWT:%x\nPCD:%x\nA:%x\nD:%x\nPAT:%x\nG:%x\nAvail:%x\nPBA:%x\n", page_table[0].kb_4_page.P,
+// 	page_table[0].kb_4_page.R_W, page_table[0].kb_4_page.U_S, page_table[0].kb_4_page.PWT, page_table[0].kb_4_page.PCD,
+// 	page_table[0].kb_4_page.A, page_table[0].kb_4_page.D, page_table[0].kb_4_page.PAT, page_table[0].kb_4_page.G,
+// 	page_table[0].kb_4_page.Avail, page_table[0].kb_4_page.PBA);
+// 	return result;
+// }
 
-/* int page_content_test4(void);
- * Inputs: void
- * Outputs: PASS/FAIL
- * Side Effects: None
- * Coverage: test page table entry 1
- * Files: x86_desc.h/S 1 
- */
-int page_content_test4(){
-	TEST_HEADER;
-	int result = PASS;
-	printf("Page table, video memory:\n");
-	printf("P:%x\nRW:%x\nU_S:%x\nPWT:%x\nPCD:%x\nA:%x\nD:%x\nPAT:%x\nG:%x\nAvail:%x\nPBA:%x\n", page_table[VIDEO/BOUNDARY].kb_4_page.P,
-	page_table[VIDEO/BOUNDARY].kb_4_page.R_W, page_table[VIDEO/BOUNDARY].kb_4_page.U_S, page_table[VIDEO/BOUNDARY].kb_4_page.PWT, 
-	page_table[VIDEO/BOUNDARY].kb_4_page.PCD, page_table[VIDEO/BOUNDARY].kb_4_page.A, page_table[VIDEO/BOUNDARY].kb_4_page.D, 
-	page_table[VIDEO/BOUNDARY].kb_4_page.PAT, page_table[VIDEO/BOUNDARY].kb_4_page.G, page_table[VIDEO/BOUNDARY].kb_4_page.Avail, 
-	page_table[VIDEO/BOUNDARY].kb_4_page.PBA);
-	return result;
-}
+// /* int page_content_test4(void);
+//  * Inputs: void
+//  * Outputs: PASS/FAIL
+//  * Side Effects: None
+//  * Coverage: test page table entry 1
+//  * Files: x86_desc.h/S 1 
+//  */
+// int page_content_test4(){
+// 	TEST_HEADER;
+// 	int result = PASS;
+// 	printf("Page table, video memory:\n");
+// 	printf("P:%x\nRW:%x\nU_S:%x\nPWT:%x\nPCD:%x\nA:%x\nD:%x\nPAT:%x\nG:%x\nAvail:%x\nPBA:%x\n", page_table[VIDEO/BOUNDARY].kb_4_page.P,
+// 	page_table[VIDEO/BOUNDARY].kb_4_page.R_W, page_table[VIDEO/BOUNDARY].kb_4_page.U_S, page_table[VIDEO/BOUNDARY].kb_4_page.PWT, 
+// 	page_table[VIDEO/BOUNDARY].kb_4_page.PCD, page_table[VIDEO/BOUNDARY].kb_4_page.A, page_table[VIDEO/BOUNDARY].kb_4_page.D, 
+// 	page_table[VIDEO/BOUNDARY].kb_4_page.PAT, page_table[VIDEO/BOUNDARY].kb_4_page.G, page_table[VIDEO/BOUNDARY].kb_4_page.Avail, 
+// 	page_table[VIDEO/BOUNDARY].kb_4_page.PBA);
+// 	return result;
+// }
 
-/* int page_dereference1(void);
- * Inputs: void
- * Outputs: PASS/FAIL
- * Side Effects: None
- * Coverage: Function: test paging when address is not null
- * Files: x86_desc.h/S 1 
- */
-int page_dereference1()
-{
-	TEST_HEADER;
-	int val = 10;
-	int* address;
-	address = &val;
-	int result = PASS;
-	if (*address == val){
-		printf("Address: %x\nvalue: %d\n", address, val);
-	}
-	else
-		result = FAIL;
-	return result;
-}
+// /* int page_dereference1(void);
+//  * Inputs: void
+//  * Outputs: PASS/FAIL
+//  * Side Effects: None
+//  * Coverage: Function: test paging when address is not null
+//  * Files: x86_desc.h/S 1 
+//  */
+// int page_dereference1()
+// {
+// 	TEST_HEADER;
+// 	int val = 10;
+// 	int* address;
+// 	address = &val;
+// 	int result = PASS;
+// 	if (*address == val){
+// 		printf("Address: %x\nvalue: %d\n", address, val);
+// 	}
+// 	else
+// 		result = FAIL;
+// 	return result;
+// }
 
-/* int page_dereference2(void);
- * Inputs: void
- * Outputs: PASS/FAIL
- * Side Effects: None
- * Coverage: Function: test paging when address is null
- * Files: x86_desc.h/S 1 
- */
-int page_dereference2()
-{
-	TEST_HEADER;
-	int* address;
-	int val;
-	address = 0;
-	int result = PASS;
-	val = *address;
-	return result;
-}
+// /* int page_dereference2(void);
+//  * Inputs: void
+//  * Outputs: PASS/FAIL
+//  * Side Effects: None
+//  * Coverage: Function: test paging when address is null
+//  * Files: x86_desc.h/S 1 
+//  */
+// int page_dereference2()
+// {
+// 	TEST_HEADER;
+// 	int* address;
+// 	int val;
+// 	address = 0;
+// 	int result = PASS;
+// 	val = *address;
+// 	return result;
+// }
 
-/* void refresh_and_test(void);
- * Inputs: void
- * Return Value: none
- * Function: reset the screen and test again 
- */
+// /* void refresh_and_test(void);
+//  * Inputs: void
+//  * Return Value: none
+//  * Function: reset the screen and test again 
+//  */
 void refresh_and_test()
 {
 	test_counter++;
@@ -238,6 +240,9 @@ int get_counter()
 
 void launch_tests()
 {
+	int i;
+	int* pt[50];
+	int* normal_pt;
 	int8_t string[20];
 	string[0] = 46;
 	string[1] = 0;
@@ -245,7 +250,20 @@ void launch_tests()
 	reset_cursor();
 	switch (test_counter){
 		case 0:
+			for (i = 0; i < 42; i++){
+				pt[i] = (int*)kmalloc(8192,__GFP_ZERO && __GFP_NORETRY);
+			}
+			//normal_pt = kmalloc(4, __GFP_ZERO && __GFP_NORETRY);
+			for (i = 0; i < 42; i++){
+				kfree(pt[i]);
+			}
+			for (i = 0; i <14; i++)
+			kmalloc(8192, __GFP_ZERO && __GFP_NORETRY);
 			// sys_execute((uint8_t*)"shell");
+			break;
+		case 1:
+		    // Init PIT
+   			PIT_init();
 			break;
 		default:
 			break;

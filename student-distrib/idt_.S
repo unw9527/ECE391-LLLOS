@@ -107,6 +107,7 @@ COMMON_EXCP:                                                         # This is t
     pushl %eax                                                       # Push the INT vector onto the stack.
     call exception_handler
     popl %eax
+    call check_pending
     popfl
     popal
     popl %eax

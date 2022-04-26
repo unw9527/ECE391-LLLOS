@@ -259,6 +259,8 @@ void putc(uint8_t c, int32_t tid) {
         terminal[tid].terminal_y = (terminal[tid].terminal_y + (terminal[tid].terminal_x / NUM_COLS)) % NUM_ROWS;
     }
     move_cursor(curr_terminal);
+    sti();
+    return;
 }
 
 /* int8_t* itoa(uint32_t value, int8_t* buf, int32_t radix);
