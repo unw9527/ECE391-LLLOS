@@ -16,11 +16,15 @@ typedef struct thread_info
 {
     uint32_t esp;
     uint32_t ebp;
+    uint32_t curr_esp;
+    uint32_t curr_ebp;
     int32_t my_index;
     int32_t parent_index;
     file_descriptor_entry_t file_array[DESP_NUM];
     uint8_t arg_buf[MAX_BUFFER];
     int32_t padding;
+    int32_t terminal_id;
+    uint32_t entry_point;
 } thread_info_t;
 
 typedef struct PCB
@@ -31,10 +35,17 @@ typedef struct PCB
     };
 } PCB_t;
 
-int32_t set_up_PCB(int32_t process_ct, int32_t prev_process_ct, uint8_t* buf);
+typedef struct task_struct_t
+{
+    struct task_struct_t* prev;
+    struct task_struct_t* next;
+    PCB_t* curr_pcb;
+} task_struct_t;
+
+int32_t set_up_PCB(int32_t process_ct, int32_t prev_process_ct, uint8_t* buf, uint32_t entry_point, int32_t terminal_id);
 
 extern PCB_t* PCB_array;
-extern int32_t process_counter;
+extern int32_t pid;
 extern uint8_t process_one_hot[NUM_PROCESS];
 
 #endif

@@ -16,8 +16,6 @@ uint8_t slave_mask;  /* IRQs 8-15 */
  * Function: initialize i8259 */
 /* Initialize the 8259 PIC */
 void i8259_init(void) {
-    cli();
-
     // Mask all the IRQ of master PIC and slave PIC
     master_mask = MASK_ALL;
     slave_mask = MASK_ALL;
@@ -38,7 +36,6 @@ void i8259_init(void) {
     outb(master_mask, MASTER_8259_PORT + ICW4);
     outb(slave_mask, SLAVE_8259_PORT + ICW4);
 
-    sti();
 }
 
 /* void enable_irq(void);

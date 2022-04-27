@@ -12,6 +12,9 @@
 #include "rtc.h"
 #include "keyboard.h"
 #include "filesys.h"
+#include "terminal.h"
+#include "scheduling.h"
+
 
 #define RUN_TESTS
 
@@ -146,11 +149,17 @@ void entry(unsigned long magic, unsigned long addr) {
 
     /* Init the PIC */
     i8259_init();
-
     keyboard_initial();
-
     /* Init the RTC */
     RTC_init();
+
+    terminal_init();
+
+
+
+    // Init PIT
+    PIT_init();
+
     /* Initialize devices, memory, filesystem, enable device interrupts on the
      * PIC, any other initialization stuff... */
 

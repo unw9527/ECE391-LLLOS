@@ -1,6 +1,8 @@
 #include "filesys.h"
 #include "lib.h"
 #include "process.h"
+#include "scheduling.h"
+#include "terminal.h"
 
 int32_t type;
 int32_t file_size;
@@ -20,7 +22,7 @@ int32_t read_dentry_by_name(const uint8_t* fname, dentry_t* dentry)
     uint32_t max_length;
     const int8_t* string;
     length = strlen((const int8_t*)fname);                           /* Get the length of the string.*/
-    if (length == 0)
+    if (length == 0 || length > FILENAME_LEN)
         return -1;
     for (i = 0; i < NUM_DIR_ENTRIES; i++){                           /* Go through all 63 directory entries. */
         string = (const int8_t*)&(cast_pt -> boot_block.direntries[i].filename);
@@ -157,14 +159,15 @@ int32_t read_file(int32_t fd, void* buf, int32_t nbytes)
     int32_t bytes_read;
     uint32_t inode;
     uint32_t offset;
-    inode = PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].inode;
-    offset = PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_pos;
+
+    inode = PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].inode;
+    offset = PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].file_pos;
     /* Call read_data to read the data into the buffer.*/
     bytes_read = read_data(inode, offset, buf, nbytes);
     if (bytes_read == -1)
         return -1;
     /* Update the file position.*/
-    PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_pos += bytes_read;
+    PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].file_pos += bytes_read;
     return bytes_read;
 }
 
@@ -179,7 +182,8 @@ int32_t read_dir(int32_t fd, void* buf, int32_t nbytes)
     int32_t length;
     dentry_t dentry;
     int8_t* file_name;
-    offset = PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_pos;
+
+    offset = PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].file_pos;
     /* In this case, the index is out of the range of # directory entries.*/
     if (read_dentry_by_index(offset, &dentry) == -1)
         return 0;
@@ -190,7 +194,7 @@ int32_t read_dir(int32_t fd, void* buf, int32_t nbytes)
     /* Copy the file name into the buffer.*/
     strncpy((int8_t*)buf, file_name, FILENAME_LEN);
     /* Update the file position by 1.*/
-    PCB_array[NUM_PROCESS-1-process_counter].thread_info.file_array[fd].file_pos ++;
+    PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].file_pos ++;
     type = dentry.filetype;
     file_size = cast_pt[dentry.inode_num+1].inode.length;
     return length;

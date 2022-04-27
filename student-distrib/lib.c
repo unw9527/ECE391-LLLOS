@@ -2,9 +2,10 @@
  * vim:ts=4 noexpandtab */
 
 #include "lib.h"
-
-static int screen_x;
-static int screen_y;
+#include "terminal.h"
+#include "scheduling.h"
+// static int screen_x;
+// static int screen_y;
 static char* video_mem = (char *)VIDEO;
 
 /* void clear(void);
@@ -23,8 +24,8 @@ void clear(void) {
  * Inputs: void
  * Return Value: none
  * Function: move the cursor to the supposed position */
-void move_cursor(void) {
-    uint16_t pos = screen_y * NUM_COLS + screen_x;
+void move_cursor(int32_t tid) {
+    uint16_t pos = terminal[tid].terminal_y * NUM_COLS + terminal[tid].terminal_x;
     outb(0x0F, 0x3D4);
     outb((uint8_t) (pos & 0xFF), 0x3D5);
     outb(0x0E, 0x3D4);
@@ -36,9 +37,9 @@ void move_cursor(void) {
  * Return Value: none
  * Function: reset the cursor to the upper left of the screen */
 void reset_cursor(void) {
-    screen_x = 0;
-    screen_y = 0;
-    move_cursor();
+    terminal[curr_terminal].terminal_x = 0;
+    terminal[curr_terminal].terminal_y = 0;
+    move_cursor(curr_terminal);
     return;
 }
 
@@ -96,7 +97,7 @@ format_char_switch:
                     switch (*buf) {
                         /* Print a literal '%' character */
                         case '%':
-                            putc('%');
+                            putc('%', curr_terminal);
                             break;
 
                         /* Use alternate formatting */
@@ -158,7 +159,7 @@ format_char_switch:
 
                         /* Print a single character */
                         case 'c':
-                            putc((uint8_t) *((int32_t *)esp));
+                            putc((uint8_t) *((int32_t *)esp), curr_terminal);
                             esp++;
                             break;
 
@@ -176,7 +177,7 @@ format_char_switch:
                 break;
 
             default:
-                putc(*buf);
+                putc(*buf, curr_terminal);
                 break;
         }
         buf++;
@@ -190,10 +191,12 @@ format_char_switch:
  *    Function: Output a string to the console */
 int32_t puts(int8_t* s) {
     register int32_t index = 0;
+    cli();
     while (s[index] != '\0') {
-        putc(s[index]);
+        putc(s[index], curr_terminal);
         index++;
     }
+    sti();
     return index;
 }
 
@@ -202,54 +205,62 @@ int32_t puts(int8_t* s) {
  * Return Value: void
  *  Function: move the cursor and the current position caused by the backspace */
 void backspace(void) {
-    if (screen_x > 0)
-        screen_x--;
-    else if ((screen_y != 0) && (screen_x == 0)) {
-        screen_x = NUM_COLS - 2;
-        screen_y--;
+    if (terminal[curr_terminal].terminal_x > 0)
+        terminal[curr_terminal].terminal_x--;
+    else if ((terminal[curr_terminal].terminal_y != 0) && (terminal[curr_terminal].terminal_x == 0)) {
+        terminal[curr_terminal].terminal_x = NUM_COLS - 2;
+        terminal[curr_terminal].terminal_y--;
     }
 
-    *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = ' ';
-    *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = ATTRIB;
+    *(uint8_t *)(video_mem + ((NUM_COLS * terminal[curr_terminal].terminal_y + terminal[curr_terminal].terminal_x) << 1)) = ' ';
+    *(uint8_t *)(video_mem + ((NUM_COLS * terminal[curr_terminal].terminal_y + terminal[curr_terminal].terminal_x) << 1) + 1) = ATTRIB;
 
-    move_cursor();
+    move_cursor(curr_terminal);
 }
 
 /* void putc(uint8_t c);
  * Inputs: uint_8* c = character to print
  * Return Value: void
  *  Function: Output a character to the console */
-void putc(uint8_t c) {
-    if (c == 0) return;
-
-    if (c == BACK_SPACE) {        // backspace
-        backspace();
+void putc(uint8_t c, int32_t tid) {
+    cli();
+    if (tid < 0 || tid > 2 || c == 0) {
+        sti();
         return;
     }
 
-    if (screen_x == NUM_COLS - 1) {         // Determine whether the vertical scroll is needed
-        screen_x = 0;
-        if (screen_y == NUM_ROWS - 1)
-            vertical_scroll();
-        else 
-            screen_y++;
+    if (c == BACK_SPACE) {        // backspace
+        backspace();
+        sti();
+        return;
     }
 
-    if (c == '\n' || c == '\r') {           
-        screen_x = 0;
-        if (screen_y == NUM_ROWS - 1)
+    if (terminal[tid].terminal_x == NUM_COLS - 1 && c != '\n') {         // Determine whether the vertical scroll is needed
+        terminal[tid].terminal_x = 0;
+        terminal[tid].terminal_y++;
+        if (terminal[tid].terminal_y == NUM_ROWS){
             vertical_scroll();
-        else 
-            screen_y++;
-    } 
-    else {                              
-        *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = c;
-        *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = ATTRIB;
-        screen_x++;
-        screen_x %= NUM_COLS;
-        screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
+            terminal[tid].terminal_y--;
+        }
     }
-    move_cursor();
+    if (c == '\n' || c == '\r') {           
+        terminal[tid].terminal_x = 0;
+        terminal[tid].terminal_y++;
+        if (terminal[tid].terminal_y == NUM_ROWS){
+            vertical_scroll();
+            terminal[tid].terminal_y--;
+        }
+    } 
+    else { 
+        *(uint8_t *)(video_mem + ((NUM_COLS * terminal[tid].terminal_y + terminal[tid].terminal_x) << 1)) = c;
+        *(uint8_t *)(video_mem + ((NUM_COLS * terminal[tid].terminal_y + terminal[tid].terminal_x) << 1) + 1) = ATTRIB;
+        terminal[tid].terminal_x++;
+        terminal[tid].terminal_x %= NUM_COLS;
+        terminal[tid].terminal_y = (terminal[tid].terminal_y + (terminal[tid].terminal_x / NUM_COLS)) % NUM_ROWS;
+    }
+    move_cursor(curr_terminal);
+    sti();
+    return;
 }
 
 /* int8_t* itoa(uint32_t value, int8_t* buf, int32_t radix);

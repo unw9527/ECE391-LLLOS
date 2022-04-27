@@ -3,7 +3,7 @@
 .globl DOUBLE_FAULT_EXCEPTION, COPROCESSOR_SEGMENT_OVERRUN, INVALID_TSS_EXCEPTION, SEGMENT_NOT_PRESENT
 .globl STACK_FAULT_EXCEPTION, GENERAL_PROTECTION_EXCEPTION, PAGE_FAULT_EXCEPTION, MATH_ERROR
 .globl ALIGNMENT_CHECK_EXCEPTION, MACHINE_CHECK_EXCEPTION, FLOATING_POINT_EXCEPTION
-.globl KEYBOARD_INT, RTC_INT
+.globl KEYBOARD_INT, RTC_INT, PIT_INT
 
 
 # The exception jump table
@@ -87,13 +87,17 @@ FLOATING_POINT_EXCEPTION:
 
 
 
-# The interrupt jump table
+PIT_INT:
+    cli
+    pushl $0xFFFFFFFF
+    jmp   COMMON_INT
+
 KEYBOARD_INT:
-    sti
+    cli
     pushl $0xFFFFFFFE                                                 # Push the opposite value to the stack.
     jmp COMMON_INT                                                   # Jump to common interrupt.
 RTC_INT:
-    sti
+    cli
     pushl $0xFFFFFFF7
     jmp COMMON_INT
 
@@ -134,4 +138,5 @@ do_INT:
     popal
     popl %eax
     addl $4, %esp
+    sti
     iret

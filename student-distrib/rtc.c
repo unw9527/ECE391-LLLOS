@@ -2,6 +2,13 @@
 #include "rtc.h"
 #include "i8259.h"
 #include "tests.h"
+#include "scheduling.h"
+#include "terminal.h"
+
+int rtc_active[3]       = {0,0,0};
+int rtc_flag[3]         = {1,1,1};
+int rtc_counter[3]      = {0,0,0};
+int rtc_init_counter[3] = {0,0,0};
 
 /* void RTC_init(void);
  * Inputs: void
@@ -38,12 +45,26 @@ void RTC_init()
  * Function: handle the RTC */
 void RTC_handler()
 {
+    int i;
     // if (get_counter() == 3)
     //     test_interrupts();
-    send_eoi(8); // IRQ 8
+
     outb(REG_C, CMOS_PORT_0);                                             /* Do some strange stuff with register C.*/
     inb(CMOS_PORT_1);
     RTC_intr = 1;
+    send_eoi(8); // IRQ 8
+    for (i = 0; i < 3; i++) // three terminals
+    {
+        rtc_counter[i]--;
+        /* Check if counter has reached zero */
+        if(rtc_counter[i] == 0)
+        {
+            /* Clear interrupt flag */
+            rtc_flag[i] = 0;
+            /* Reset counter */
+            rtc_counter[i] = rtc_init_counter[i];
+        }
+    }
 }
 
 
@@ -52,7 +73,15 @@ void RTC_handler()
  * Return Value: 0
  * Function: provides access to the ﬁle system */
 int32_t RTC_open(const uint8_t * filename){
-    RTC_set_freq(RTC_RATE_2); // set to 2 Hz
+    int32_t freq = 2;
+
+    /* Set RTC to active for the running terminal */
+    rtc_active[running_term] = 1;
+
+    rtc_counter[running_term] = 1024/freq;
+
+    rtc_init_counter[running_term] = rtc_counter[running_term];
+
     return 0;
 }
 
@@ -62,6 +91,7 @@ int32_t RTC_open(const uint8_t * filename){
  * Return Value: 0
  * Function: closes the speciﬁed ﬁle descriptor and makes it available for return from later calls to open */
 int32_t RTC_close(int32_t fd){
+    rtc_active[running_term] = 0;
     return 0;
 }
 
@@ -71,9 +101,16 @@ int32_t RTC_close(int32_t fd){
  * Return Value: 0
  * Function: set a ﬂag and wait until the interrupt handler clears it, then return 0 */
 int32_t RTC_read(int32_t fd, void * buf, int32_t nbytes){
-    RTC_intr = 0;
-    while (0 == RTC_intr){} // wait here
-    RTC_intr = 0; // reset
+    if(rtc_active[running_term] == 1)
+        rtc_flag[running_term] = 1;
+
+    
+    sti();
+
+    /* Wait until interrupt handler clears flag */
+    while (rtc_flag[running_term]);
+
+    cli();
     return 0;
 }
 
@@ -83,22 +120,34 @@ int32_t RTC_read(int32_t fd, void * buf, int32_t nbytes){
  * Return Value: 0
  * Function: writes data to the terminal or to a device (RTC) */
 int32_t RTC_write(int32_t fd, const void * buf, int32_t nbytes){
-    int power;
-    char rate;
-    if (NULL == buf || 4 != nbytes) return -1;
-    int32_t freq = *((int32_t*) buf);
-    if ((freq & (freq - 1)) != 0) return -1; // one line formula to check whether freq is a power of 2
-    power = 0;
-    while (1 < freq){
-        freq >>= 1;
-        power++;
-    }
-    // the following values are found in the datasheet of RTC 
-    rate = 16 - power;
-    // mp3 doc further requires frequency not going beyond 1024 Hz, not below 2 Hz
-    if (RTC_RATE_1024 > rate || RTC_RATE_2 < rate) return -1;
-    RTC_set_freq(rate);
-    return 0;
+    int32_t freq, valid_freq;
+
+    /* Check for null pointer */
+    if (buf == NULL)
+      return -1;
+
+    /* Check for size */
+    if (nbytes != 4) // 4 bytes
+      return -1;
+
+    /* Get the frequency value */
+    freq = *((int32_t*)buf);
+
+    /* Check if frequency is in valid range */
+    if (freq < MIN_FREQ || freq > MAX_FREQ)
+      return -1;
+
+    /* Check if frequency is a power of 2 */
+    valid_freq = !(freq & (freq - 1));
+    if (valid_freq != 1)
+      return -1;
+
+    rtc_counter[running_term] = MAX_FREQ / FREQ_COEF / freq;
+
+    rtc_init_counter[running_term] = rtc_counter[running_term];
+
+    /* Return number of bytes written */
+    return 4;
 }
 
 

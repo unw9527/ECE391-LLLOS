@@ -8,6 +8,7 @@
 #include "i8259.h"
 #include "keyboard.h"
 #include "rtc.h"
+#include "scheduling.h"
 #include "syscall.h"
 
 int32_t exception_happen;
@@ -22,115 +23,97 @@ void exception_handler(uint32_t num) {
     case 0:
         exception_happen = 1;
         printf("Devide Error Exception\n");
-        sti();
         sys_halt(0);
         break;
     case 1:
         exception_happen = 1;
         printf("Debug Exception\n");
-        sti();
         sys_halt(0);
         break;
     case 2:
         exception_happen = 1;
         printf("NMI Interrupt\n");
-        sti();
         sys_halt(0);
         break;
     case 3:
         exception_happen = 1;
         printf("Breakpoint Exception\n");
-        sti();
         sys_halt(0);
         break;
     case 4:
         exception_happen = 1;
         printf("Overflow Exception\n");
-        sti();
         sys_halt(0);
         break;
     case 5:
         exception_happen = 1;
         printf("BOUND Range Exceeded Exception\n");
-        sti();
         sys_halt(0);
         break;
     case 6:
         exception_happen = 1;
         printf("Invalid Opcode Exception\n");
-        sti();
         sys_halt(0);
         break;
     case 7:
         exception_happen = 1;
         printf("Device Not Available Exception\n");
-        sti();
         sys_halt(0);
         break;
     case 8:
         exception_happen = 1;
         printf("Double Fault Exception\n");
-        sti();
         sys_halt(0);
         break;
     case 9:
         exception_happen = 1;
         printf("Coprocessor Segment Overrun\n");
-        sti();
         sys_halt(0);
         break;
     case 10:
         exception_happen = 1;
         printf("Invalid TSS Exception\n");
-        sti();
         sys_halt(0);
         break;
     case 11:
         exception_happen = 1;
         printf("Segment Not Present\n");
-        sti();
         sys_halt(0);
         break;
     case 12:
         exception_happen = 1;
         printf("Stack Fault Exception\n");
-        sti();
         sys_halt(0);
         break;
     case 13:
         exception_happen = 1;
         printf("General Protection Exception\n");
-        sti();
         sys_halt(0);
         break;
     case 14:
         exception_happen = 1;
         printf("Page-Fault Exception\n");
-        sti();
         sys_halt(0);
         break;
     case 16:
         exception_happen = 1;
         printf("x87 FPU Floating-Point Error\n");
-        sti();
         sys_halt(0);
         break;
     case 17:
         exception_happen = 1;
         printf("Alignment Check Exception\n");
-        sti();
+
         sys_halt(0);
         break;
     case 18:
         exception_happen = 1;
         printf("Machine-Check Exception\n");
-        sti();
         sys_halt(0);
         break;
     case 19:
         exception_happen = 1;
         printf("SIMD Floating-Point Exception\n");
-        sti();
         sys_halt(0);
         break;
     default:
@@ -146,6 +129,9 @@ void interrupt_handler(uint32_t num)
 {
     switch (num)
     {
+        case 0:
+            PIT_handler();
+            break;
         case 1:
             keyboard_handler();
             break;
@@ -185,6 +171,7 @@ void idt_initial(void) {
     SET_IDT_ENTRY(idt[17], ALIGNMENT_CHECK_EXCEPTION);
     SET_IDT_ENTRY(idt[18], MACHINE_CHECK_EXCEPTION);
     SET_IDT_ENTRY(idt[19], FLOATING_POINT_EXCEPTION);
+    SET_IDT_ENTRY(idt[PIT_IDT], PIT_INT);
     SET_IDT_ENTRY(idt[KEYBOARD_IDT], KEYBOARD_INT);
     SET_IDT_ENTRY(idt[RTC_IDT], RTC_INT);
     SET_IDT_ENTRY(idt[SYSTEM_IDT], system_call);
@@ -215,4 +202,6 @@ void idt_initial(void) {
     idt[RTC_IDT].present = 1;
     idt[SYSTEM_IDT].present = 1;
     idt[SYSTEM_IDT].dpl = 3;
+    idt[PIT_IDT].reserved3 = 0; // change from TRAP to INTR
+    idt[PIT_IDT].present = 1;
 }
