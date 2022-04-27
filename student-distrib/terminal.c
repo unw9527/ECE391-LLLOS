@@ -4,6 +4,7 @@
 #include "x86_desc.h"
 #include "syscall.h"
 #include "scheduling.h"
+#include "history.h"
 /* void clear_buffer(void)
  * Inputs: void
  * Return Value: none
@@ -75,12 +76,22 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
         size = MAX_BUFFER;
     enter_flag[running_term] = 0;
 
+    if (curr_history_id == MAX_HISTORY){
+        update_history(1); // 1 means we need to reset curr_history_id to 0
+    }
+
     for (i = 0; i < MAX_BUFFER; i++){       // store the line buffer to the buf
-        if (i < terminal[running_term].buffer_index) 
+        if (i < terminal[running_term].buffer_index){ 
             buf1[i] = terminal[running_term].line_buffer[i];
+            // store history
+            history_holder[curr_history_id][i] = buf1[i];
+        }
         terminal[running_term].line_buffer[i] = NULL;
     }
     buf1[terminal[running_term].buffer_index] = NEW_LINE;
+    // story history
+    history_holder[curr_history_id][terminal[running_term].buffer_index] = NEW_LINE;
+    update_history(0);
     terminal[running_term].buffer_index = 0;
     sti();
     return size+1;
