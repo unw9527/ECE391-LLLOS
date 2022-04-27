@@ -137,9 +137,10 @@ void echo(uint8_t ascii_value) {
     }
     else if (shift)
             ascii = shift_ascii(ascii);
-    putc(ascii, curr_terminal);
+    
     // determine whether the backspace is pressed
     if (ascii == BACKSPACE) {
+        putc(ascii, curr_terminal);
         if (terminal[curr_terminal].buffer_index > 0) {                                 // decrement the line buffer
             if (terminal[curr_terminal].buffer_index <= MAX_BUFFER)
                 terminal[curr_terminal].line_buffer[terminal[curr_terminal].buffer_index - 1] = NEW_LINE;
@@ -151,9 +152,10 @@ void echo(uint8_t ascii_value) {
             terminal[curr_terminal].line_buffer[terminal[curr_terminal].buffer_index] = ascii;
             terminal[curr_terminal].line_buffer[terminal[curr_terminal].buffer_index + 1] = NEW_LINE;
             terminal[curr_terminal].buffer_index++;
+            putc(ascii, curr_terminal);
         }
         else {
-            terminal[curr_terminal].buffer_index++;
+            // terminal[curr_terminal].buffer_index++;
             // if (enter) {
             //     terminal[curr_terminal].buffer_index = 0;
             //     enter = 0;
@@ -226,14 +228,14 @@ void keyboard_handler(void) {
     case 0x1C:          // Enter pressed
         ascii_value = 0x0A;
         enter_flag[curr_terminal] = 1;
-        restore_vid_mem();
+        store_vid_mem(curr_terminal);
         putc('\n', curr_terminal);
         store_vid_mem(running_term);
         send_eoi(KEYBOARD_IRQ);
         sti();
         return;
     case 0x9C:         // Enter released
-        restore_vid_mem();
+        store_vid_mem(curr_terminal);
         store_vid_mem(running_term);
         send_eoi(KEYBOARD_IRQ);
         sti();
@@ -285,13 +287,14 @@ void keyboard_handler(void) {
 
     }
 
-    restore_vid_mem();
+    store_vid_mem(curr_terminal);
     /* ctrl + l */
     if (ctrl & (ascii_value == 0x6C)) {
         send_eoi(KEYBOARD_IRQ);
         sti();   
         clear();                            // clear the creen
         reset_cursor();     
+        printf("391OS> ");
         buffer_index = 0;                   // reset the buffer index
         enter = 0;  
         sti();                         

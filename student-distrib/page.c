@@ -148,14 +148,6 @@ void set_video_page()
     return;
 }
 
-void restore_vid_mem(void){
-    page_table[VIDEO / BOUNDARY].kb_4_page.PBA = (uint32_t)(VIDEO / BOUNDARY);
-    page_table[VIDEO / BOUNDARY].kb_4_page.U_S = 1;
-    page_table[VIDEO / BOUNDARY].kb_4_page.R_W = 1;
-    page_table[VIDEO / BOUNDARY].kb_4_page.P = 1;
-    flush_tlb();
-    return;
-}
 
 void store_vid_mem(int32_t term_id){
     if(curr_terminal == term_id) {

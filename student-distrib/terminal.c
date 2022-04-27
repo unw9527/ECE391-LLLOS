@@ -118,7 +118,7 @@ void switch_terminal(int32_t term_id)
         return;
 
     curr_terminal = term_id;
-    restore_vid_mem();
+    store_vid_mem(curr_terminal);
 
     memcpy((void*) terminal[prev_terminal].vid_mem, (const void*)VIDEO, 4096);
 

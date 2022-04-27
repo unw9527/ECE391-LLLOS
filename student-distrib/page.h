@@ -81,6 +81,5 @@ int32_t swap_page(uint32_t process_ct);
 void flush_tlb();
 int en_pg(general_page_entry_t* pt);
 void set_video_page();
-void restore_vid_mem(void);
 void store_vid_mem(int32_t term_id);
 #endif
