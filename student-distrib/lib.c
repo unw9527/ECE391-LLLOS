@@ -235,7 +235,7 @@ void putc(uint8_t c, int32_t tid) {
         return;
     }
 
-    if (terminal[tid].terminal_x == NUM_COLS - 1) {         // Determine whether the vertical scroll is needed
+    if (terminal[tid].terminal_x == NUM_COLS - 1 && c != '\n') {         // Determine whether the vertical scroll is needed
         terminal[tid].terminal_x = 0;
         terminal[tid].terminal_y++;
         if (terminal[tid].terminal_y == NUM_ROWS){
@@ -259,6 +259,8 @@ void putc(uint8_t c, int32_t tid) {
         terminal[tid].terminal_y = (terminal[tid].terminal_y + (terminal[tid].terminal_x / NUM_COLS)) % NUM_ROWS;
     }
     move_cursor(curr_terminal);
+    sti();
+    return;
 }
 
 /* int8_t* itoa(uint32_t value, int8_t* buf, int32_t radix);

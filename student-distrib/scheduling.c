@@ -63,6 +63,7 @@ void PIT_handler(){
         return;
     }
 
+    pid = next_pid;
     set_video_page();
     swap_page(next_pid);
     store_vid_mem(running_term);  

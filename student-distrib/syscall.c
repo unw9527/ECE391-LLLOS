@@ -23,7 +23,7 @@ int32_t sys_halt (uint8_t status) {
     uint32_t extend_status;
     cli();
 
-    pid = terminal[running_term].prog_array[terminal[running_term].terminal_prog_count-1];
+    terminal[running_term].terminal_prog_count--;
     process_one_hot[pid] = 0;       /* Clear the assosiate process_one_hot entry.  */
     /* Close the all the file descriptor (except for stdin and stdout).  */
     for (i = 2; i < DESP_NUM; i++) {
@@ -35,11 +35,10 @@ int32_t sys_halt (uint8_t status) {
 
     /* Determine whether the current processor is shell     */
     if (terminal[running_term].terminal_prog_count == 0) {
-        pid = -1;
         sys_execute((uint8_t *) "shell");       // If the shell is close, reboot it
     }
 
-    terminal[running_term].terminal_prog_count--;
+    
     /* Restore parent paging */
     swap_page(terminal[running_term].prog_array[terminal[running_term].terminal_prog_count - 1]);
 
@@ -226,7 +225,7 @@ int32_t sys_open (const uint8_t* filename)
     int32_t fd;
     int32_t (**pt)(const uint8_t*);
     dentry_t dentry;
-    pid = terminal[running_term].prog_array[terminal[running_term].terminal_prog_count-1];
+
     /* If the file does not exists, return -1.*/
     if (read_dentry_by_name(filename, &dentry) == -1)
         return -1;
@@ -278,7 +277,7 @@ int32_t sys_open (const uint8_t* filename)
 int32_t sys_close (int32_t fd)
 {
     int32_t (**pt)(int32_t);
-    pid = terminal[running_term].prog_array[terminal[running_term].terminal_prog_count-1];
+
     /* If fd corresponds to stdin and stdout, return -1.*/
     if (fd == 0 || fd == 1 || fd < 0 || fd > 7)
         return -1;
@@ -300,7 +299,7 @@ int32_t sys_read (int32_t fd, void* buf, int32_t nbytes)
 {
     int32_t bytes_read;
     int32_t (**pt)(int32_t, void* , int32_t);
-    pid = terminal[running_term].prog_array[terminal[running_term].terminal_prog_count-1];
+
     if (fd < 0 || fd > 7 || fd == 1)
         return -1;
     if (PCB_array[NUM_PROCESS-1-pid].thread_info.file_array[fd].flags == 0)
@@ -320,7 +319,7 @@ int32_t sys_write(int32_t fd, const void* buf, int32_t nbytes)
 {
     int32_t bytes_written;
     int32_t (**pt)(int32_t, const void*, int32_t);
-    pid = terminal[running_term].prog_array[terminal[running_term].terminal_prog_count-1];
+
     if (fd <= 0 || fd > 7)
         return -1;
 
@@ -340,7 +339,7 @@ int32_t sys_write(int32_t fd, const void* buf, int32_t nbytes)
 int32_t sys_getargs (uint8_t* buf, int32_t nbytes)
 {
     uint32_t length;
-    pid = terminal[running_term].prog_array[terminal[running_term].terminal_prog_count-1];
+
     length = strlen((const int8_t*)PCB_array[NUM_PROCESS-1-pid].thread_info.arg_buf);
     /* If the argument does not fit into buffer or null pointer or null string, return -1.*/
     if (buf == 0 || length == 128 || PCB_array[NUM_PROCESS-1-pid].thread_info.arg_buf[0] == 0)
