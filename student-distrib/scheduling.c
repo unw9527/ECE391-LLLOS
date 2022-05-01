@@ -7,6 +7,11 @@
 #include "x86_desc.h"
 #include "syscall.h"
 
+/* Note:
+ * Some code that relates to initialization is from 
+ * http://www.osdever.net/bkerndev/Docs/pit.htm
+ */
+
 /*
  * void pit_init(int hz)
  * Input: none

@@ -10,6 +10,11 @@ int rtc_active[3] = {0,0,0};
 int rtc_count[3] = {0,0,0};
 int rtc_count1[3] = {0,0,0};
 
+/* Note:
+ * Some code that relates to turning on IRQ and setting the frequency is from
+ * https://wiki.osdev.org/RTC
+ */
+
 /* void RTC_init(void);
  * Inputs: void
  * Return Value: none
@@ -152,3 +157,5 @@ int32_t (*read_rtc_pt) (int32_t, void*, int32_t) = RTC_read;
 int32_t (*open_rtc_pt) (const uint8_t*) = RTC_open;
 int32_t (*close_rtc_pt) (int32_t) = RTC_close;
 int32_t (*write_rtc_pt) (int32_t, const void*, int32_t) = RTC_write;
+
+
