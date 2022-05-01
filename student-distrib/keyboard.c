@@ -259,7 +259,7 @@ void keyboard_handler(void) {
         return;
     case 0x48: // up arrow pressed 
         send_eoi(KEYBOARD_IRQ);
-        if (0 == normal_key){
+        if ((0 == normal_key) || (0 == terminal[curr_terminal].buffer_index)){
             retrieve_history_up(start_x, start_y);
         }
         sti();
@@ -283,7 +283,7 @@ void keyboard_handler(void) {
         return;
     default:
         ascii_value = key_to_ascii(scan_code);
-        if (scan_code != 0xE0)  normal_key = 1;
+        if ((32 <= ascii_value) && (127 >= ascii_value))  normal_key = 1;
     }
     
     if(alt && !shift) {
