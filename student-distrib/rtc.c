@@ -5,10 +5,10 @@
 #include "scheduling.h"
 #include "terminal.h"
 
-int rtc_active[3]       = {0,0,0};
-int rtc_flag[3]         = {1,1,1};
-int rtc_counter[3]      = {0,0,0};
-int rtc_init_counter[3] = {0,0,0};
+int rtc_flag[3] = {1,1,1};
+int rtc_active[3] = {0,0,0};
+int rtc_count[3] = {0,0,0};
+int rtc_count1[3] = {0,0,0};
 
 /* void RTC_init(void);
  * Inputs: void
@@ -46,23 +46,20 @@ void RTC_init()
 void RTC_handler()
 {
     int i;
-    // if (get_counter() == 3)
-    //     test_interrupts();
-
     outb(REG_C, CMOS_PORT_0);                                             /* Do some strange stuff with register C.*/
     inb(CMOS_PORT_1);
     RTC_intr = 1;
     send_eoi(8); // IRQ 8
     for (i = 0; i < 3; i++) // three terminals
     {
-        rtc_counter[i]--;
+        rtc_count[i]--;
         /* Check if counter has reached zero */
-        if(rtc_counter[i] == 0)
+        if(rtc_count[i] == 0)
         {
             /* Clear interrupt flag */
             rtc_flag[i] = 0;
             /* Reset counter */
-            rtc_counter[i] = rtc_init_counter[i];
+            rtc_count[i] = rtc_count1[i];
         }
     }
 }
@@ -78,9 +75,9 @@ int32_t RTC_open(const uint8_t * filename){
     /* Set RTC to active for the running terminal */
     rtc_active[running_term] = 1;
 
-    rtc_counter[running_term] = 1024/freq;
+    rtc_count[running_term] = 1024/freq;
 
-    rtc_init_counter[running_term] = rtc_counter[running_term];
+    rtc_count1[running_term] = rtc_count[running_term];
 
     return 0;
 }
@@ -103,13 +100,9 @@ int32_t RTC_close(int32_t fd){
 int32_t RTC_read(int32_t fd, void * buf, int32_t nbytes){
     if(rtc_active[running_term] == 1)
         rtc_flag[running_term] = 1;
-
-    
     sti();
-
-    /* Wait until interrupt handler clears flag */
+    // Wait until interrupt handler clears flag
     while (rtc_flag[running_term]);
-
     cli();
     return 0;
 }
@@ -120,34 +113,23 @@ int32_t RTC_read(int32_t fd, void * buf, int32_t nbytes){
  * Return Value: 0
  * Function: writes data to the terminal or to a device (RTC) */
 int32_t RTC_write(int32_t fd, const void * buf, int32_t nbytes){
-    int32_t freq, valid_freq;
+    int32_t freq;
 
-    /* Check for null pointer */
-    if (buf == NULL)
+    // Check for null pointer or size
+    if ((buf == NULL) || (nbytes != 4))
       return -1;
 
-    /* Check for size */
-    if (nbytes != 4) // 4 bytes
-      return -1;
-
-    /* Get the frequency value */
+    // Get the frequency value
     freq = *((int32_t*)buf);
 
-    /* Check if frequency is in valid range */
-    if (freq < MIN_FREQ || freq > MAX_FREQ)
+    if ((freq < MIN_FREQ || freq > MAX_FREQ) || ((!(freq & (freq - 1))) != 1))
       return -1;
 
-    /* Check if frequency is a power of 2 */
-    valid_freq = !(freq & (freq - 1));
-    if (valid_freq != 1)
-      return -1;
+    rtc_count[running_term] = MAX_FREQ / FREQ_COEF / freq;
+    rtc_count1[running_term] = rtc_count[running_term];
 
-    rtc_counter[running_term] = MAX_FREQ / FREQ_COEF / freq;
-
-    rtc_init_counter[running_term] = rtc_counter[running_term];
-
-    /* Return number of bytes written */
-    return 4;
+    // Return number of bytes
+    return nbytes;
 }
 
 
@@ -157,10 +139,10 @@ int32_t RTC_write(int32_t fd, const void * buf, int32_t nbytes){
  * Function: change the rate based on the frequency in Hz */
 void RTC_set_freq(int32_t rate){
     char prev;
-    cli(); // disable interrupts
-    outb(REG_A, CMOS_PORT_0); // select register A, and disable NMI
-    prev = inb(CMOS_PORT_1); // read the current value of register A
-    outb(REG_A, CMOS_PORT_0); // set the index again
+    cli();                                  // disable interrupts
+    outb(REG_A, CMOS_PORT_0);               // select register A, and disable NMI
+    prev = inb(CMOS_PORT_1);                // read the current value of register A
+    outb(REG_A, CMOS_PORT_0);               // set the index again
     outb((prev & 0xF0) | rate, CMOS_PORT_1);
     sti();
 

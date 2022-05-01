@@ -16,6 +16,11 @@ void clear_buffer(void) {
     }
 }
 
+
+/* int32_t terminal_init(void)
+ * Inputs: void
+ * Return Value: 0
+ * Function: Initial the terminal */
 void terminal_init(void) {
 
     clear();
@@ -29,9 +34,9 @@ void terminal_init(void) {
          terminal[i].buffer_index = 0;
          terminal[i].terminal_prog_count = 0;
 	}
-    terminal[0].vid_mem = TERM_1_PHYS_ADDR;
-    terminal[1].vid_mem = TERM_2_PHYS_ADDR;
-    terminal[2].vid_mem = TERM_3_PHYS_ADDR;
+    terminal[0].vid_mem = TERMINAL1_ADDRESS;
+    terminal[1].vid_mem = TERMINAL2_ADDRESS;
+    terminal[2].vid_mem = TERMINAL3_ADDRESS;
 	return;
 }
 
@@ -105,32 +110,31 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes) {
     return nbytes;
 }
 
-void switch_terminal(int32_t term_id)
-{   
+/* int32_t switch_terminal(int32_t term_id)
+ * Inputs: term_id -- the terminal id to be switched
+ * Return Value: none
+ * Function: switch the terminal */
+void switch_terminal(int32_t term_id) {   
     int32_t prev_terminal;
 
-    if( term_id < 0 || term_id > 2)
+    if( term_id < 0 || term_id > 2)         // check whether the terminal id is valid
         return;
 
-    prev_terminal = curr_terminal;
+    prev_terminal = curr_terminal;          // store the previous terminal id
 
-    if (term_id == prev_terminal)
+    if (term_id == prev_terminal)           // if the terminal id equals to the previos terminal, just return
         return;
 
-    curr_terminal = term_id;
-    store_vid_mem(curr_terminal);
+    curr_terminal = term_id;                // switch to current terminal
 
-    memcpy((void*) terminal[prev_terminal].vid_mem, (const void*)VIDEO, 4096);
+    store_vid_mem(curr_terminal);           // store the video memory to the current terminal
 
-    memcpy((void*)VIDEO, (const void*) terminal[curr_terminal].vid_mem, 4096);    
+    // Copy the memory between current terminal and previous terminal
+    memcpy((void*) terminal[prev_terminal].vid_mem, (const void*)VIDEO, VIDEO_MEM_SIZE);      
+
+    memcpy((void*)VIDEO, (const void*) terminal[curr_terminal].vid_mem, VIDEO_MEM_SIZE);    
     
-    // if (terminal[curr_terminal].terminal_prog_count == 0) {
-    //     sys_execute((uint8_t*)"shell");
-    // }
-    // else {
-    // pid = terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count-1];
-    // }
-    
+    // Move the cursor to the current terminal
     move_cursor(curr_terminal);
 
     return;

@@ -241,12 +241,12 @@ void keyboard_handler(void) {
         sti();
         return;
 
-    case 0x38:
+    case 0x38:         // Alt pressed
         alt = 1;
         send_eoi(KEYBOARD_IRQ);
         sti();
-        return;
-    case 0xB8:
+        return; 
+    case 0xB8:         // Alt released
         alt = 0;
         send_eoi(KEYBOARD_IRQ);
         sti();
@@ -301,16 +301,16 @@ void keyboard_handler(void) {
         return;                            
     }
 
-    /* ctrl + space */
-    if (ctrl & (scan_code == 0x39)) {
-        send_eoi(KEYBOARD_IRQ);
-        sti();
-        refresh_and_test();                 // change test
-        buffer_index = 0;                   // reset the buffer index
-        enter = 0;
-        sti();
-        return;
-    }
+    // /* ctrl + space */
+    // if (ctrl & (scan_code == 0x39)) {
+    //     send_eoi(KEYBOARD_IRQ);
+    //     sti();
+    //     refresh_and_test();                 // change test
+    //     buffer_index = 0;                   // reset the buffer index
+    //     enter = 0;
+    //     sti();
+    //     return;
+    // }
 
     // echo the key
     echo(ascii_value);

@@ -12,8 +12,14 @@ general_page_entry_t page_directory[NUM_PAGE_ENTRY] __attribute__((aligned (BOUN
 general_page_entry_t page_table[NUM_PAGE_ENTRY] __attribute__((aligned (BOUNDARY)));
 general_page_entry_t video_page_table[NUM_PAGE_ENTRY] __attribute__((aligned (BOUNDARY)));
 
-int page_init()
-{
+/*
+ * int page_init()
+ * input: none
+ * output: none
+ * effect: initial the page table
+ * side effect: none
+ */
+int page_init() {
     int i;
     /* Step 1. Initialize the page directory.
     First set all the directory entries to be the same.*/
@@ -57,18 +63,18 @@ int page_init()
         page_table[i].kb_4_page.PBA = i;                             /* The address of the pages, set to i to avoid further modification.*/
     }
     /* Then we change the page entries corresponds to video memory.*/
-    page_table[VIDEO/BOUNDARY + 0].kb_4_page.P = 1;
-    page_table[VIDEO/BOUNDARY + 0].kb_4_page.R_W = 1;
-    page_table[VIDEO/BOUNDARY + 0].kb_4_page.U_S = 1;
-    page_table[VIDEO/BOUNDARY + 1].kb_4_page.P = 1;
-    page_table[VIDEO/BOUNDARY + 1].kb_4_page.R_W = 1;
-    page_table[VIDEO/BOUNDARY + 1].kb_4_page.U_S = 1;
-    page_table[VIDEO/BOUNDARY + 2].kb_4_page.P = 1;
-    page_table[VIDEO/BOUNDARY + 2].kb_4_page.R_W = 1;
-    page_table[VIDEO/BOUNDARY + 2].kb_4_page.U_S = 1;
-    page_table[VIDEO/BOUNDARY + 3].kb_4_page.P = 1;
-    page_table[VIDEO/BOUNDARY + 3].kb_4_page.R_W = 1;
-    page_table[VIDEO/BOUNDARY + 3].kb_4_page.U_S = 1;
+    page_table[VIDEO / BOUNDARY].kb_4_page.P = 1;
+    page_table[VIDEO / BOUNDARY].kb_4_page.R_W = 1;
+    page_table[VIDEO / BOUNDARY].kb_4_page.U_S = 1;
+    page_table[VIDEO / BOUNDARY + 1].kb_4_page.P = 1;
+    page_table[VIDEO / BOUNDARY + 1].kb_4_page.R_W = 1;
+    page_table[VIDEO / BOUNDARY + 1].kb_4_page.U_S = 1;
+    page_table[VIDEO / BOUNDARY + 2].kb_4_page.P = 1;
+    page_table[VIDEO / BOUNDARY + 2].kb_4_page.R_W = 1;
+    page_table[VIDEO / BOUNDARY + 2].kb_4_page.U_S = 1;
+    page_table[VIDEO / BOUNDARY + 3].kb_4_page.P = 1;
+    page_table[VIDEO / BOUNDARY + 3].kb_4_page.R_W = 1;
+    page_table[VIDEO / BOUNDARY + 3].kb_4_page.U_S = 1;
     /* Step3. Call the enable_page to en_pg to enable the paging.*/
     en_pg(page_directory);
     flush_tlb();
@@ -112,33 +118,10 @@ void set_video_page()
     page_directory[USER_VIDEO].kb_4_dir.Reserved = 0;
     /* The virtual address is just the physical address for kernel.*/
     page_directory[USER_VIDEO].kb_4_dir.PTBA = (uint32_t)page_table >> SR;
-    /* Set the page table for video memory.*/
-    // for (i = 0; i < NUM_PAGE_ENTRY; i++){
-    //     video_page_table[i].kb_4_page.P = 1;
-    //     video_page_table[i].kb_4_page.R_W = 1;
-    //     video_page_table[i].kb_4_page.U_S = 1;
-    //     video_page_table[i].kb_4_page.PWT = 0;
-    //     video_page_table[i].kb_4_page.PCD = 0;
-    //     video_page_table[i].kb_4_page.A = 0;
-    //     video_page_table[i].kb_4_page.D = 0;
-    //     video_page_table[i].kb_4_page.PAT = 0;
-    //     video_page_table[i].kb_4_page.G = 0;
-    //     video_page_table[i].kb_4_page.Avail = 0;
-    //     video_page_table[i].kb_4_page.PBA = i;
-    // }
     // /* Map the 0 entry to the fixed virtual address.*/
     page_table[0].kb_4_page.P = 1;
     page_table[0].kb_4_page.U_S = 1;
     page_table[0].kb_4_page.R_W = 1;
-    // video_page_table[1].kb_4_page.P = 1;
-    // video_page_table[1].kb_4_page.U_S = 1;
-    // video_page_table[1].kb_4_page.R_W = 1;
-    // video_page_table[2].kb_4_page.P = 1;
-    // video_page_table[2].kb_4_page.U_S = 1;
-    // video_page_table[2].kb_4_page.R_W = 1;
-    // video_page_table[3].kb_4_page.P = 1;
-    // video_page_table[3].kb_4_page.U_S = 1;
-    // video_page_table[3].kb_4_page.R_W = 1;
     /* Note that VIDEO % BOUNDARY = 0.*/
     if (curr_terminal == running_term)
         page_table[0].kb_4_page.PBA = (uint32_t)(VIDEO / BOUNDARY);
@@ -148,7 +131,14 @@ void set_video_page()
     return;
 }
 
-
+/*
+ * void store_vid_mem(int32_t term_id)
+ * input: term_id -- represent the id of the terminal to be store
+ * output: none
+ * effect: map the vidoe memory to b8 if term_id = curr_terminal
+ *         map the video memory to b9/ba/bb if term_id != curr_terminal
+ * side effect: 
+ */
 void store_vid_mem(int32_t term_id){
     if(curr_terminal == term_id) {
         page_table[VIDEO / BOUNDARY].kb_4_page.PBA = (uint32_t)(VIDEO / BOUNDARY);
@@ -163,7 +153,6 @@ void store_vid_mem(int32_t term_id){
         page_table[VIDEO / BOUNDARY].kb_4_page.P = 1;
     }
     flush_tlb();
-
     return;
 }
 

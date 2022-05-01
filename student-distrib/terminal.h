@@ -6,9 +6,11 @@
 #include "process.h"
 
 #define MAX_TERMINAL        3
-#define TERM_1_PHYS_ADDR    0xB9000
-#define TERM_2_PHYS_ADDR    0xBA000
-#define TERM_3_PHYS_ADDR    0xBB000
+#define TERMINAL1_ADDRESS   0xB9000
+#define TERMINAL2_ADDRESS   0xBA000
+#define TERMINAL3_ADDRESS   0xBB000
+#define VIDEO_MEM_SIZE      4096
+
 
 extern void clear_buffer(void);
 
@@ -35,7 +37,6 @@ typedef struct terminal {
          int32_t    vid_mem;
          int32_t    terminal_prog_count;
          int32_t    prog_array[6];
-        //  int32_t    enter_flag;
          volatile uint8_t    line_buffer[MAX_BUFFER];
          volatile int32_t    buffer_index;
 } terminal_t;

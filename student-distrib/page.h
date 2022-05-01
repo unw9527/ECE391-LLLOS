@@ -83,3 +83,4 @@ int en_pg(general_page_entry_t* pt);
 void set_video_page();
 void store_vid_mem(int32_t term_id);
 #endif
+
