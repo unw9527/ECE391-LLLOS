@@ -6,6 +6,7 @@
 #include "page.h"
 #include "scheduling.h"
 #include "history.h"
+#include "signal.h"
 
 // the key flag
 uint8_t caps;
@@ -348,6 +349,17 @@ void keyboard_handler(void) {
         sti();
         return;
     }
+
+    /* ctrl + c */
+    if (ctrl & (ascii_value == 0x63)){
+        send_eoi(KEYBOARD_IRQ);
+        signal_update(INTERRUPT);
+        buffer_index = 0;
+        enter = 0;
+        sti();
+        return;
+    }
+
 
     // echo the key
     echo(ascii_value);

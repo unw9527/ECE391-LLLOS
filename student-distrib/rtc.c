@@ -9,6 +9,7 @@ int rtc_active[3]       = {0,0,0};
 int rtc_flag[3]         = {1,1,1};
 int rtc_counter[3]      = {0,0,0};
 int rtc_init_counter[3] = {0,0,0};
+uint32_t time = 0;
 
 /* void RTC_init(void);
  * Inputs: void
@@ -18,8 +19,8 @@ void RTC_init()
 {
     uint32_t flags;
     unsigned char prev;
-    unsigned char rate = 3; 
-    RTC_intr = 0;                                         /* The maximux rates is 32784 >> 3 = 4096HZ*/
+    unsigned char rate = 5; 
+    RTC_intr = 0;                                         /* The maximux rates is 32784 >> 5 = 1024HZ*/
     cli_and_save(flags);
     outb(REG_B, CMOS_PORT_0);
     prev = inb(CMOS_PORT_1);
@@ -64,6 +65,12 @@ void RTC_handler()
             /* Reset counter */
             rtc_counter[i] = rtc_init_counter[i];
         }
+    }
+    time++;
+    /* Check for 10 seconds.*/
+    if (time == 4 * MAX_FREQ){
+        signal_update(ALARM);
+        time = 0;
     }
 }
 
@@ -142,7 +149,7 @@ int32_t RTC_write(int32_t fd, const void * buf, int32_t nbytes){
     if (valid_freq != 1)
       return -1;
 
-    rtc_counter[running_term] = MAX_FREQ / FREQ_COEF / freq;
+    rtc_counter[running_term] = MAX_FREQ / freq;
 
     rtc_init_counter[running_term] = rtc_counter[running_term];
 

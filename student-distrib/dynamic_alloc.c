@@ -218,24 +218,24 @@ void* alloc_pages(uint32_t gfp_mask, uint32_t order)
     if (order >= NUM_FREE_ELEMENT)
         return 0;
     /* Check __GFP__NORETRY.*/
-    if (gfp_mask && __GFP_NORETRY){
+    if (gfp_mask & __GFP_NORETRY){
         pointer = __rmqueue(order);
         /* Check whether fail.*/
         if (!pointer){
             /* Check  __GFP_NOWARN*/
-            if (gfp_mask && __GFP_NOWARN)
+            if (gfp_mask & __GFP_NOWARN)
                 return 0;
             printf("Out of Memory!\n");
             return 0;
         }
     }
     /* Check GFP_WAIT.*/
-    else if (gfp_mask && __GFP_WAIT){
+    else if (gfp_mask & __GFP_WAIT){
         while (pointer == 0)
             pointer = __rmqueue(order);
     }
     /* Check __GFP_ZERO*/
-    if (gfp_mask &&  __GFP_ZERO){
+    if (gfp_mask &  __GFP_ZERO){
         page_idx = (uint32_t) (pointer - mem_map);
         /* Get the start address to fill 0.*/
         fill_zero_pt = (void*) (page_idx * BOUNDARY);

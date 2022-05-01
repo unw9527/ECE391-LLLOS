@@ -17,7 +17,8 @@ uint32_t curr_ebp;
 
 uint32_t schedule;
 
-int32_t running_term;
+volatile int32_t running_term;
+extern int32_t signal_flag[3];
 // initialize PIT
 extern void PIT_init();
 // swap process to execute

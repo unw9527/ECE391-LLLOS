@@ -34,10 +34,12 @@ jump_table_syscall:
 
 system_call:
     # Save all the registers in the correct order.
+    pushl $0
+    pushl %eax
     pushl %fs
     pushl %es
     pushl %ds
-    pushl %gs
+    pushl %eax
     pushl %ebp
     pushl %edi
     pushl %esi
@@ -58,17 +60,35 @@ fail:
     # Return -1 in this case.
     movl $-1, %eax
 return_system_call:
+    cmpl $0x999, %eax
+    je POP_REG1
+    cmpl $0x888, %eax
+    je POP_REG2
+    movl %eax, 24(%esp)
+    movl 52(%esp), %eax
+    pushl %eax
+    call check_pending
+    popl %ebx
+    cmpl $-1, %eax
+    jne SIGNAL_DEAL
     # Pop all the registers in the correct order.
+POP_REG1:
     popl %ebx
     popl %ecx
     popl %edx
     popl %esi
     popl %edi
     popl %ebp
-    popl %gs
+    popl %eax
     popl %ds
     popl %es
     popl %fs
+    addl $8, %esp
     iret
     # Do not need to modify the %eax value since this is already done in the sub function.
+
+    # The case for user level.
+POP_REG2:
+    addl $8, %esp
+    jmp POP_REG1
 .end

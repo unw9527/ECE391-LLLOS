@@ -7,6 +7,8 @@
 #include "x86_desc.h"
 #include "syscall.h"
 
+int32_t signal_flag[3];
+
 /*
  * void pit_init(int hz)
  * Input: none
@@ -70,6 +72,11 @@ void PIT_handler(){
     tss.ss0 = KERNEL_DS;
     tss.esp0 = STACK_BASE - 4 * KERNEL_STACK * next_pid - 4;
     send_eoi(0);
+    /* Check whether ctrl c signal is sent.*/
+    if (signal_flag[running_term]){
+        signal_flag[running_term] = 0;
+        sys_halt(0);
+    }
     asm volatile(
         "movl %0, %%ebp       \n"
         "movl %1, %%esp       \n"

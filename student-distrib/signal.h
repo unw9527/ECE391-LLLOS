@@ -15,6 +15,12 @@
 #define USER2 5
 #define ALL_MASK 0x3f
 #define SIGPENDING_SIZE 12
+#define SIGNAL_SIZE 512
+#define EBP_OFFSET 3
+#define HARDWARE_CONTEXT 68
+#define MIDDLE_POS 64
+#define SIGCASE1 0x888
+#define SIGCASE2 0x999
 
 
 typedef struct sigpending
@@ -43,14 +49,18 @@ typedef struct sigpending_head
 } sigpending_head_t;
 
 extern sighand_t sighand_array[6];
+extern void* sig_pt;
 
+int32_t sighand_init();
 void div_zero_default();
 void segfault_default();
 void interrupt_default();
 void alarm_default();
 void user1_default();
+void kernel_dispatcher(uint32_t type);
 void user2_default();
 void signal_update(uint32_t type);
-void check_pending();
+int32_t check_pending(uint32_t cs);
+void user_signal(uint32_t signal_index);
 
 #endif

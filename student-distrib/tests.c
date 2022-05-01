@@ -240,30 +240,10 @@ int get_counter()
 
 void launch_tests()
 {
-	int i;
-	int* pt[50];
-	int* normal_pt;
-	int8_t string[20];
-	string[0] = 46;
-	string[1] = 0;
 	clear();
 	reset_cursor();
 	switch (test_counter){
 		case 0:
-			for (i = 0; i < 42; i++){
-				pt[i] = (int*)kmalloc(8192,__GFP_ZERO && __GFP_NORETRY);
-			}
-			//normal_pt = kmalloc(4, __GFP_ZERO && __GFP_NORETRY);
-			for (i = 0; i < 42; i++){
-				kfree(pt[i]);
-			}
-			for (i = 0; i <14; i++)
-			kmalloc(8192, __GFP_ZERO && __GFP_NORETRY);
-			// sys_execute((uint8_t*)"shell");
-			break;
-		case 1:
-		    // Init PIT
-   			PIT_init();
 			break;
 		default:
 			break;

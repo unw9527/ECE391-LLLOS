@@ -75,11 +75,12 @@ int page_init()
     /* Step3. Now we set 32 MB ~ 128MB.*/
     for (i = 0; i < REST_PAGE_TABLE; i++){
         page_directory[i+BASE_OFFSET_PAGE_DIR].kb_4_dir.P = 1;
+        page_directory[i+BASE_OFFSET_PAGE_DIR].kb_4_dir.U_S = 1;
         page_directory[i+BASE_OFFSET_PAGE_DIR].kb_4_dir.PTBA =(uint32_t)(&rest_page_table[i]) >> SR;
         for (j = 0; j < NUM_PAGE_ENTRY; j++){
             rest_page_table[i][j].kb_4_page.P = 1;
             rest_page_table[i][j].kb_4_page.R_W = 1;
-            rest_page_table[i][j].kb_4_page.U_S = 0;
+            rest_page_table[i][j].kb_4_page.U_S = 1;
             rest_page_table[i][j].kb_4_page.PWT = 0;
             rest_page_table[i][j].kb_4_page.PCD = 0;
             rest_page_table[i][j].kb_4_page.A = 0;

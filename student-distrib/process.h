@@ -29,6 +29,7 @@ typedef struct thread_info
     int32_t pending_exist;                                           /* This is used to indicate the existence of the pending signal.*/
     sigpending_head_t pending_list;                                  /* A linked list which stores the pending signals.*/
     uint32_t running;
+    volatile uint32_t sig_dealing;
 } thread_info_t;
 
 typedef struct PCB

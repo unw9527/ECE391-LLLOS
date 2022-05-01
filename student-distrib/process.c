@@ -52,6 +52,7 @@ int32_t set_up_PCB(int32_t process_ct, int32_t prev_process_ct, uint8_t* buf, ui
     PCB_array[NUM_PROCESS-1-pid].thread_info.pending_exist = 0;
     PCB_array[NUM_PROCESS-1-pid].thread_info.pending_list.head = 0;
     PCB_array[NUM_PROCESS-1-pid].thread_info.pending_list.tail = 0;
+    PCB_array[NUM_PROCESS-1-pid].thread_info.sig_dealing = 0;
 
     /* Store the ebp of its process */
     asm volatile("                         \n\
