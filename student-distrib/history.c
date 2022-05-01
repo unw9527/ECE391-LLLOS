@@ -146,7 +146,12 @@ void retrieve_history_down(int32_t start_x, int32_t start_y){
     sti();
 }
 
-
+/*
+ * void update_retri_id()
+ * Input: none
+ * Output: none
+ * Function: increment retrieve_history_id
+ */
 void update_retri_id(){
     retrieve_history_id++;
 }
