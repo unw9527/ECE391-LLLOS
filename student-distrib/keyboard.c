@@ -152,6 +152,9 @@ void echo(uint8_t ascii_value) {
                 terminal[curr_terminal].line_buffer[terminal[curr_terminal].buffer_index - 1] = NEW_LINE;
             }
             terminal[curr_terminal].buffer_index--;
+            if (terminal[curr_terminal].buffer_index == 0) {
+                update_retri_id();
+            }
         }
     }
     else {
@@ -259,7 +262,10 @@ void keyboard_handler(void) {
         return;
     case 0x48: // up arrow pressed 
         send_eoi(KEYBOARD_IRQ);
-        if ((0 == normal_key) || (0 == terminal[curr_terminal].buffer_index)){
+        if (0 == terminal[curr_terminal].buffer_index){
+            normal_key = 0;
+        }
+        if (0 == normal_key){
             retrieve_history_up(start_x, start_y);
         }
         sti();
@@ -283,7 +289,7 @@ void keyboard_handler(void) {
         return;
     default:
         ascii_value = key_to_ascii(scan_code);
-        if ((32 <= ascii_value) && (127 >= ascii_value))  normal_key = 1;
+        if (((32 <= ascii_value) && (127 >= ascii_value)) || (0 != terminal[curr_terminal].buffer_index) && (BACK_SPACE == ascii_value))  normal_key = 1;
     }
     
     if(alt && !shift) {

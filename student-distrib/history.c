@@ -147,3 +147,7 @@ void retrieve_history_down(int32_t start_x, int32_t start_y){
 }
 
 
+void update_retri_id(){
+    retrieve_history_id++;
+}
+
