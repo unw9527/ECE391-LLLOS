@@ -389,3 +389,68 @@ exception happens when I tried to go into them.
 
 Solution: I find I did not add these two functions in jump table so I added
 them.
+
+Checkpoint 5
+
+<--------------------------------------------------------->
+                          BUG 1                          
+<--------------------------------------------------------->
+File: kernel.c
+
+Time: 2022.4.22
+
+Creator: Li Kunle
+
+Description: Keyboard interrupts are ignored after adding 
+PIT initialization.
+
+Solution: Need to initialize the keyboard before PIT,
+
+<--------------------------------------------------------->
+                          BUG 2                          
+<--------------------------------------------------------->
+File: scheduling.c
+
+Time: 2022.4.22
+
+Creator: Li Kunle
+
+Description: When I run counter in one terminal and switch to another terminal and 
+then switch back, the counter stops.
+
+Solution: Need to store the esp and ebp of the current process before switching. Otherwise,
+cannot resume after switching back.
+
+<--------------------------------------------------------->
+                          BUG 3                          
+<--------------------------------------------------------->
+File: page.c
+
+Time: 2022.4.23
+
+Creator: Li Kunle
+
+Description: When the cursor reaches the bottom of the terminal, sometimes the keystrokes
+will be printed to another terminal instead of the one being displayed.
+
+Solution: When calling putc, we need to store the video memory of that terminal first, 
+and store the video memory to the running terminal afterwards.
+
+<--------------------------------------------------------->
+                          BUG 4                          
+<--------------------------------------------------------->
+File: page.c
+
+Time: 2022.4.24
+
+Creator: Li Kunle
+
+Description: When switching terminals manually, sometimes the content of the terminal
+is lost.
+
+Solution: We should only map the virtual address at 0xB8000 to the physical address, 
+and should not map the virtual memory starting at 0xB9000 or so.
+
+
+
+
