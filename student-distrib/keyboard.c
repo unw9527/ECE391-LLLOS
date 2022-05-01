@@ -13,7 +13,6 @@ uint8_t caps;
 uint8_t shift;
 uint8_t alt;
 uint8_t ctrl;
-uint8_t uparrow; // determines whether uparrow if pressed (1) or not (0) for a new command. Only record the starting coordinate if we have not pressed up
 uint8_t normal_key; // any keys that can be displayed
 int32_t start_x;
 int32_t start_y;
@@ -104,7 +103,6 @@ void keyboard_initial(void) {
     enter_flag[1] = 0;
     enter_flag[2] = 0;
     curr_history_id = 0;
-    uparrow = 0;
     normal_key = 0;
     enable_irq(KEYBOARD_IRQ);
 }
@@ -230,7 +228,6 @@ void keyboard_handler(void) {
         return;
 
     case 0x1C:          // Enter pressed
-        uparrow = 0;
         normal_key = 0;
         ascii_value = 0x0A;
         enter_flag[curr_terminal] = 1;
@@ -245,6 +242,8 @@ void keyboard_handler(void) {
         restore_vid_mem();
         store_vid_mem(running_term);
         send_eoi(KEYBOARD_IRQ);
+        start_x = terminal[curr_terminal].terminal_x;
+        start_y = terminal[curr_terminal].terminal_y;
         sti();
         return;
 
@@ -260,16 +259,9 @@ void keyboard_handler(void) {
         return;
     case 0x48: // up arrow pressed 
         send_eoi(KEYBOARD_IRQ);
-        if (0 == uparrow){
-            start_x = terminal[curr_terminal].terminal_x;
-            start_y = terminal[curr_terminal].terminal_y;
-        }
-        uparrow = 1;
-        
         if (0 == normal_key){
             retrieve_history_up(start_x, start_y);
         }
-        
         sti();
         return;
     case 0xC8: // up arrow released 
