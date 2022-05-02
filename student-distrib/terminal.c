@@ -19,7 +19,7 @@ void clear_buffer(void) {
 
 /* int32_t terminal_init(void)
  * Inputs: void
- * Return Value: 0
+ * Return Value: none
  * Function: Initial the terminal */
 void terminal_init(void) {
 
