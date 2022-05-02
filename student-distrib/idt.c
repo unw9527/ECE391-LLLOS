@@ -11,6 +11,7 @@
 #include "scheduling.h"
 #include "syscall.h"
 #include "signal.h"
+#include "mouse.h"
 
 int32_t exception_happen;
 /* void* exception_handler(uint32_t num);
@@ -106,6 +107,8 @@ void interrupt_handler(uint32_t num)
         case 8:
             RTC_handler();
             break;
+        case 12:
+            mouse_handler();
         default:
             break;
     }
@@ -142,6 +145,7 @@ void idt_initial(void) {
     SET_IDT_ENTRY(idt[PIT_IDT], PIT_INT);
     SET_IDT_ENTRY(idt[KEYBOARD_IDT], KEYBOARD_INT);
     SET_IDT_ENTRY(idt[RTC_IDT], RTC_INT);
+    SET_IDT_ENTRY(idt[MOUSE_IDT], MOUSE_INT);
     SET_IDT_ENTRY(idt[SYSTEM_IDT], system_call);
 
     for (i = 0; i < EXCEPTION_NUM; i++) {                            /* We first set all the exceptions to be present.*/
@@ -166,10 +170,12 @@ void idt_initial(void) {
     }
     idt[KEYBOARD_IDT].reserved3 = 0;
     idt[RTC_IDT].reserved3 = 0;
+    idt[PIT_IDT].reserved3 = 0; // change from TRAP to INTR
+    idt[MOUSE_IDT].reserved3 = 0;
     idt[KEYBOARD_IDT].present = 1;
     idt[RTC_IDT].present = 1;
+    idt[PIT_IDT].present = 1;
+    idt[MOUSE_IDT].present = 1;
     idt[SYSTEM_IDT].present = 1;
     idt[SYSTEM_IDT].dpl = 3;
-    idt[PIT_IDT].reserved3 = 0; // change from TRAP to INTR
-    idt[PIT_IDT].present = 1;
 }

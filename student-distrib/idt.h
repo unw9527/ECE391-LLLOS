@@ -9,6 +9,7 @@
 #define PIT_IDT                 0x20        // The IDT entry of PIT
 #define KEYBOARD_IDT            0x21        // The IDT entry of keyboard
 #define RTC_IDT                 0x28        // The IDT entry of RTC
+#define MOUSE_IDT               0x2C
 #define SYSTEM_IDT              0x80        // The IDT entry of system call
 #define EXCEPTION_ERROR          256
 
@@ -55,5 +56,7 @@ void RTC_INT(void);
 
 /* The initial function of PIT.         */
 void PIT_INT(void);
+
+void MOUSE_INT(void);
 
 #endif
