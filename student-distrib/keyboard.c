@@ -7,6 +7,7 @@
 #include "scheduling.h"
 #include "history.h"
 #include "signal.h"
+#include "tab.h"
 
 // the key flag
 uint8_t caps;
@@ -16,6 +17,7 @@ uint8_t ctrl;
 uint8_t normal_key; // any keys that can be displayed
 int32_t start_x;
 int32_t start_y;
+int32_t tab;
 
 typedef struct key                                                              /* The first entry is the scan code and the second is the ascii.*/
 {
@@ -104,6 +106,7 @@ void keyboard_initial(void) {
     enter_flag[2] = 0;
     curr_history_id = 0;
     normal_key = 0;
+    tab = 0;
     enable_irq(KEYBOARD_IRQ);
 }
 
@@ -287,6 +290,19 @@ void keyboard_handler(void) {
         send_eoi(KEYBOARD_IRQ);
         sti();
         return;
+    case 0x0F:          // tab is pressed
+        send_eoi(KEYBOARD_IRQ);
+        if (0 == tab){
+            tab = 1;
+            press_tab();
+        }
+        sti();
+        return;
+    case 0x8F:          // tab is released
+        send_eoi(KEYBOARD_IRQ);
+        tab = 0;
+        sti();
+        return;
     default:
         ascii_value = key_to_ascii(scan_code);
         if (((32 <= ascii_value) && (127 >= ascii_value)) || (0 != terminal[curr_terminal].buffer_index) && (BACK_SPACE == ascii_value))  normal_key = 1;
@@ -361,12 +377,12 @@ void keyboard_handler(void) {
 
     // echo the key
     echo(ascii_value);
-    if (scan_code == 0x0F) {                  // Tab
-        echo(ascii_value);
-        echo(ascii_value);
-        echo(ascii_value);
-        sti();
-    }
+    // if (scan_code == 0x0F) {                  // Tab
+    //     echo(ascii_value);
+    //     echo(ascii_value);
+    //     echo(ascii_value);
+    //     sti();
+    // }
     store_vid_mem(running_term);
     send_eoi(KEYBOARD_IRQ);
 }
