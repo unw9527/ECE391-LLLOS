@@ -109,6 +109,7 @@ void interrupt_handler(uint32_t num)
             break;
         case 12:
             mouse_handler();
+            break;
         default:
             break;
     }

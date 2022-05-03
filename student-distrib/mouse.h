@@ -1,5 +1,8 @@
 #ifndef _MOUSE_H
 #define _MOUSE_H
+
+#include "lib.h"
+
 #define COMPAQ 0x20
 #define MOUSE_AUX 0x64
 #define MOUSE_DATA 0x60
@@ -12,5 +15,7 @@
 
 void mouse_handler();
 void mouse_init();
+void text_mode_mouse();
+void mouse_update_vid(uint8_t x, uint8_t y);
 
 #endif
