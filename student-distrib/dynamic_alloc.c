@@ -628,7 +628,6 @@ void* kmalloc(uint32_t size, uint32_t flags)
     }
     /* Check for validity.*/
     if (i == NUM_GENERAL_CACHE){
-        printf("Malloc Fail: Too Large Size.");
         return 0;
     }
     else{

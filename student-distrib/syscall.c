@@ -407,3 +407,15 @@ int32_t sys_sigreturn (void)
     /* Note that it is not allowed in the general case though.*/
 }
 
+void* sys_malloc(int32_t size)
+{
+    void* pt;
+    pt = kmalloc(size, __GFP_NORETRY | __GFP_ZERO);
+    return pt;
+}
+
+int32_t sys_free(void* addr)
+{
+    kfree(addr);
+    return 0;
+}

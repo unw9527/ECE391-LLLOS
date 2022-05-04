@@ -109,6 +109,8 @@ void signal_update(uint32_t type)
 {
     sigpending_t* pending_element;
     /* Update the pending_exist field.*/
+    if (pid == -1)
+        return;
     PCB_array[NUM_PROCESS-1-pid].thread_info.pending_exist = 1;
     /* Dynamically allocate a pending element.*/
     pending_element = (sigpending_t*) kmalloc(SIGPENDING_SIZE, __GFP_ZERO | __GFP_NORETRY);

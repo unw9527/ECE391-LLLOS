@@ -238,12 +238,77 @@ int get_counter()
 
 /* Checkpoint 3 tests */
 
+void dynamic_test1()
+{
+	int32_t i;
+	printf("The initial version of our buddy system.\n");
+	printf("The free area structure:\n");
+	for (i = 0; i < 11; i++)
+		printf("The size %d free list.    Num_free: %d   The head: %x\n", i, free_area[i].nr_free, free_area[i].free_pt);
+}
+
+void dynamic_test2()
+{
+	int32_t i;
+	printf("The initial version of our buddy system.\n");
+	printf("Some of the page_desc structure. Note: 24 * 4MB only when initialized.\n");
+	for (i = 0; i < 3; i++){
+		printf("The %dth 4 MB page descriptor for dynamic allocation:\n", i);
+		printf("flags: %x, next_pt: %x, prev_pt: %x, order: %d\n", mem_map[8192 + 1024 * i].flags, mem_map[8192 + 1024 * i].lru.next, mem_map[8192 + 1024 * i].lru.prev, mem_map[8192 + 1024 * i]._private);
+	}
+}
+
+void dynamic_test3()
+{
+	int32_t i;
+	printf("The initial version of our slab cache. 17 general caches.\n");
+	printf("At the initialization time, no slab caches are there.\n");
+	for (i = 4; i <= 6; i++){
+		printf("The %dth general slab cache:\n", i);
+		printf("align: %d, color: %d, color_next: %d, gfp_order: %d\n", general_caches[i].align, general_caches[i].color, general_caches[i].color_next, general_caches[i].gfp_order);
+		printf("name: %s, num_per_slab: %d, object_size: %d, slab_size: %d\n", general_caches[i].name, general_caches[i].num_per_slab, general_caches[i].object_size, general_caches[i].slab_size);
+		printf("Information on slab. num_free_obj: %d, slab_free_head: %x, slab_full_head: %x, slab_partial_head: %x\n", general_caches[i].lists.free_objects, general_caches[i].lists.slab_free, general_caches[i].lists.slab_full, general_caches[i].lists.slab_partial);
+	}
+}
+
+void dynamic_test4()
+{
+	int32_t i;
+	void* pt[10];
+	for (i = 0; i <= 9; i++){
+		pt[i] = kmalloc(2, __GFP_NORETRY | __GFP_ZERO);
+	}
+	for (i = 0; i <= 9; i++){
+		printf("The address of pointer %d: %x\n", i, pt[i]);
+	}
+	for (i = 0; i <= 9; i++){
+		kfree(pt[i]);
+	}
+	return;
+};
+
+
+
 void launch_tests()
 {
 	clear();
 	reset_cursor();
 	switch (test_counter){
 		case 0:
+			dynamic_test1();
+			break;
+		case 1:
+			dynamic_test2();
+			break;
+		case 2:
+			dynamic_test3();
+			break;
+		case 3:
+			dynamic_test4();
+			break;
+		case 4:
+			/* Init PIT*/
+   			PIT_init();
 			break;
 		default:
 			break;

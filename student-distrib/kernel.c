@@ -163,8 +163,6 @@ void entry(unsigned long magic, unsigned long addr) {
     mem_map_init();
     /* Init the slab caches.*/
     kmem_cache_init();
-    /* Init PIT*/
-    PIT_init();
     /* Init the signal.*/
     sighand_init();
     /* Initialize devices, memory, filesystem, enable device interrupts on the
