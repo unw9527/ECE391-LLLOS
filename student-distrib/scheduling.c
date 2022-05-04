@@ -6,8 +6,11 @@
 #include "terminal.h"
 #include "x86_desc.h"
 #include "syscall.h"
+#include "mouse.h"
 
 int32_t signal_flag[3];
+int32_t sleep_num = 0;
+int32_t sleep_flag[3];
 
 /*
  * void pit_init(int hz)
@@ -32,6 +35,7 @@ void PIT_init()
  * Effect: switch to different processes to execute for a slice of time
  */
 void PIT_handler(){
+    char* video_mem = (char *)VIDEO;
     int32_t next_term = (running_term + 1) % MAX_TERMINAL;
     // int32_t display_pid = terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1]; // curr_pid refers to the terminal that is displayed
     int32_t run_pid;
@@ -46,6 +50,7 @@ void PIT_handler(){
             :
             : "memory"
         );
+        *(uint8_t *)(video_mem + 1) = GREEN;
         switch_terminal(running_term);
         send_eoi(0);
         sys_execute((uint8_t*)"shell");
@@ -63,6 +68,12 @@ void PIT_handler(){
     if (terminal[running_term].terminal_prog_count == 0) {
         send_eoi(0);
         return;
+    }
+    /* Check whether the next terminal is sleeping.*/
+    while (sleep_flag[running_term]){
+        next_term = (running_term + 1) % MAX_TERMINAL;
+        running_term = next_term;
+        next_pid = terminal[next_term].prog_array[terminal[next_term].terminal_prog_count-1];
     }
     /* Change the pid here.*/
     pid = next_pid;

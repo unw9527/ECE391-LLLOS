@@ -87,12 +87,22 @@ void alarm_default()
 
 void user1_default()
 {
-
+    /* Sleep the program.*/
+    if (sleep_num <= 1 && sleep_flag[curr_terminal] == 0){
+        sleep_num++;
+        sleep_flag[curr_terminal] = 1;
+    }
+    return;
 }
 
 void user2_default()
 {
-
+    /* Wake up the program.*/
+    if (sleep_flag[curr_terminal]){
+        sleep_num--;
+        sleep_flag[curr_terminal] = 0;
+    }
+    return;
 }
 
 void signal_update(uint32_t type)
@@ -106,7 +116,7 @@ void signal_update(uint32_t type)
     /* Check for resources.*/
     if(type == DIV_ZERO || type == SEGFAULT)
         pending_element->resources = EXCEPTION_RESC;
-    else if(type == INTERRUPT)
+    else if(type == INTERRUPT || type == USER1 || type == USER2)
         pending_element->resources = INTERRUPT_RESC;
     else if (type == ALARM)
         pending_element->resources = SYSCALL_RESC;

@@ -153,12 +153,12 @@ void entry(unsigned long magic, unsigned long addr) {
     i8259_init();
     /* Init the keyboard.*/
     keyboard_initial();
-    /* Init the mouse.*/
-    mouse_init();
     /* Init the RTC */
     RTC_init();
     /* Init the terminal.*/
     terminal_init();
+    /* Init the mouse.*/
+    mouse_init();
     /* Init the mem_map array.*/
     mem_map_init();
     /* Init the slab caches.*/

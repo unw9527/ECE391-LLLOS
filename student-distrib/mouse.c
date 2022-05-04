@@ -1,8 +1,14 @@
 #include "mouse.h"
 #include "i8259.h"
 #include "lib.h"
+#include "terminal.h"
+#include "page.h"
+#include "scheduling.h"
+#include "signal.h"
 
 int32_t mouse_iter = -1;
+int32_t x_pos[3];
+int32_t y_pos[3];
 
 void mouse_handler()
 {
@@ -28,23 +34,49 @@ void mouse_init()
     while ((inb(MOUSE_AUX) & 0x2));
     outb(status, MOUSE_DATA);
     /* Reset the mouse.*/
-    // while((inb(MOUSE_AUX) & 0x2));
-    // outb(COMMAND_REQUIRE, MOUSE_AUX);
-    // while((inb(MOUSE_AUX) & 0x2));
-    // outb(MOUSE_RESET, MOUSE_DATA);
+    while((inb(MOUSE_AUX) & 0x2));
+    outb(COMMAND_REQUIRE, MOUSE_AUX);
+    while((inb(MOUSE_AUX) & 0x2));
+    outb(MOUSE_RESET, MOUSE_DATA);
     /* Set the sampling rate to 60.*/
-    // while ((inb(MOUSE_AUX) & 0x2));
-    // outb(COMMAND_REQUIRE, MOUSE_AUX);
-    // while ((inb(MOUSE_AUX) & 0x2));
-    // outb(SET_SAMPLE, MOUSE_DATA);
-    // while ((inb(MOUSE_AUX) & 0x1) != 1);
+    while ((inb(MOUSE_AUX) & 0x2));
+    outb(COMMAND_REQUIRE, MOUSE_AUX);
+    while ((inb(MOUSE_AUX) & 0x2));
+    outb(SET_SAMPLE, MOUSE_DATA);
+    while ((inb(MOUSE_AUX) & 0x1) != 1);
     /* Wait until ACK is received.*/
-    // while (ack != ACK)
-    //     ack = inb(MOUSE_DATA);
+    while (ack != ACK)
+        ack = inb(MOUSE_DATA);
+    ack = 0;
+    while ((inb(MOUSE_AUX) & 0x2));
+    outb(COMMAND_REQUIRE, MOUSE_AUX);
+    while ((inb(MOUSE_AUX) & 0x2));
+    outb(60, MOUSE_DATA);
+    while (ack != ACK)
+        ack = inb(MOUSE_DATA);
+    ack = 0;
+    /* Set the resolution.*/
+    while ((inb(MOUSE_AUX) & 0x2));
+    outb(COMMAND_REQUIRE, MOUSE_AUX);
+    while ((inb(MOUSE_AUX) & 0x2));
+    outb(RESOLUTION, MOUSE_DATA);
+    while ((inb(MOUSE_AUX) & 0x1) != 1);
+    /* Wait until ACK is received.*/
+    while (ack != ACK)
+        ack = inb(MOUSE_DATA);
+    ack = 0;
+    while ((inb(MOUSE_AUX) & 0x2));
+    outb(COMMAND_REQUIRE, MOUSE_AUX);
+    while ((inb(MOUSE_AUX) & 0x2));
+    outb(0, MOUSE_DATA);
+    while (ack != ACK)
+        ack = inb(MOUSE_DATA);
+    ack = 0;
+    /* Check status.*/
     // while ((inb(MOUSE_AUX) & 0x2));
     // outb(COMMAND_REQUIRE, MOUSE_AUX);
     // while ((inb(MOUSE_AUX) & 0x2));
-    // outb(60, MOUSE_DATA);
+    // outb(0xE9, MOUSE_DATA);
     /* Enable the auto packets.*/
     while((inb(MOUSE_AUX) & 0x2));
     outb(COMMAND_REQUIRE, MOUSE_AUX);
@@ -60,9 +92,9 @@ void text_mode_mouse()
     uint8_t mouse_byte1;
     uint8_t mouse_byte2;
     uint8_t mouse_byte3;
-    // while ((inb(MOUSE_AUX) & 0x1) != 1);
-    // if ((inb(MOUSE_AUX) & COMPAQ) == 0)
-    //     return;
+    /* Check for mouse interrupt.*/
+    if ((inb(MOUSE_AUX) & COMPAQ) == 0)
+        return;
     switch (mouse_iter){
         case 0:
             /* Get the value of the mouse.*/
@@ -77,7 +109,8 @@ void text_mode_mouse()
         case 2:
             mouse_byte3 = inb(MOUSE_DATA);
             /* Update the new cursor.*/
-            mouse_update_vid(mouse_byte2, mouse_byte3);
+            mouse_update_vid(mouse_byte1, mouse_byte2, mouse_byte3);
+            mouse_click(mouse_byte1);
             mouse_iter = (mouse_iter+1) % 3;
             break;
         default:
@@ -87,7 +120,69 @@ void text_mode_mouse()
     return;
 }
 
-void mouse_update_vid(uint8_t x, uint8_t y)
+void mouse_update_vid(uint8_t status, uint8_t x, uint8_t y)
 {
+    char* video_mem = (char *)VIDEO;
+    int8_t sign_x;
+    int8_t sign_y;
+    if (x == 0 && y == 0)
+        return;
+    /* Check overflow.*/
+    if ((status & X_OVERFLOW) || (status & Y_OVERFLOW))
+        return;
+    /*Change the color back to white.*/
+    restore_vid_mem();
+    if (*(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1)) == '#')
+        *(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1)) = ' ';
+    *(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1) + 1) = ATTRIB;
+    /* Update the mouse position.*/
+    /* Check for neg x.*/
+    if (status & X_SIGN){
+        sign_x = (int8_t) x;
+        x_pos[curr_terminal] += (int32_t)sign_x;
+        if (x_pos[curr_terminal] < 0)
+            x_pos[curr_terminal] = 0;
+    }
+    else{
+        x_pos[curr_terminal] += (int32_t)x;
+        if (x_pos[curr_terminal] >= NUM_COLS)
+            x_pos[curr_terminal] = NUM_COLS - 1;
+    }
+    /* Check for neg y.*/
+    if (status & Y_SIGN){
+        sign_y = (int8_t) y;
+        y_pos[curr_terminal] -= (int32_t)sign_y;
+        if (y_pos[curr_terminal] >= NUM_ROWS)
+            y_pos[curr_terminal] = NUM_ROWS - 1;
+    }
+    else{
+        y_pos[curr_terminal] -= (int32_t)y;
+        if (y_pos[curr_terminal] < 0)
+            y_pos[curr_terminal] = 0;
+    }
+    /* Update the new green position.*/
+    if (*(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1)) == ' ')
+        *(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1)) = '#';
+    *(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1) + 1) = GREEN;
+    store_vid_mem(running_term);
+    return;
+}
+
+void mouse_click(uint8_t status)
+{
+    /* Check overflow.*/
+    if ((status & X_OVERFLOW) || (status & Y_OVERFLOW))
+        return;
+    /* Check for right click.*/
+    if ((status & RIGHT_BUTTON) == 0 && (status & LEFT_BUTTON) == 0)
+        return;
+    if (status & RIGHT_BUTTON){
+        /* Update the USER1 signal.*/
+        signal_update(USER1);
+    }
+    else if (status & LEFT_BUTTON){
+        /* Update the USER2 signal.*/
+        signal_update(USER2);
+    }
     return;
 }

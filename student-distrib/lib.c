@@ -253,7 +253,8 @@ void putc(uint8_t c, int32_t tid) {
     } 
     else { 
         *(uint8_t *)(video_mem + ((NUM_COLS * terminal[tid].terminal_y + terminal[tid].terminal_x) << 1)) = c;
-        *(uint8_t *)(video_mem + ((NUM_COLS * terminal[tid].terminal_y + terminal[tid].terminal_x) << 1) + 1) = ATTRIB;
+        if (*(uint8_t *)(video_mem + ((NUM_COLS * terminal[tid].terminal_y + terminal[tid].terminal_x) << 1) + 1) != 0x2)
+            *(uint8_t *)(video_mem + ((NUM_COLS * terminal[tid].terminal_y + terminal[tid].terminal_x) << 1) + 1) = ATTRIB;
         terminal[tid].terminal_x++;
         terminal[tid].terminal_x %= NUM_COLS;
         terminal[tid].terminal_y = (terminal[tid].terminal_y + (terminal[tid].terminal_x / NUM_COLS)) % NUM_ROWS;
