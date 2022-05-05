@@ -5,6 +5,9 @@
 #include "syscall.h"
 #include "scheduling.h"
 #include "history.h"
+
+int32_t refresh_terminal;
+
 /* void clear_buffer(void)
  * Inputs: void
  * Return Value: none
@@ -21,6 +24,7 @@ void terminal_init(void) {
 
     clear();
     reset_cursor();
+    refresh_terminal = 0;
     clear_buffer();
     int i;
 	for (i = 0; i < MAX_TERMINAL; i++) {
@@ -129,18 +133,13 @@ void switch_terminal(int32_t term_id)
         return;
 
     curr_terminal = term_id;
-    restore_vid_mem();
+    set_video_page(curr_terminal);
+    store_vid_mem(curr_terminal);
 
     memcpy((void*) terminal[prev_terminal].vid_mem, (const void*)VIDEO, 4096);
 
     memcpy((void*)VIDEO, (const void*) terminal[curr_terminal].vid_mem, 4096);    
-    
-    // if (terminal[curr_terminal].terminal_prog_count == 0) {
-    //     sys_execute((uint8_t*)"shell");
-    // }
-    // else {
-    // pid = terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count-1];
-    // }
+    refresh_terminal = 1;
     
     move_cursor(curr_terminal);
 

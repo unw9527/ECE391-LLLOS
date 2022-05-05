@@ -134,7 +134,6 @@ uint8_t shift_ascii(uint8_t ascii_value) {
 
 void echo(uint8_t ascii_value) {
     uint8_t ascii;
-    cli();
     if (ascii_value == 0 || (ascii_value == BACKSPACE && terminal[curr_terminal].buffer_index == 0))
         return;
     ascii = ascii_value;
@@ -181,6 +180,7 @@ void echo(uint8_t ascii_value) {
 void keyboard_handler(void) {
     uint8_t scan_code = inb(KEYBOARD_PORT);
     uint8_t ascii_value;
+    cli();
     switch (scan_code)
     {
     case 0x3A:          // CAPS LOCK pressed
@@ -234,7 +234,7 @@ void keyboard_handler(void) {
         normal_key = 0;
         ascii_value = 0x0A;
         enter_flag[curr_terminal] = 1;
-        restore_vid_mem();
+        store_vid_mem(curr_terminal);
         putc('\n', curr_terminal);
         store_vid_mem(running_term);
         send_eoi(KEYBOARD_IRQ);
@@ -242,7 +242,7 @@ void keyboard_handler(void) {
         return;
     case 0x9C:         // Enter released
         // update_history();
-        restore_vid_mem();
+        store_vid_mem(curr_terminal);
         store_vid_mem(running_term);
         send_eoi(KEYBOARD_IRQ);
         start_x = terminal[curr_terminal].terminal_x;
@@ -324,7 +324,7 @@ void keyboard_handler(void) {
 
     }
 
-    restore_vid_mem();
+    store_vid_mem(curr_terminal);
     /* ctrl + l */
     if (ctrl & (ascii_value == 0x6C)) {
         send_eoi(KEYBOARD_IRQ);

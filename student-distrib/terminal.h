@@ -6,9 +6,9 @@
 #include "process.h"
 
 #define MAX_TERMINAL        3
-#define TERM_1_PHYS_ADDR    0xB9000
-#define TERM_2_PHYS_ADDR    0xBA000
-#define TERM_3_PHYS_ADDR    0xBB000
+#define TERM_1_PHYS_ADDR    0xE1000
+#define TERM_2_PHYS_ADDR    0xE2000
+#define TERM_3_PHYS_ADDR    0xE3000
 
 extern void clear_buffer(void);
 
@@ -43,5 +43,6 @@ typedef struct terminal {
 terminal_t  terminal[MAX_TERMINAL];
 volatile int32_t     curr_terminal; // the terminal that is being displayed
 int32_t     total_prog_count;  
+extern int32_t refresh_terminal;
 #endif
 

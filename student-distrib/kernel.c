@@ -17,6 +17,9 @@
 #include "dynamic_alloc.h"
 #include "signal.h"
 #include "mouse.h"
+#include "vbe.h"
+#include "gui.h"
+#include "syscall.h"
 
 
 #define RUN_TESTS
@@ -143,7 +146,7 @@ void entry(unsigned long magic, unsigned long addr) {
 
         tss.ldt_segment_selector = KERNEL_LDT;
         tss.ss0 = KERNEL_DS;
-        tss.esp0 = 0x700000;
+        tss.esp0 = 0x800000;
         ltr(KERNEL_TSS);
     }
 
@@ -153,10 +156,15 @@ void entry(unsigned long magic, unsigned long addr) {
     i8259_init();
     /* Init the keyboard.*/
     keyboard_initial();
-    /* Init the RTC */
-    RTC_init();
+
+    
     /* Init the terminal.*/
     terminal_init();
+    vbe_set(BG_WIDTH, BG_HEIGHT, 32);
+    boot_gui();
+    /* Init the RTC */
+    RTC_init();
+    
     /* Init the mouse.*/
     mouse_init();
     /* Init the mem_map array.*/

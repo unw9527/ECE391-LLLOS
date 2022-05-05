@@ -30,6 +30,7 @@ extern int rtc_active[3];
 extern int rtc_flag[3];
 extern int rtc_counter[3];
 extern uint32_t time;
+volatile int32_t need_update;
 
 #endif
 

@@ -131,7 +131,7 @@ void mouse_update_vid(uint8_t status, uint8_t x, uint8_t y)
     if ((status & X_OVERFLOW) || (status & Y_OVERFLOW))
         return;
     /*Change the color back to white.*/
-    restore_vid_mem();
+    store_vid_mem(curr_terminal);
     if (*(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1)) == '#')
         *(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1)) = ' ';
     *(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1) + 1) = ATTRIB;

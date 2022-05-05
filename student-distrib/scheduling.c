@@ -7,7 +7,7 @@
 #include "x86_desc.h"
 #include "syscall.h"
 #include "mouse.h"
-
+#include "rtc.h"
 int32_t signal_flag[3];
 int32_t sleep_num = 0;
 int32_t sleep_flag[3];
@@ -35,7 +35,7 @@ void PIT_init()
  * Effect: switch to different processes to execute for a slice of time
  */
 void PIT_handler(){
-    char* video_mem = (char *)VIDEO;
+    // char* video_mem = (char *)VIDEO;
     int32_t next_term = (running_term + 1) % MAX_TERMINAL;
     // int32_t display_pid = terminal[curr_terminal].prog_array[terminal[curr_terminal].terminal_prog_count - 1]; // curr_pid refers to the terminal that is displayed
     int32_t run_pid;
@@ -50,7 +50,7 @@ void PIT_handler(){
             :
             : "memory"
         );
-        *(uint8_t *)(video_mem + 1) = GREEN;
+        // *(uint8_t *)(video_mem + 1) = GREEN;
         switch_terminal(running_term);
         send_eoi(0);
         sys_execute((uint8_t*)"shell");
@@ -63,6 +63,10 @@ void PIT_handler(){
         :
         : "memory"
     );
+    // if (need_update || refresh_terminal) {
+    //     draw_terminal((char *)VIDEO, curr_terminal);
+    //     need_update = 0;
+    // }
     running_term = next_term;
     next_pid = terminal[next_term].prog_array[terminal[next_term].terminal_prog_count-1];
     if (terminal[running_term].terminal_prog_count == 0) {
@@ -77,7 +81,7 @@ void PIT_handler(){
     }
     /* Change the pid here.*/
     pid = next_pid;
-    set_video_page();
+    set_video_page(running_term);
     swap_page(next_pid);
     store_vid_mem(running_term);
     tss.ss0 = KERNEL_DS;

@@ -357,7 +357,7 @@ int32_t sys_vidmap(uint8_t** screen_start)
     if ((uint32_t)screen_start < PROCESS_START || (uint32_t)screen_start >= PROCESS_END)
         return -1;
     /* Create a page table for the user-level video memory.*/
-    set_video_page();
+    set_video_page(running_term);
     /* Set the screen start.*/
     *screen_start = (uint8_t*) USER_VIDEO_ADDR;
     return USER_VIDEO_ADDR;

@@ -4,12 +4,19 @@
 #include "tests.h"
 #include "scheduling.h"
 #include "terminal.h"
+#include "gui.h"
+#include "x86_desc.h"
+#include "syscall.h"
+#include "page.h"
+#include "time.h"
 
 int rtc_active[3]       = {0,0,0};
 int rtc_flag[3]         = {1,1,1};
-int rtc_counter[3]      = {0,0,0};
+int rtc_counter[3]      = {1,1,1};
 int rtc_init_counter[3] = {0,0,0};
+int time_counter = 0;
 uint32_t time = 0;
+uint32_t time1 = 0; 
 
 /* void RTC_init(void);
  * Inputs: void
@@ -35,6 +42,7 @@ void RTC_init()
     outb(REG_C, CMOS_PORT_0);                                             /* Do some strange stuff with register C.*/
     inb(CMOS_PORT_1);
     restore_flags(flags);
+    need_update = 0;
     sti();
     enable_irq(8);                                                   /* IRQ8 corresponds to rtc.*/
 }
@@ -53,6 +61,18 @@ void RTC_handler()
     outb(REG_C, CMOS_PORT_0);                                             /* Do some strange stuff with register C.*/
     inb(CMOS_PORT_1);
     RTC_intr = 1;
+    time_counter++;
+    if (time_counter > 0xFF) {
+        get_system_time();
+        time_counter = 0;
+    }
+
+    time1++;
+    if ((need_update || refresh_terminal) && time1 > 0xF) {
+        draw_terminal((char *)VIDEO, curr_terminal);
+        need_update = 0;
+        time1 = 0;
+    }
     send_eoi(8); // IRQ 8
     for (i = 0; i < 3; i++) // three terminals
     {
