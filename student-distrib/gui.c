@@ -15,6 +15,9 @@
 #include "page.h"
 #include "time.h"
 #include "mouse.h"
+
+// References: https://docs.microsoft.com/en-us/windows/win32/directshow/working-with-16-bit-rgb (color encoding)
+
 int32_t last_x = 0, last_y = 0;
 uint32_t mouse_initial = 0;
 uint32_t mouse_buffer[22][34];
@@ -23,8 +26,12 @@ uint32_t* qemu_memory = (uint32_t *) QEMU_BASE_ADDR;
 int box = 1;
 int back = 0;
 int col = 0x8B00FF;
-// static ARGB fbuf[BG_HEIGHT][BG_WIDTH] __attribute__((aligned(32)));
 
+/*
+ * void sleep(int32_t time)
+ * Input: time - time to wait
+ * Return value: none
+ */
 void sleep(int32_t time) {
     int32_t k = 0;
     while (k < time) {
@@ -32,6 +39,12 @@ void sleep(int32_t time) {
     }
 }
 
+/*
+ * void draw_transparent()
+ * Input: none
+ * Return value: none
+ * Function: draw transparent text
+ */
 void draw_transparent() {
     int i;
     int j;
@@ -61,6 +74,13 @@ void draw_transparent() {
     }
 }
 
+
+/*
+ * void draw_uiuc()
+ * Input: none
+ * Return value: none
+ * Function: draw the UIUC background for boot animation
+ */
 void draw_uiuc() {
     int i,j;
     for (i = 0; i < 130; i++) {
@@ -73,11 +93,17 @@ void draw_uiuc() {
                 continue;
             *(uint32_t *)(qemu_memory + j + 300 + (i + 400) * BG_WIDTH) = rgb;
         }
-        sleep(0xFFFFFF);
+        sleep(0x8FFFFF);
     }
-    sleep(0xFFFFFF);
+    sleep(0x8FFFFF);
 }
 
+/*
+ * void draw_boot_font()
+ * Input: none
+ * Return value: none
+ * Function: draw the boot text for boot animation
+ */
 void draw_boot_font() {
     int i,j;
     for (j = 0; j < 600; j++) {
@@ -95,7 +121,12 @@ void draw_boot_font() {
     draw_uiuc();
 }
 
-
+/*
+ * void draw_background()
+ * Input: none
+ * Return value: none
+ * Function: draw the desktop
+ */
 void draw_background() {
     int i;
     int j;
@@ -113,6 +144,12 @@ void draw_background() {
     }
 }
 
+/*
+ * void draw_uiuc()
+ * Input: none
+ * Return value: none
+ * Function: draw the OS text
+ */
 void draw_os_font() {
     int i, j;
     for (i = 0; i < 30; i++) {
@@ -164,6 +201,15 @@ void draw_os_font() {
 }
 
 
+/*
+ * void draw_char(int x, int y, char ch, uint32_t color, uint32_t back_color)
+ * Input: x, y  - position in the screen
+ *        ch    - the character to draw
+ *        color - the color of the character
+ *        back_color - the background color
+ * Return value: none
+ * Function: draw a character
+ */
 void draw_char(int x, int y, char ch, uint32_t color, uint32_t back_color) {
     char* print_char = (char*)font_data[(uint8_t)(ch)];
     int i, j;
@@ -181,12 +227,32 @@ void draw_char(int x, int y, char ch, uint32_t color, uint32_t back_color) {
     }
 }
 
+
+/*
+ * draw_string(int x, int y, int8_t* str, uint32_t color, uint32_t back_color)
+ * Input: x, y  - position in the screen
+ *        str    - the string to draw
+ *        color - the color of the character
+ *        back_color - the background color
+ * Return value: none
+ * Function: draw a string
+ */
 void draw_string(int x, int y, int8_t* str, uint32_t color, uint32_t back_color) {
     int i;
     for (i = 0; i < strlen(str); i++)
         draw_char(x + 8 * i, y, str[i], color, back_color);
 }
 
+
+/*
+ * void draw_big_char(int x, int y, char ch, uint32_t color, uint32_t back_color)
+ * Input: x, y  - position in the screen
+ *        ch    - the character to draw
+ *        color - the color of the character
+ *        back_color - the background color
+ * Return value: none
+ * Function: draw a big character
+ */
 void draw_big_char(int x, int y, char ch, uint32_t color, uint32_t back_color) {
     char* print_char = (char*)font_data[(uint8_t)(ch)];
     int i, j;
@@ -210,6 +276,13 @@ void draw_big_char(int x, int y, char ch, uint32_t color, uint32_t back_color) {
     }
 }
 
+
+/*
+ * void boot_gui()
+ * Input: none
+ * Return value: none
+ * Function: boot gui
+ */
 void boot_gui() {
     draw_transparent();
     draw_boot_font();
@@ -218,6 +291,15 @@ void boot_gui() {
     draw_string(2, BG_HEIGHT - 24 , "Creator: Kunle Li, Ziyuan Lin, Peiyuan Liu", 0x0000FFFF, 0x00505050);
 }
 
+
+/*
+ * void draw_temrinal_char(int x, int y, char ch, uint32_t color)
+ * Input: x, y  - position in the screen
+ *        ch    - the character to draw
+ *        color - the color of the character
+ * Return value: none
+ * Function: draw a character in the terminal
+ */
 void draw_terminal_char(int x, int y, char ch, uint32_t color) {
     char* print_char = (char*)font_data[(uint8_t)(ch)];
     int i, j;
@@ -239,13 +321,29 @@ void draw_terminal_char(int x, int y, char ch, uint32_t color) {
     }
 }
 
+
+/*
+ * void draw_temrinal_string(int x, int y, char ch, uint32_t color)
+ * Input: x, y  - position in the screen
+ *        str   - the string to draw
+ *        color - the color of the string
+ * Return value: none
+ * Function: draw a string in the terminal
+ */
 void draw_terminal_string(int x, int y, int8_t* str, uint32_t color) {
     int i;
     for (i = 0; i < strlen(str); i++)
         draw_terminal_char(x + 8 * i, y, str[i], color);
 }
 
-
+/*
+ * void draw_temrinal_window(int x, int y, int w, int h, uint32_t color)
+ * Input: x, y  - position in the screen
+ *        w, h  - the width and height of the terminal
+ *        color - the color of the terminal
+ * Return value: none
+ * Function: draw a terminal window
+ */
 void draw_terminal_window(int x, int y, int w, int h, uint32_t color) {
     int i, j;
     for (i = 0; i < h; i++) {
@@ -262,6 +360,15 @@ void draw_terminal_window(int x, int y, int w, int h, uint32_t color) {
     }
 }
 
+
+/*
+ * void draw_temrinal_bar(int x, int y, int w, int h)
+ * Input: x, y  - position in the screen
+ *        w, h  - the width and height of the terminal
+ *        color - the color of the terminal status bar
+ * Return value: none
+ * Function: draw a terminal status bar
+ */
 void draw_terminal_bar(int x, int y, int w, int h) {
     int i, j;
     for (i = 0; i < w; i++) {
@@ -271,6 +378,14 @@ void draw_terminal_bar(int x, int y, int w, int h) {
     }
 }
 
+
+/*
+ * void draw_temrinal(char* terminal_memory, int32_t tid)
+ * Input: temrinal_memory - the staring position in the memory to draw
+ *        tid             - the process id
+ * Return value: none
+ * Function: draw a terminal
+ */
 void draw_terminal(char* terminal_memory, int32_t tid) {
     int i, j;
     if (box) {
@@ -310,6 +425,13 @@ void draw_terminal(char* terminal_memory, int32_t tid) {
     }
 }
 
+
+/*
+ * void draw_time_bar()
+ * Input: none
+ * Return value: none
+ * Function: time display
+ */
 void draw_time_bar() {
     int i;
     char status_bar[26] = "Time:2022-00-00 00:00:00";
@@ -334,7 +456,12 @@ void draw_time_bar() {
 }
 
 
-
+/*
+ * void draw_mouse()
+ * Input: none
+ * Return value: none
+ * Function: mouse display
+ */
 void draw_mouse() {
     int i, j;
     if (mouse_initial == 0) {
