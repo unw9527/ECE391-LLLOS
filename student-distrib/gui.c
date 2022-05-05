@@ -452,7 +452,7 @@ void draw_time_bar() {
     status_bar[22] = sec / 10 + ASCII_ZERO;
     status_bar[23] = sec % 10 + ASCII_ZERO;
     for (i = 0; i < strlen(status_bar); i++)
-        draw_big_char(825 + 8 * i, 2, status_bar[i], 0x00DADAFF, 0x00505050);
+        draw_big_char(825 + 8 * i, 2, status_bar[i], 0x0000FFFF, 0x00505050);
 }
 
 
@@ -472,6 +472,8 @@ void draw_mouse() {
         }
         mouse_initial = 1;
     }
+    if (last_x == x_pos && last_y == y_pos)
+        return;
     for (i = 0; i < 22; i++) {
         for (j = 0; j < 34; j++) {
             *(uint32_t *)(qemu_memory + last_x + i + (j + last_y) * BG_WIDTH) = mouse_buffer[i][j];

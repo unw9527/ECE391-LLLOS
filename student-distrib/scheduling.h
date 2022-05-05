@@ -25,6 +25,6 @@ extern int32_t sleep_num;
 extern void PIT_init();
 // swap process to execute
 extern void PIT_handler();
-
+extern int32_t pit_disable_rtc;
 #endif
 

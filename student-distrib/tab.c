@@ -19,6 +19,7 @@ static uint8_t ls[MAX_STRING_SIZE] = "ls";
 static uint8_t frame[MAX_STRING_SIZE] = "frame";
 static uint8_t frame0[MAX_STRING_SIZE] = "frame0.txt";
 static uint8_t frame1[MAX_STRING_SIZE] = "frame1.txt";
+static uint8_t reference[MAX_STRING_SIZE] = "reference.txt";
 
 /*
  * void delete_to_start_pos(int i)
@@ -109,7 +110,11 @@ void auto_complete(int i, int space_detected){
         memset(s, 0, MAX_STRING_SIZE);
         memcpy(s, verylarge, MAX_STRING_SIZE);
     }
-    else {return;}
+    else if (terminal[curr_terminal].line_buffer[idx] == 'r'){
+        memset(s, 0, MAX_STRING_SIZE);
+        memcpy(s, reference, MAX_STRING_SIZE);
+    }
+    else {return;} // if not the cases above, don't allow tab
 
 
     delete_to_start_pos(idx);

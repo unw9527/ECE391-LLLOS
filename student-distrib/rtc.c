@@ -14,7 +14,7 @@
 
 int rtc_active[3]       = {0,0,0};
 int rtc_flag[3]         = {1,1,1};
-int rtc_counter[3]      = {1,1,1};
+int rtc_counter[3]      = {0,0,0};
 int rtc_init_counter[3] = {0,0,0};
 int time_counter = 0;
 uint32_t time = 0;
@@ -71,22 +71,24 @@ void RTC_handler()
         time_counter = 0;
     }
 
-    time1++;
-    if ((need_update || refresh_terminal) && time1 > 20) {
-        draw_terminal((char *)VIDEO, curr_terminal);
-        need_update = 0;
-        time1 = 0;
-        draw = 1;
-    }
-
 
     send_eoi(8); // IRQ 8
     for (i = 0; i < 3; i++) // three terminals
     {
         rtc_counter[i]--;
+        time1++;
+        if (rtc_counter[i] != 0) {
+            if (pit_disable_rtc == 0) {
+                if ((need_update || refresh_terminal) && time1 > 10) {
+                    draw_terminal((char *)VIDEO, curr_terminal);
+                    need_update = 0;
+                    time1 = 0;
+                    draw = 1;
+                }
+            }
+        }
         /* Check if counter has reached zero */
-        if(rtc_counter[i] == 0)
-        {
+        if(rtc_counter[i] == 0) {
             /* Clear interrupt flag */
             rtc_flag[i] = 0;
             /* Reset counter */
