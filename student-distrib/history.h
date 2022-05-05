@@ -11,8 +11,8 @@ int curr_history_id;
 
 extern void update_history(int32_t is_max_history);
 extern void update_retri_id();
-extern void retrieve_history_up(int32_t start_x, int32_t start_y);
-extern void retrieve_history_down(int32_t start_x, int32_t start_y);
+extern void retrieve_history_up();
+extern void retrieve_history_down();
 
 #endif
 

@@ -37,14 +37,13 @@ void update_history(int32_t is_max_history){
 
 
 /*
- * void retrieve_history_up(int32_t start_x, int32_t start_y, uint8_t is_up)
- * Input: the starting coordinate (x and y); 
- *        is_up: whether the last arrow key pressed is up
+ * void retrieve_history_up()
+ * Input: none
  * Output: none
  * Function: store the history to line buffer of the current terminal when up is pressed
  * Side effect: clear the history that is already printed
  */
-void retrieve_history_up(int32_t start_x, int32_t start_y){
+void retrieve_history_up(){
     int j;
     cli();
    
@@ -69,11 +68,9 @@ void retrieve_history_up(int32_t start_x, int32_t start_y){
         }
     }
     
-    // while ((terminal[curr_terminal].terminal_x > start_x) || (terminal[curr_terminal].terminal_y > start_y)){
     while (terminal[curr_terminal].buffer_index > 0){
         store_vid_mem(curr_terminal);
         putc(BACK_SPACE, curr_terminal);
-        // echo(BACK_SPACE);
         store_vid_mem(running_term);  
         terminal[curr_terminal].buffer_index--;
     }
@@ -87,7 +84,6 @@ void retrieve_history_up(int32_t start_x, int32_t start_y){
         if (history_holder[retrieve_history_id][j] == NEW_LINE) break;
         store_vid_mem(curr_terminal);
         putc(history_holder[retrieve_history_id][j], curr_terminal);
-        // echo(history_holder[retrieve_history_id][j]);
         store_vid_mem(running_term);
         terminal[curr_terminal].line_buffer[j] = history_holder[retrieve_history_id][j];
     }
@@ -100,14 +96,13 @@ void retrieve_history_up(int32_t start_x, int32_t start_y){
 
 
 /*
- * void retrieve_history_down(int32_t start_x, int32_t start_y, uint8_t is_up)
- * Input: the starting coordinate (x and y); 
- *        is_up: whether the last arrow key pressed is up
+ * void retrieve_history_down()
+ * Input: none
  * Output: none
  * Function: store the history to line buffer of the current terminal when down is pressed
  * Side effect: clear the history that is already printed
  */
-void retrieve_history_down(int32_t start_x, int32_t start_y){
+void retrieve_history_down(){
     int j;
     cli();
     
@@ -116,13 +111,9 @@ void retrieve_history_down(int32_t start_x, int32_t start_y){
         count--;
         memset((uint8_t*) terminal[curr_terminal].line_buffer, 0, MAX_BUFFER); // clear the line buffer, otherwise will get "no such command" error
 
-        // terminal[curr_terminal].buffer_index = 0;
-
-        // while ((terminal[curr_terminal].terminal_x > start_x) || (terminal[curr_terminal].terminal_y > start_y)){
         while (terminal[curr_terminal].buffer_index > 0){
             store_vid_mem(curr_terminal);
             putc(BACK_SPACE, curr_terminal);
-            // echo(BACK_SPACE);
             store_vid_mem(running_term);       
             terminal[curr_terminal].buffer_index--; 
         }
@@ -141,7 +132,6 @@ void retrieve_history_down(int32_t start_x, int32_t start_y){
         if (history_holder[retrieve_history_id][j] == NEW_LINE) break;
         store_vid_mem(curr_terminal);
         putc(history_holder[retrieve_history_id][j], curr_terminal);
-        // echo(history_holder[retrieve_history_id][j]);
         store_vid_mem(running_term);
         terminal[curr_terminal].line_buffer[j] = history_holder[retrieve_history_id][j];
     }

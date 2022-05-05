@@ -6,6 +6,6 @@
 #define MAX_STRING_SIZE 33
 #define SPACE           0x20
 
-extern void press_tab(int32_t start_x, int32_t start_y);
+extern void press_tab();
 
 #endif

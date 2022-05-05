@@ -15,8 +15,6 @@ uint8_t shift;
 uint8_t alt;
 uint8_t ctrl;
 uint8_t normal_key; // any keys that can be displayed
-int32_t start_x;
-int32_t start_y;
 int32_t tab;
 
 typedef struct key                                                              /* The first entry is the scan code and the second is the ascii.*/
@@ -248,8 +246,6 @@ void keyboard_handler(void) {
         restore_vid_mem();
         store_vid_mem(running_term);
         send_eoi(KEYBOARD_IRQ);
-        start_x = terminal[curr_terminal].terminal_x;
-        start_y = terminal[curr_terminal].terminal_y;
         sti();
         return;
 
@@ -269,7 +265,7 @@ void keyboard_handler(void) {
             normal_key = 0;
         }
         if (0 == normal_key){
-            retrieve_history_up(start_x, start_y);
+            retrieve_history_up();
         }
         sti();
         return;
@@ -281,7 +277,7 @@ void keyboard_handler(void) {
         send_eoi(KEYBOARD_IRQ);
         
         if (0 == normal_key) {
-            retrieve_history_down(start_x, start_y);
+            retrieve_history_down();
         }
 
         sti();
@@ -294,7 +290,7 @@ void keyboard_handler(void) {
         send_eoi(KEYBOARD_IRQ);
         if (0 == tab){
             tab = 1;
-            press_tab(start_x, start_y);
+            press_tab();
         }
         sti();
         return;

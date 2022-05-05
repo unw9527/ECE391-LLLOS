@@ -21,17 +21,12 @@ static uint8_t frame0[MAX_STRING_SIZE] = "frame0.txt";
 static uint8_t frame1[MAX_STRING_SIZE] = "frame1.txt";
 
 /*
- * void delete_to_start_pos(int32_t start_x, int32_t start_y, int i)
- * Input: the starting position of that line, the index of the start of the last word
+ * void delete_to_start_pos(int i)
+ * Input: the index of the start of the last word
  * Output: none
  * Function: delete everything and move the cursor to the starting position
  */
-void delete_to_start_pos(int32_t start_x, int32_t start_y, int i){
-    if ((start_x == 0) && (start_y == 0)){
-        start_x = 7;
-        start_y = 1;
-    }
-    // while ((terminal[curr_terminal].terminal_x != start_x) || (terminal[curr_terminal].terminal_y != start_y)){
+void delete_to_start_pos(int i){
     while (terminal[curr_terminal].buffer_index > i){
         store_vid_mem(curr_terminal);
         putc(BACK_SPACE, curr_terminal);
@@ -41,12 +36,13 @@ void delete_to_start_pos(int32_t start_x, int32_t start_y, int i){
 }
 
 /*
- * void delete_to_start_pos(int32_t start_x, int32_t start_y)
- * Input: the starting position of that line
+ * void delete_to_start_pos(int i, int space_detected)
+ * Input: - the index of the start of the last word; 
+ *        - whether space is detected
  * Output: none
- * Function: delete everything and move the cursor to the starting position
+ * Function: auto complete
  */
-void auto_complete(int i, int32_t start_x, int32_t start_y, int space_detected){
+void auto_complete(int i, int space_detected){
     uint8_t s[MAX_STRING_SIZE];
     int j;
     int idx = 0;
@@ -116,7 +112,7 @@ void auto_complete(int i, int32_t start_x, int32_t start_y, int space_detected){
     else {return;}
 
 
-    delete_to_start_pos(start_x + idx, start_y, idx);
+    delete_to_start_pos(idx);
     for (j = 0; j < MAX_STRING_SIZE; j++){
         if (s[j] == '\0'){break;}
         store_vid_mem(curr_terminal);
@@ -130,38 +126,17 @@ void auto_complete(int i, int32_t start_x, int32_t start_y, int space_detected){
     // store_vid_mem(running_term); t
     // terminal[curr_terminal].line_buffer[j + idx] = ' ';
     terminal[curr_terminal].buffer_index = j + idx;
-
-    // if (terminal[curr_terminal].line_buffer[0] == (uint8_t) s[0]){
-    //     delete_to_start_pos(start_x, start_y, 0);
-    //     for (j = 0; j < MAX_STRING_SIZE; j++){
-    //         store_vid_mem(curr_terminal);
-    //         putc(s[j], curr_terminal);
-    //         store_vid_mem(running_term);   
-    //         terminal[curr_terminal].line_buffer[j] = s[j];
-    //     }
-    //     terminal[curr_terminal].buffer_index = j;
-    // }
-    // if (space_detected && (terminal[curr_terminal].line_buffer[i + 1] == (uint8_t) s[0])){
-    //     delete_to_start_pos(start_x + i + 1, start_y, i);
-    //     for (j = 0; j < MAX_STRING_SIZE; j++){
-    //         store_vid_mem(curr_terminal);
-    //         putc(s[j], curr_terminal);
-    //         store_vid_mem(running_term);
-    //         terminal[curr_terminal].line_buffer[j + i + 1] = s[j];  
-    //     }
-    //     terminal[curr_terminal].buffer_index = j + i + 1;
-    // }
 }
 
 
 
 /*
- * void press_tab(int32_t start_x, int32_t start_y)
- * Input: the starting position of that line
+ * void press_tab()
+ * Input: none
  * Output: none
  * Function: main function for auto complete
  */
-void press_tab(int32_t start_x, int32_t start_y){
+void press_tab(){
     int i;
     int space_detected = 0;
     for (i = 0; i < terminal[curr_terminal].buffer_index; i++){
@@ -170,7 +145,7 @@ void press_tab(int32_t start_x, int32_t start_y){
             break;
         }
     }
-    auto_complete(i, start_x, start_y, space_detected);
+    auto_complete(i, space_detected);
 
 }
 
