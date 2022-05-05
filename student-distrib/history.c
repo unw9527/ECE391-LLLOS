@@ -69,13 +69,15 @@ void retrieve_history_up(int32_t start_x, int32_t start_y){
         }
     }
     
-    while ((terminal[curr_terminal].terminal_x != start_x) || (terminal[curr_terminal].terminal_y != start_y)){
+    // while ((terminal[curr_terminal].terminal_x > start_x) || (terminal[curr_terminal].terminal_y > start_y)){
+    while (terminal[curr_terminal].buffer_index > 0){
         store_vid_mem(curr_terminal);
         putc(BACK_SPACE, curr_terminal);
         // echo(BACK_SPACE);
-        store_vid_mem(running_term);        
+        store_vid_mem(running_term);  
+        terminal[curr_terminal].buffer_index--;
     }
-
+    
     
 
     memset((uint8_t*) terminal[curr_terminal].line_buffer, 0, MAX_BUFFER); // clear the line buffer, otherwise will get "no such command" error
@@ -114,13 +116,15 @@ void retrieve_history_down(int32_t start_x, int32_t start_y){
         count--;
         memset((uint8_t*) terminal[curr_terminal].line_buffer, 0, MAX_BUFFER); // clear the line buffer, otherwise will get "no such command" error
 
-        terminal[curr_terminal].buffer_index = 0;
+        // terminal[curr_terminal].buffer_index = 0;
 
-        while ((terminal[curr_terminal].terminal_x != start_x) || (terminal[curr_terminal].terminal_y != start_y)){
+        // while ((terminal[curr_terminal].terminal_x > start_x) || (terminal[curr_terminal].terminal_y > start_y)){
+        while (terminal[curr_terminal].buffer_index > 0){
             store_vid_mem(curr_terminal);
             putc(BACK_SPACE, curr_terminal);
             // echo(BACK_SPACE);
-            store_vid_mem(running_term);        
+            store_vid_mem(running_term);       
+            terminal[curr_terminal].buffer_index--; 
         }
     }
 

@@ -235,7 +235,7 @@ void putc(uint8_t c, int32_t tid) {
         return;
     }
 
-    if (terminal[tid].terminal_x == NUM_COLS - 1) {         // Determine whether the vertical scroll is needed
+    if ((c != '\n') && (terminal[tid].terminal_x == NUM_COLS - 1)) {         // Determine whether the vertical scroll is needed
         terminal[tid].terminal_x = 0;
         terminal[tid].terminal_y++;
         if (terminal[tid].terminal_y == NUM_ROWS){

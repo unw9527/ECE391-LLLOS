@@ -294,7 +294,7 @@ void keyboard_handler(void) {
         send_eoi(KEYBOARD_IRQ);
         if (0 == tab){
             tab = 1;
-            press_tab();
+            press_tab(start_x, start_y);
         }
         sti();
         return;
@@ -305,7 +305,7 @@ void keyboard_handler(void) {
         return;
     default:
         ascii_value = key_to_ascii(scan_code);
-        if (((32 <= ascii_value) && (127 >= ascii_value)) || (0 != terminal[curr_terminal].buffer_index) && (BACK_SPACE == ascii_value))  normal_key = 1;
+        if (((32 <= ascii_value) && (127 >= ascii_value)) || ((0 != terminal[curr_terminal].buffer_index) && (BACK_SPACE == ascii_value)))  normal_key = 1;
     }
     
     if(alt && !shift) {
