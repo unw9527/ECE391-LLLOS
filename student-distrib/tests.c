@@ -263,7 +263,7 @@ void dynamic_test3()
 	int32_t i;
 	printf("The initial version of our slab cache. 17 general caches.\n");
 	printf("At the initialization time, no slab caches are there.\n");
-	for (i = 4; i <= 6; i++){
+	for (i = 7; i <= 10; i++){
 		printf("The %dth general slab cache:\n", i);
 		printf("align: %d, color: %d, color_next: %d, gfp_order: %d\n", general_caches[i].align, general_caches[i].color, general_caches[i].color_next, general_caches[i].gfp_order);
 		printf("name: %s, num_per_slab: %d, object_size: %d, slab_size: %d\n", general_caches[i].name, general_caches[i].num_per_slab, general_caches[i].object_size, general_caches[i].slab_size);
@@ -296,7 +296,7 @@ void dynamic_test5()
     }
     printf("After the malloc, now free_list looks like this.\n");
     for (i = 0; i < 11; i++)
-        printf("The size %d free list.   Num_free: %d   The head: %x\n", i, free_area[i].nr_free, free_area[i].free_pt);
+        printf("The size %d free list.   Num_free: %d   The head: %x\n", i, free_area[i].nr_free, free_area[i].free_pt);
     for (i = 0; i <= 9; i++){
         kfree(pt[i]);
     }
@@ -311,11 +311,11 @@ void dynamic_test6()
     }
     printf("After the malloc, now parts of the buddy system looks like this.\n");
     for (i = 0; i < 3; i++){
-        printf("The %dth 4 MB page descriptor for dynamic allocation:\n", i);
-        printf("flags: %x, next_pt: %x, prev_pt: %x, order: %d\n", mem_map[8192 + 1024 * i].flags, mem_map[8192 + 1024 * i].lru.next, mem_map[8192 + 1024 * i].lru.prev, mem_map[8192 + 1024 * i]._private);
+        printf("The order i page descriptor for dynamic allocation:\n", i);
+        printf("flags: %x, next_pt: %x, prev_pt: %x, order: %d\n", mem_map[8192 + (1 << i)].flags, mem_map[8192 + (1 << i)].lru.next, mem_map[8192 + (1 << i)].lru.prev, mem_map[8192 + (1 << i)]._private);
     }
     printf("After the malloc, now slab cache looks like this.\n");
-    for (i = 4; i <= 6; i++){
+    for (i = 0; i <= 3; i++){
         printf("The %dth general slab cache:\n", i);
         printf("align: %d, color: %d, color_next: %d, gfp_order: %d\n", general_caches[i].align, general_caches[i].color, general_caches[i].color_next, general_caches[i].gfp_order);
         printf("name: %s, num_per_slab: %d, object_size: %d, slab_size: %d\n", general_caches[i].name, general_caches[i].num_per_slab, general_caches[i].object_size, general_caches[i].slab_size);
@@ -342,7 +342,7 @@ void dynamic_test8()
         printf("flags: %x, next_pt: %x, prev_pt: %x, order: %d\n", mem_map[8192 + 1024 * i].flags, mem_map[8192 + 1024 * i].lru.next, mem_map[8192 + 1024 * i].lru.prev, mem_map[8192 + 1024 * i]._private);
     }
     printf("After free, now slab cache looks like this.\n");
-    for (i = 4; i <= 6; i++){
+    for (i = 0; i <= 3; i++){
         printf("The %dth general slab cache:\n", i);
         printf("align: %d, color: %d, color_next: %d, gfp_order: %d\n", general_caches[i].align, general_caches[i].color, general_caches[i].color_next, general_caches[i].gfp_order);
         printf("name: %s, num_per_slab: %d, object_size: %d, slab_size: %d\n", general_caches[i].name, general_caches[i].num_per_slab, general_caches[i].object_size, general_caches[i].slab_size);
