@@ -1,3 +1,5 @@
+// Reference: https://wiki.osdev.org/RTC
+
 #ifndef _RTC_H
 #define _RTC_H
 #define CMOS_PORT_0 0x70

@@ -1,3 +1,5 @@
+// The mouse implementation in this file is obtained from https://wiki.osdev.org/Mouse
+
 #include "mouse.h"
 #include "i8259.h"
 #include "lib.h"
@@ -8,8 +10,8 @@
 #include "gui.h"
 #include "vbe.h"
 int32_t mouse_iter = -1;
-int32_t x_pos[3];
-int32_t y_pos[3];
+int32_t x_pos;
+int32_t y_pos;
 
 int32_t mouse_timer = 0;
 
@@ -125,10 +127,8 @@ void text_mode_mouse()
 
 void mouse_update_vid(uint8_t status, uint8_t x, uint8_t y)
 {
-    char* video_mem = (char *)VIDEO;
     int8_t sign_x;
     int8_t sign_y;
-    int i, j;
     if (x == 0 && y == 0)
         return;
     /* Check overflow.*/
@@ -136,40 +136,40 @@ void mouse_update_vid(uint8_t status, uint8_t x, uint8_t y)
         return;
     /*Change the color back to white.*/
     // store_vid_mem(curr_terminal);
-    // if (*(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1)) == '#')
-    //     *(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1)) = ' ';
-    // *(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1) + 1) = ATTRIB;
+    // if (*(uint8_t *)(video_mem + ((x_pos + y_pos * NUM_COLS) << 1)) == '#')
+    //     *(uint8_t *)(video_mem + ((x_pos + y_pos * NUM_COLS) << 1)) = ' ';
+    // *(uint8_t *)(video_mem + ((x_pos + y_pos * NUM_COLS) << 1) + 1) = ATTRIB;
 
     /* Update the mouse position.*/
     /* Check for neg x.*/
     if (status & X_SIGN){
         sign_x = (int8_t) x;
-        x_pos[curr_terminal] += (int32_t)sign_x;
-        if (x_pos[curr_terminal] < 0)
-            x_pos[curr_terminal] = 0;
+        x_pos += (int32_t)sign_x;
+        if (x_pos < 0)
+            x_pos = 0;
     }
     else{
-        x_pos[curr_terminal] += (int32_t)x;
-        if (x_pos[curr_terminal] >= BG_WIDTH)
-            x_pos[curr_terminal] = BG_WIDTH - 1;
+        x_pos += (int32_t)x;
+        if (x_pos >= BG_WIDTH)
+            x_pos = BG_WIDTH - 1;
     }
     /* Check for neg y.*/
     if (status & Y_SIGN){
         sign_y = (int8_t) y;
-        y_pos[curr_terminal] -= (int32_t)sign_y;
-        if (y_pos[curr_terminal] >= BG_HEIGHT)
-            y_pos[curr_terminal] = BG_HEIGHT - 1;
+        y_pos -= (int32_t)sign_y;
+        if (y_pos >= BG_HEIGHT)
+            y_pos = BG_HEIGHT - 1;
     }
     else{
-        y_pos[curr_terminal] -= (int32_t)y;
-        if (y_pos[curr_terminal] < 0)
-            y_pos[curr_terminal] = 0;
+        y_pos -= (int32_t)y;
+        if (y_pos < 0)
+            y_pos = 0;
     }
 
     /* Update the new green position.*/
-    // if (*(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1)) == ' ')
-    //     *(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1)) = '#';
-    // *(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1) + 1) = GREEN;
+    // if (*(uint8_t *)(video_mem + ((x_pos + y_pos * NUM_COLS) << 1)) == ' ')
+    //     *(uint8_t *)(video_mem + ((x_pos + y_pos * NUM_COLS) << 1)) = '#';
+    // *(uint8_t *)(video_mem + ((x_pos + y_pos * NUM_COLS) << 1) + 1) = GREEN;
     return;
 }
 

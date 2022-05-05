@@ -64,11 +64,7 @@ void PIT_handler(){
         :
         : "memory"
     );
-    // if (need_update || refresh_terminal) {
-    //     draw_terminal((char *)VIDEO, curr_terminal);
-    //     need_update = 0;
-    // }
-    draw_mouse();
+    // draw_mouse();
     running_term = next_term;
     next_pid = terminal[next_term].prog_array[terminal[next_term].terminal_prog_count-1];
     if (terminal[running_term].terminal_prog_count == 0) {

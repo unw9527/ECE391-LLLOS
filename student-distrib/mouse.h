@@ -3,6 +3,7 @@
 
 #include "lib.h"
 
+// Reference: https://wiki.osdev.org/Mouse
 #define COMPAQ 0x20
 #define MOUSE_AUX 0x64
 #define MOUSE_DATA 0x60
@@ -22,8 +23,8 @@
 #define RIGHT_BUTTON 0x02
 #define LEFT_BUTTON 0x01
 
-extern int32_t x_pos[3];
-extern int32_t y_pos[3];
+extern int32_t x_pos;
+extern int32_t y_pos;
 
 void mouse_handler();
 void mouse_init();

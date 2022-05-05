@@ -1,3 +1,5 @@
+// The keycode information in this file is obtained from https://wiki.osdev.org/Keyboard
+
 #include "lib.h"
 #include "i8259.h"
 #include "keyboard.h"

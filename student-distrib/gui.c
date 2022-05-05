@@ -340,7 +340,7 @@ void draw_mouse() {
     if (mouse_initial == 0) {
         for (i = 0; i < 22; i++) {
             for (j = 0; j < 34; j++) {
-                mouse_buffer[i][j] = *(uint32_t *)(qemu_memory + x_pos[curr_terminal] + i + (j + y_pos[curr_terminal])* BG_WIDTH);
+                mouse_buffer[i][j] = *(uint32_t *)(qemu_memory + x_pos + i + (j + y_pos)* BG_WIDTH);
             }
         }
         mouse_initial = 1;
@@ -352,7 +352,7 @@ void draw_mouse() {
     }
     for (i = 0; i < 22; i++) {
         for (j = 0; j < 34; j++) {
-            mouse_buffer[i][j] = *(uint32_t *)(qemu_memory + x_pos[curr_terminal] + i + (j + y_pos[curr_terminal])* BG_WIDTH);
+            mouse_buffer[i][j] = *(uint32_t *)(qemu_memory + x_pos + i + (j + y_pos)* BG_WIDTH);
         }
     }
     for (i = 0; i < 22; i++) {
@@ -363,11 +363,11 @@ void draw_mouse() {
             rgb |= (((mouse_img[i + j * 22] & BLUE_MASK) << 3) & 0xFF);
             if (rgb == BLACK)
                 continue;
-            *(uint32_t *)(qemu_memory + x_pos[curr_terminal] + i + (j + y_pos[curr_terminal])* BG_WIDTH) = rgb;
+            *(uint32_t *)(qemu_memory + x_pos + i + (j + y_pos)* BG_WIDTH) = rgb;
         }
     }
-    last_x = x_pos[curr_terminal];
-    last_y = y_pos[curr_terminal];
+    last_x = x_pos;
+    last_y = y_pos;
 }
 
 

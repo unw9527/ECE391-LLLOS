@@ -3,8 +3,7 @@
 #include "lib.h"
 #include "terminal.h"
 #include "gui.h"
-/*The following parts are concerning CMOS system time*/
-/* Reference Comes from: https://wiki.osdev.org/CMOS#Getting_Current_Date_and_Time_from_RTC\ */
+// Reference: https://wiki.osdev.org/CMOS#Getting_Current_Date_and_Time_from_RTC
 
 
 int get_update_in_progress_flag() {

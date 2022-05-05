@@ -10,6 +10,8 @@
 #include "page.h"
 #include "time.h"
 
+// Reference: https://wiki.osdev.org/RTC
+
 int rtc_active[3]       = {0,0,0};
 int rtc_flag[3]         = {1,1,1};
 int rtc_counter[3]      = {1,1,1};
@@ -61,14 +63,16 @@ void RTC_handler()
     outb(REG_C, CMOS_PORT_0);                                             /* Do some strange stuff with register C.*/
     inb(CMOS_PORT_1);
     RTC_intr = 1;
+    draw_mouse();
     time_counter++;
     if (time_counter > 0xFF) {
+        draw_os_font();
         get_system_time();
         time_counter = 0;
     }
 
     time1++;
-    if ((need_update || refresh_terminal) && time1 > 50) {
+    if ((need_update || refresh_terminal) && time1 > 20) {
         draw_terminal((char *)VIDEO, curr_terminal);
         need_update = 0;
         time1 = 0;

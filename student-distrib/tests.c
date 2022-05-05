@@ -21,7 +21,7 @@
 #define TEST_OUTPUT(name, result)	\
 	printf("[TEST %s] Result = %s\n", name, (result) ? "PASS" : "FAIL");
 
-int test_counter = 0;
+int test_counter = -1;
 
 static inline void assertion_failure(){
 	/* Use exception #15 for assertions, otherwise
@@ -350,14 +350,23 @@ void dynamic_test8()
     }
 }
 
+void test_instruction() {
+	printf("Welcome to the Triple-L OS !!!\n\n");
+	printf("We will first include some test of dynamic allocations.\n");
+	printf("Please press (Crtl + Space) to go through each test.\n");
+	printf("After the individual testing, we will starting the shell.\n\n\n");
+	printf("Have fun !!! \n");
+
+}
+
 void launch_tests()
 {
 	clear();
 	reset_cursor();
-	if (test_counter == 9) {
-		return;
-	}
 	switch (test_counter){
+		case -1:
+			test_instruction();
+			break;
 		case 0:
 			dynamic_test1();
 			break;
