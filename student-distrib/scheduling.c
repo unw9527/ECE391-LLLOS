@@ -8,6 +8,7 @@
 #include "syscall.h"
 #include "mouse.h"
 #include "rtc.h"
+#include "gui.h"
 int32_t signal_flag[3];
 int32_t sleep_num = 0;
 int32_t sleep_flag[3];
@@ -67,6 +68,7 @@ void PIT_handler(){
     //     draw_terminal((char *)VIDEO, curr_terminal);
     //     need_update = 0;
     // }
+    draw_mouse();
     running_term = next_term;
     next_pid = terminal[next_term].prog_array[terminal[next_term].terminal_prog_count-1];
     if (terminal[running_term].terminal_prog_count == 0) {

@@ -57,7 +57,7 @@ void RTC_handler()
     int i;
     // if (get_counter() == 3)
     //     test_interrupts();
-
+    int draw = 0;
     outb(REG_C, CMOS_PORT_0);                                             /* Do some strange stuff with register C.*/
     inb(CMOS_PORT_1);
     RTC_intr = 1;
@@ -68,11 +68,14 @@ void RTC_handler()
     }
 
     time1++;
-    if ((need_update || refresh_terminal) && time1 > 0xF) {
+    if ((need_update || refresh_terminal) && time1 > 50) {
         draw_terminal((char *)VIDEO, curr_terminal);
         need_update = 0;
         time1 = 0;
+        draw = 1;
     }
+
+
     send_eoi(8); // IRQ 8
     for (i = 0; i < 3; i++) // three terminals
     {
@@ -84,6 +87,11 @@ void RTC_handler()
             rtc_flag[i] = 0;
             /* Reset counter */
             rtc_counter[i] = rtc_init_counter[i];
+            if (draw == 0) {
+                draw_terminal((char *)VIDEO, curr_terminal);
+            }
+            else
+                draw = 0;
         }
     }
     time++;

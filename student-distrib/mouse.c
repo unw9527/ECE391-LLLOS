@@ -5,10 +5,13 @@
 #include "page.h"
 #include "scheduling.h"
 #include "signal.h"
-
+#include "gui.h"
+#include "vbe.h"
 int32_t mouse_iter = -1;
 int32_t x_pos[3];
 int32_t y_pos[3];
+
+int32_t mouse_timer = 0;
 
 void mouse_handler()
 {
@@ -125,16 +128,18 @@ void mouse_update_vid(uint8_t status, uint8_t x, uint8_t y)
     char* video_mem = (char *)VIDEO;
     int8_t sign_x;
     int8_t sign_y;
+    int i, j;
     if (x == 0 && y == 0)
         return;
     /* Check overflow.*/
     if ((status & X_OVERFLOW) || (status & Y_OVERFLOW))
         return;
     /*Change the color back to white.*/
-    store_vid_mem(curr_terminal);
-    if (*(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1)) == '#')
-        *(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1)) = ' ';
-    *(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1) + 1) = ATTRIB;
+    // store_vid_mem(curr_terminal);
+    // if (*(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1)) == '#')
+    //     *(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1)) = ' ';
+    // *(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1) + 1) = ATTRIB;
+
     /* Update the mouse position.*/
     /* Check for neg x.*/
     if (status & X_SIGN){
@@ -145,26 +150,26 @@ void mouse_update_vid(uint8_t status, uint8_t x, uint8_t y)
     }
     else{
         x_pos[curr_terminal] += (int32_t)x;
-        if (x_pos[curr_terminal] >= NUM_COLS)
-            x_pos[curr_terminal] = NUM_COLS - 1;
+        if (x_pos[curr_terminal] >= BG_WIDTH)
+            x_pos[curr_terminal] = BG_WIDTH - 1;
     }
     /* Check for neg y.*/
     if (status & Y_SIGN){
         sign_y = (int8_t) y;
         y_pos[curr_terminal] -= (int32_t)sign_y;
-        if (y_pos[curr_terminal] >= NUM_ROWS)
-            y_pos[curr_terminal] = NUM_ROWS - 1;
+        if (y_pos[curr_terminal] >= BG_HEIGHT)
+            y_pos[curr_terminal] = BG_HEIGHT - 1;
     }
     else{
         y_pos[curr_terminal] -= (int32_t)y;
         if (y_pos[curr_terminal] < 0)
             y_pos[curr_terminal] = 0;
     }
+
     /* Update the new green position.*/
-    if (*(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1)) == ' ')
-        *(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1)) = '#';
-    *(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1) + 1) = GREEN;
-    store_vid_mem(running_term);
+    // if (*(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1)) == ' ')
+    //     *(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1)) = '#';
+    // *(uint8_t *)(video_mem + ((x_pos[curr_terminal] + y_pos[curr_terminal] * NUM_COLS) << 1) + 1) = GREEN;
     return;
 }
 

@@ -27,6 +27,7 @@ extern void show_screen();
 extern void draw_background();
 extern void draw_terminal(char* terminal_memory, int32_t tid);
 extern void draw_string(int x, int y, int8_t* str, uint32_t color, uint32_t back_color);
+extern void draw_mouse();
 void draw_terminal_window(int x, int y, int w, int h, uint32_t color);
 void draw_os_font();
 extern void boot_gui();

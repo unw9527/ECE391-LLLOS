@@ -5,6 +5,7 @@
 #include "uiuc.h"
 #include "transparent.h"
 #include "zjui_term.h"
+#include "mouse_img.h"
 #include "types.h"
 #include "lib.h"
 #include "x86_desc.h"
@@ -13,6 +14,10 @@
 #include "scheduling.h"
 #include "page.h"
 #include "time.h"
+#include "mouse.h"
+int32_t last_x = 0, last_y = 0;
+uint32_t mouse_initial = 0;
+uint32_t mouse_buffer[22][34];
 
 uint32_t* qemu_memory = (uint32_t *) QEMU_BASE_ADDR;
 int box = 1;
@@ -282,7 +287,7 @@ void draw_terminal(char* terminal_memory, int32_t tid) {
 }
 
 void draw_time_bar() {
-    char status_bar[20] = "2022-00-00 00:00:00";\
+    char status_bar[20] = "2022-00-00 00:00:00";
     status_bar[5] = month / 10 + ASCII_ZERO;
     status_bar[6] = month % 10 + ASCII_ZERO;
     status_bar[8] = day / 10 + ASCII_ZERO;
@@ -295,5 +300,41 @@ void draw_time_bar() {
     status_bar[18] = sec % 10 + ASCII_ZERO;
     draw_string(400, BG_HEIGHT - 24 , status_bar, BLACK, 0x00505050);
 }
+
+void draw_mouse() {
+    int i, j;
+    if (mouse_initial == 0) {
+        for (i = 0; i < 22; i++) {
+            for (j = 0; j < 34; j++) {
+                mouse_buffer[i][j] = *(uint32_t *)(qemu_memory + x_pos[curr_terminal] + i + (j + y_pos[curr_terminal])* BG_WIDTH);
+            }
+        }
+        mouse_initial = 1;
+    }
+    for (i = 0; i < 22; i++) {
+        for (j = 0; j < 34; j++) {
+            *(uint32_t *)(qemu_memory + last_x + i + (j + last_y) * BG_WIDTH) = mouse_buffer[i][j];
+        }
+    }
+    for (i = 0; i < 22; i++) {
+        for (j = 0; j < 34; j++) {
+            mouse_buffer[i][j] = *(uint32_t *)(qemu_memory + x_pos[curr_terminal] + i + (j + y_pos[curr_terminal])* BG_WIDTH);
+        }
+    }
+    for (i = 0; i < 22; i++) {
+        for (j = 0; j < 34; j++) {
+            uint32_t rgb = BLACK;
+            rgb |= ((((mouse_img[i + j * 22] & RED_MASK) >> 11) << 3) & 0xFF) << 16;
+            rgb |= ((((mouse_img[i + j * 22] & GREEN_MASK) >> 5) << 2) & 0xFF) << 8;
+            rgb |= (((mouse_img[i + j * 22] & BLUE_MASK) << 3) & 0xFF);
+            if (rgb == BLACK)
+                continue;
+            *(uint32_t *)(qemu_memory + x_pos[curr_terminal] + i + (j + y_pos[curr_terminal])* BG_WIDTH) = rgb;
+        }
+    }
+    last_x = x_pos[curr_terminal];
+    last_y = y_pos[curr_terminal];
+}
+
 
 

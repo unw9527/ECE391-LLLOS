@@ -44,5 +44,6 @@ terminal_t  terminal[MAX_TERMINAL];
 volatile int32_t     curr_terminal; // the terminal that is being displayed
 int32_t     total_prog_count;  
 extern int32_t refresh_terminal;
+extern int32_t rtc_disable;
 #endif
 

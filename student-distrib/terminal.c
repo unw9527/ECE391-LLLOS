@@ -5,7 +5,7 @@
 #include "syscall.h"
 #include "scheduling.h"
 #include "history.h"
-
+int32_t rtc_disable = 0;
 int32_t refresh_terminal;
 
 /* void clear_buffer(void)
@@ -114,6 +114,7 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes) {
         return -1;
     cli();
     for (i = 0; i < nbytes; i++) {        // print the content of the buf
+        store_vid_mem(running_term);
         putc(buf1[i], running_term);
     }
     sti();
