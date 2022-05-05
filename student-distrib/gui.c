@@ -4,7 +4,7 @@
 #include "boot_font.h"
 #include "uiuc.h"
 #include "transparent.h"
-#include "zjui_term.h"
+#include "cloud_terminal.h"
 #include "mouse_img.h"
 #include "types.h"
 #include "lib.h"
@@ -88,7 +88,7 @@ void draw_boot_font() {
             rgb |= (((boot_font[j + i * 600] & BLUE_MASK) << 3) & 0xFF);
             if (rgb < 0x00111111)
                 continue;
-            *(uint32_t *)(qemu_memory + j + 200 + (i + 200) * BG_WIDTH) = rgb;
+            *(uint32_t *)(qemu_memory + j + 200 + (i + 200) * BG_WIDTH) = 0x00000055;
         }
         sleep(0xFFFFF);
     }
@@ -187,12 +187,35 @@ void draw_string(int x, int y, int8_t* str, uint32_t color, uint32_t back_color)
         draw_char(x + 8 * i, y, str[i], color, back_color);
 }
 
+void draw_big_char(int x, int y, char ch, uint32_t color, uint32_t back_color) {
+    char* print_char = (char*)font_data[(uint8_t)(ch)];
+    int i, j;
+    for (i = 0; i < 16; i++) {
+        for (j = 0; j < 8; j++) {
+            if (print_char[i] & 1 << (8 - j)) {
+                uint32_t rgb = BLACK;
+                rgb |= color;
+                *(uint32_t *)(qemu_memory + 2 * x + j + (i + 2 * y) * BG_WIDTH) = rgb;
+                *(uint32_t *)(qemu_memory + 2 * x + 1 + j + (i + 2 * y) * BG_WIDTH) = rgb;
+                *(uint32_t *)(qemu_memory + 2 * x + j + (i + 2 * y + 1) * BG_WIDTH) = rgb;
+                *(uint32_t *)(qemu_memory + 2 * x + 1 + j + (i + 2 * y + 1) * BG_WIDTH) = rgb;
+            }
+            else {
+                *(uint32_t *)(qemu_memory + 2 * x + j + (i + 2 * y) * BG_WIDTH) = back_color;
+                *(uint32_t *)(qemu_memory + 2 * x + 1 + j + (i + 2 * y) * BG_WIDTH) = back_color;
+                *(uint32_t *)(qemu_memory + 2 * x + j + (i + 2 * y + 1) * BG_WIDTH) = back_color;
+                *(uint32_t *)(qemu_memory + 2 * x + j + 1 + (i + 2 * y + 1) * BG_WIDTH) = back_color;
+            }
+        }
+    }
+}
+
 void boot_gui() {
-    // draw_transparent();
-    // draw_boot_font();
+    draw_transparent();
+    draw_boot_font();
     draw_background();
     draw_os_font();
-    draw_string(2, BG_HEIGHT - 24 , "Creator: Kunle Li, Ziyuan Lin, Peiyuan Liu", 0x00FF0000, 0x00505050);
+    draw_string(2, BG_HEIGHT - 24 , "Creator: Kunle Li, Ziyuan Lin, Peiyuan Liu", 0x0000FFFF, 0x00505050);
 }
 
 void draw_terminal_char(int x, int y, char ch, uint32_t color) {
@@ -207,9 +230,9 @@ void draw_terminal_char(int x, int y, char ch, uint32_t color) {
             }
             else {
                 uint32_t rgb = BLACK;
-                rgb |= ((((zjui_term[(x + j - TERMINAL_INIT_X)/2 + (y + i - TERMINAL_INIT_Y)/2 * 324] & RED_MASK) >> 11) << 3) & 0xFF) << 16;
-                rgb |= ((((zjui_term[(x + j - TERMINAL_INIT_X)/2+ (y + i - TERMINAL_INIT_Y)/2 * 324] & GREEN_MASK) >> 5) << 2) & 0xFF) << 8;
-                rgb |= (((zjui_term[(x + j - TERMINAL_INIT_X)/2 + (y + i - TERMINAL_INIT_Y)/2 * 324] & BLUE_MASK) << 3) & 0xFF);
+                rgb |= ((((cloud_term[(x + j - TERMINAL_INIT_X)/2 + (y + i - TERMINAL_INIT_Y)/2 * 324] & RED_MASK) >> 11) << 3) & 0xFF) << 16;
+                rgb |= ((((cloud_term[(x + j - TERMINAL_INIT_X)/2+ (y + i - TERMINAL_INIT_Y)/2 * 324] & GREEN_MASK) >> 5) << 2) & 0xFF) << 8;
+                rgb |= (((cloud_term[(x + j - TERMINAL_INIT_X)/2 + (y + i - TERMINAL_INIT_Y)/2 * 324] & BLUE_MASK) << 3) & 0xFF);
                 *(uint32_t *)(qemu_memory + x + j + (i + y) * BG_WIDTH) = rgb;
             }
         }
@@ -228,9 +251,9 @@ void draw_terminal_window(int x, int y, int w, int h, uint32_t color) {
     for (i = 0; i < h; i++) {
         for (j = 0; j < w; j++) {
             uint32_t rgb = BLACK;
-            rgb |= ((((zjui_term[j + i * w] & RED_MASK) >> 11) << 3) & 0xFF) << 16;
-            rgb |= ((((zjui_term[j + i * w] & GREEN_MASK) >> 5) << 2) & 0xFF) << 8;
-            rgb |= (((zjui_term[j + i * w] & BLUE_MASK) << 3) & 0xFF);
+            rgb |= ((((cloud_term[j + i * w] & RED_MASK) >> 11) << 3) & 0xFF) << 16;
+            rgb |= ((((cloud_term[j + i * w] & GREEN_MASK) >> 5) << 2) & 0xFF) << 8;
+            rgb |= (((cloud_term[j + i * w] & BLUE_MASK) << 3) & 0xFF);
             *(uint32_t *)(qemu_memory + x + 2 * j + (y + 2 * i) * BG_WIDTH) = rgb;
             *(uint32_t *)(qemu_memory + x + 2 * j + 1 + (y + 2 * i) * BG_WIDTH) = rgb;
             *(uint32_t *)(qemu_memory + x + 2 * j + (y + 2 * i + 1) * BG_WIDTH) = rgb;
@@ -288,19 +311,29 @@ void draw_terminal(char* terminal_memory, int32_t tid) {
 }
 
 void draw_time_bar() {
-    char status_bar[20] = "2022-00-00 00:00:00";
-    status_bar[5] = month / 10 + ASCII_ZERO;
-    status_bar[6] = month % 10 + ASCII_ZERO;
-    status_bar[8] = day / 10 + ASCII_ZERO;
-    status_bar[9] = day % 10 + ASCII_ZERO;
-    status_bar[11] = hour / 10 + ASCII_ZERO;
-    status_bar[12] = hour % 10 + ASCII_ZERO;
-    status_bar[14] = mins / 10 + ASCII_ZERO;
-    status_bar[15] = mins % 10 + ASCII_ZERO;
-    status_bar[17] = sec / 10 + ASCII_ZERO;
-    status_bar[18] = sec % 10 + ASCII_ZERO;
-    draw_string(400, BG_HEIGHT - 24 , status_bar, BLACK, 0x00505050);
+    int i;
+    char status_bar[26] = "Time:2022-00-00 00:00:00";
+    status_bar[10] = month / 10 + ASCII_ZERO;
+    status_bar[11] = month % 10 + ASCII_ZERO;
+    status_bar[13] = day / 10 + ASCII_ZERO;
+    status_bar[14] = day % 10 + ASCII_ZERO;
+
+    if (hour >= 5)
+        hour -= 5;
+    else
+        hour += 19;
+
+    status_bar[16] = hour / 10 + ASCII_ZERO;
+    status_bar[17] = hour % 10 + ASCII_ZERO;
+    status_bar[19] = mins / 10 + ASCII_ZERO;
+    status_bar[20] = mins % 10 + ASCII_ZERO;
+    status_bar[22] = sec / 10 + ASCII_ZERO;
+    status_bar[23] = sec % 10 + ASCII_ZERO;
+    for (i = 0; i < strlen(status_bar); i++)
+        draw_big_char(825 + 8 * i, 2, status_bar[i], 0x00DADAFF, 0x00505050);
 }
+
+
 
 void draw_mouse() {
     int i, j;
