@@ -280,7 +280,8 @@ void draw_terminal(char* terminal_memory, int32_t tid) {
     for (i = 0; i < NUM_ROWS; i++) {
         char line[81] = "                                                                                ";
         for (j = 0; j < NUM_COLS; j++) {
-            line[j] = *(uint8_t *)(terminal_memory + ((j + i * NUM_COLS) << 1));
+            if (*(uint8_t *)(terminal_memory + ((j + i * NUM_COLS) << 1)) != '\0')
+                line[j] = *(uint8_t *)(terminal_memory + ((j + i * NUM_COLS) << 1));
         }
         draw_terminal_string(TERMINAL_INIT_X, TERMINAL_INIT_Y + 16 * i, line, 0X00FFAA);
     }
