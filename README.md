@@ -16,30 +16,25 @@ This repository contains all files of the final MP of ECE 391 taken in Spring 20
 <center>Group 64</center>
 
 1. Boot animation
-
    - automatic image hard-coding (RGB 565 - numpy);
    - text hard-coding;
    - text animation
 
 2. Graphical User Interface (GUI)
-
    - background for both the desktop and the terminal (RGB 565)
    - switch the terminal from text-mode to graphic mode
 
 3. Dynamic allocation
-
    - buddy system
    - slab cache
 
 4. Signal
-
    - Normal functionality: sigtest passed
    - Right and left mouse click to sleep and continue respectively
 
 5. Time display (Real CT.)
 
 6. Mouse display
-
    - Graphical mouse.
 
 7. Command history retrieval (press up and down)

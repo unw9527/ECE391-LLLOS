@@ -137,7 +137,10 @@ void text_mode_mouse()
     return;
 }
 
-
+/* void mouse_update_vid(uint8_t status, uint8_t x, uint8_t y)
+ * Inputs: uint8_t status, uint8_t x, uint8_t y
+ * Return Value: none
+ * Function: Update the mouse vid */
 void mouse_update_vid(uint8_t status, uint8_t x, uint8_t y)
 {
     int8_t sign_x;
