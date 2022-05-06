@@ -1,4 +1,4 @@
-**All references that we use can be found at reference.txt.**
+**All references that we use can be found at `reference.txt` under ./fsdir.**
 
 # LLL OS
 This repository contains all files of the final MP of ECE 391 taken in Spring 2022 at UIUC. We implemented our own operating system, and functions it supports are as follows.

@@ -8,3 +8,4 @@
 8. http://wiki.osdev.org/VGA_Hardware#Memory_Layout_in_16-color_graphics_modes
 9. https://forum.osdev.org/viewtopic.php?f=1&t=30884
 10. https://wiki.osdev.org/User:Kazinsal/VirtualBox_Video_Adapter
+11. https://docs.microsoft.com/en-us/windows/win32/directshow/working-with-16-bit-rgb
