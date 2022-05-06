@@ -5,8 +5,6 @@
 #include "terminal.h"
 #include "scheduling.h"
 #include "rtc.h"
-// static int screen_x;
-// static int screen_y;
 static char* video_mem = (char *)VIDEO;
 
 /* void clear(void);

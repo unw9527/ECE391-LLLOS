@@ -125,11 +125,6 @@ void auto_complete(int i, int space_detected){
         store_vid_mem(running_term);   
         terminal[curr_terminal].line_buffer[j + idx] = s[j];
     }
-    // j++;
-    // store_vid_mem(curr_terminal);
-    // putc(' ', curr_terminal);
-    // store_vid_mem(running_term); t
-    // terminal[curr_terminal].line_buffer[j + idx] = ' ';
     terminal[curr_terminal].buffer_index = j + idx;
 }
 
@@ -151,7 +146,5 @@ void press_tab(){
         }
     }
     auto_complete(i, space_detected);
-
 }
-
 

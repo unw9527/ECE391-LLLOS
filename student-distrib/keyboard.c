@@ -375,12 +375,6 @@ void keyboard_handler(void) {
 
     // echo the key
     echo(ascii_value);
-    // if (scan_code == 0x0F) {                  // Tab
-    //     echo(ascii_value);
-    //     echo(ascii_value);
-    //     echo(ascii_value);
-    //     sti();
-    // }
     store_vid_mem(running_term);
     send_eoi(KEYBOARD_IRQ);
 }

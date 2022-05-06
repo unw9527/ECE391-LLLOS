@@ -2,13 +2,6 @@
 #define _GUI_H
 #include "vbe.h"
 
-// typedef struct ARGB {
-//     uint8_t b;
-//     uint8_t g;
-//     uint8_t r;
-//     uint8_t a;
-// } ARGB;
-
 #define RED_MASK    0xF800
 #define GREEN_MASK  0x7E0
 #define BLUE_MASK   0x1F
