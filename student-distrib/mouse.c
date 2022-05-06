@@ -15,6 +15,10 @@ int32_t y_pos;
 
 int32_t mouse_timer = 0;
 
+/* void mouse_handler();
+ * Inputs: none
+ * Return Value: none
+ * Function: The mouse handler. */
 void mouse_handler()
 {
     text_mode_mouse();
@@ -24,6 +28,10 @@ void mouse_handler()
     return;
 }
 
+/* void mouse_init();
+ * Inputs: none
+ * Return Value: none
+ * Function: Initialzie the mouse. */
 void mouse_init()
 {
     uint8_t status;
@@ -92,6 +100,10 @@ void mouse_init()
     enable_irq(12);
 }
 
+/* void text_mode_mouse();
+ * Inputs: none
+ * Return Value: none
+ * Function: Implement the 3 packages. */
 void text_mode_mouse()
 {
     uint8_t mouse_byte1;
@@ -124,6 +136,7 @@ void text_mode_mouse()
     }
     return;
 }
+
 
 void mouse_update_vid(uint8_t status, uint8_t x, uint8_t y)
 {
@@ -173,6 +186,10 @@ void mouse_update_vid(uint8_t status, uint8_t x, uint8_t y)
     return;
 }
 
+/* void mouse_click();
+ * Inputs: none
+ * Return Value: none
+ * Function: Update the signal accordingly. */
 void mouse_click(uint8_t status)
 {
     /* Check overflow.*/

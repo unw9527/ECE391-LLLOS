@@ -12,7 +12,7 @@
 int32_t signal_flag[3];
 int32_t sleep_num = 0;
 int32_t sleep_flag[3];
-
+int32_t pit_disable_rtc = 0;
 /*
  * void pit_init(int hz)
  * Input: none
@@ -21,6 +21,7 @@ int32_t sleep_flag[3];
  */
 void PIT_init()
 {
+    pit_disable_rtc = 1;
     running_term = 1;
     curr_terminal = 0;
     outb(RES_BYTE, COMMAND_REG);          /* Set our command byte 0x36 */
@@ -56,6 +57,7 @@ void PIT_handler(){
         send_eoi(0);
         sys_execute((uint8_t*)"shell");
     }
+    pit_disable_rtc = 0;
     run_pid = terminal[running_term].prog_array[terminal[running_term].terminal_prog_count-1];
     asm volatile(
         "movl %%ebp, %0       \n"
@@ -64,6 +66,12 @@ void PIT_handler(){
         :
         : "memory"
     );
+
+    // if ((need_update || refresh_terminal)) {
+    //     draw_terminal((char *)VIDEO, curr_terminal);
+    //     need_update = 0;
+    // }
+
     // draw_mouse();
     running_term = next_term;
     next_pid = terminal[next_term].prog_array[terminal[next_term].terminal_prog_count-1];

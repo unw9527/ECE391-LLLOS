@@ -31,5 +31,6 @@ extern void draw_mouse();
 void draw_terminal_window(int x, int y, int w, int h, uint32_t color);
 void draw_os_font();
 extern void boot_gui();
+extern void draw_time_bar();
 #endif
 
