@@ -11,6 +11,12 @@ sighand_t sighand_array[NUM_PROCESS];
 extern int32_t SIGNAL_LINKAGE[5];
 void* sig_pt;
 
+
+/**
+ * @brief handling the signal
+ * 
+ * @return 0
+ */
 int32_t sighand_init()
 {
     int32_t i;
@@ -32,6 +38,12 @@ int32_t sighand_init()
     return 0;
 }
 
+
+/**
+ * @brief the dispatcher
+ * 
+ * @param type error type
+ */
 void kernel_dispatcher(uint32_t type)
 {
     switch(type){
@@ -60,24 +72,40 @@ void kernel_dispatcher(uint32_t type)
     return;
 }
 
+/**
+ * @brief division by 0
+ * 
+ */
 void div_zero_default()
 {
     /* Kill the program.*/
     sys_halt(0);
 }
 
+/**
+ * @brief segfault
+ * 
+ */
 void segfault_default()
 {
     /* Kill the program.*/
     sys_halt(0);
 }
 
+/**
+ * @brief interrupt
+ * 
+ */
 void interrupt_default()
 {
     /* Kill the program.*/
     signal_flag[curr_terminal] = 1;
 }
 
+/**
+ * @brief alarm
+ * 
+ */
 void alarm_default()
 {
     /* Ignored.*/
@@ -85,6 +113,10 @@ void alarm_default()
     return;
 }
 
+/**
+ * @brief user1
+ * 
+ */
 void user1_default()
 {
     /* Sleep the program.*/
@@ -95,6 +127,10 @@ void user1_default()
     return;
 }
 
+/**
+ * @brief user2
+ * 
+ */
 void user2_default()
 {
     /* Wake up the program.*/
@@ -105,6 +141,11 @@ void user2_default()
     return;
 }
 
+/**
+ * @brief update the signal according to type
+ * 
+ * @param type 
+ */
 void signal_update(uint32_t type)
 {
     sigpending_t* pending_element;
@@ -136,6 +177,12 @@ void signal_update(uint32_t type)
     return;
 }
 
+/**
+ * @brief check whether the state is pending
+ * 
+ * @param cs code segment
+ * @return signal_index
+ */
 int32_t check_pending(uint32_t cs)
 {
     sigpending_t* pending_element;
@@ -169,6 +216,11 @@ int32_t check_pending(uint32_t cs)
     return -1;
 }
 
+/**
+ * @brief User signal
+ * 
+ * @param signal_index the index of the signal
+ */
 void user_signal(uint32_t signal_index)
 {
     int32_t* ebp;

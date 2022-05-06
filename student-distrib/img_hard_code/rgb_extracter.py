@@ -2,6 +2,7 @@
 #                                     and convert to RGB565 format,
 #                                     then store it inside a .h file
 #  @author Kunle Li
+#  @reference: https://docs.microsoft.com/en-us/windows/win32/directshow/working-with-16-bit-rgb
 #  @date   May 3rd, 2022    First done
 #          May 4th, 2022    Add args to automatically change the file name
 #                           and the variable name
