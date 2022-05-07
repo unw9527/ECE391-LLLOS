@@ -172,7 +172,7 @@ ece391_vidmap (uint8_t** screen_start)
         return -1;
     }
 
-    *screen_start = (uint8_t*)(mem_image + 0xb8000);
+    *screen_start = (uint8_t*)(mem_image + 0xE0000);
     return 0;
 }
 

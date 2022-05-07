@@ -7,6 +7,7 @@
 #include "idt.h"
 #include "x86_desc.h"
 #include "scheduling.h"
+#include "dynamic_alloc.h"
 
 /* int32_t sys_halt (uint8_t status)
  * Inputs: status -- the status of the halt process
@@ -102,7 +103,6 @@ int32_t sys_execute (const uint8_t* command) {
     }
     if (i < MAX_BUFFER)
         buf1[i] = 0;
-
     /* This sequence of code is to store the argument into buf3.*/
     if (command[i] == SPACE){
         for (j = 0; j < MAX_BUFFER; j++){
@@ -165,7 +165,7 @@ int32_t sys_execute (const uint8_t* command) {
 
     /* --------------------------- Step5. Set up the PCB ----------------------------*/
     set_up_PCB(pid, prev_pid, buf3, entry_point, running_term);
-
+    /* I do not think we need this.*/
     if (schedule) {
         PCB_array[NUM_PROCESS-1-pid].thread_info.curr_esp = curr_esp;
         PCB_array[NUM_PROCESS-1-pid].thread_info.curr_ebp = curr_ebp;
@@ -359,7 +359,7 @@ int32_t sys_vidmap(uint8_t** screen_start)
     if ((uint32_t)screen_start < PROCESS_START || (uint32_t)screen_start >= PROCESS_END)
         return -1;
     /* Create a page table for the user-level video memory.*/
-    set_video_page();
+    set_video_page(running_term);
     /* Set the screen start.*/
     *screen_start = (uint8_t*) USER_VIDEO_ADDR;
     return USER_VIDEO_ADDR;
@@ -369,13 +369,55 @@ int32_t sys_vidmap(uint8_t** screen_start)
 /* Side effect: Need to implement for extra credit.*/
 int32_t sys_set_handler (int32_t signum, void* handler)
 {
-    return -1;
+    /* Check the range of the handler.*/
+    if ((uint32_t)handler < PROCESS_START || (uint32_t)handler >= PROCESS_END)
+        return -1;
+    /* Set the handler.*/
+    sighand_array[pid].action[signum].sa_handler = handler;
+    return 0;
 }
 
 /* int32_t sys_sigreturn (void) */
 /* Side effect: Need to implement for extra credit.*/
 int32_t sys_sigreturn (void)
 {
-    return -1;
+    int32_t* esp;
+    int32_t* ebp;
+    int32_t cs;
+    /* Free the pointer.*/
+    cli();
+    kfree(sig_pt);
+    PCB_array[NUM_PROCESS-1-pid].thread_info.sig_dealing = 0;
+    asm volatile("                                                \n\
+        movl 68(%%ebp), %0                                        \n\
+        movl 52(%0), %1                                           \n\
+        movl %%ebp, %2                                            \n\
+        "                                                           \
+    : "=r" (esp), "=r" (cs), "=r" (ebp)                             \
+    : /* no input*/                                                 \
+    : "memory"                                                      \
+    );
+    /* Check for kernel or user.*/
+    if (cs == KERNEL_CS){
+        memcpy(ebp+4, esp, HARDWARE_CONTEXT-8);
+        return SIGCASE1;
+    }   
+    else{
+        memcpy(ebp+2, esp, HARDWARE_CONTEXT);
+        return SIGCASE2;
+    }
+    /* Note that it is not allowed in the general case though.*/
 }
 
+void* sys_malloc(int32_t size)
+{
+    void* pt;
+    pt = kmalloc(size, __GFP_NORETRY | __GFP_ZERO);
+    return pt;
+}
+
+int32_t sys_free(void* addr)
+{
+    kfree(addr);
+    return 0;
+}

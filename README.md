@@ -1,3 +1,49 @@
+**All references that we use can be found at `reference.txt` under ./fsdir.**
+
+# LLL OS
+This repository contains all files of the final MP of ECE 391 taken in Spring 2022 at UIUC. We implemented our own operating system, and functions it supports are as follows.
+
+## Required Functions
+1. System calls;
+2. Virtual memory (paging);
+3. Read-only file system;
+4. Exceptions handler;
+5. RTC, keyboard and PIT interrupt handlers;
+6. Multiple terminals;
+
+## Extra Features
+
+<center>Group 64</center>
+
+1. Boot animation
+   - automatic image hard-coding (RGB 565 - numpy);
+   - text hard-coding;
+   - text animation
+
+2. Graphical User Interface (GUI)
+   - background for both the desktop and the terminal (RGB 565)
+   - switch the terminal from text-mode to graphic mode
+
+3. Dynamic allocation
+   - buddy system
+   - slab cache
+
+4. Signal
+   - Normal functionality: sigtest passed
+   - Right and left mouse click to sleep and continue respectively
+
+5. Time display (Real CT.)
+
+6. Mouse display
+   - Graphical mouse.
+
+7. Command history retrieval (press up and down)
+
+8. Command auto-complete (press tab)
+
+9. Round-Robin scheduler (3-person team extra credit)
+
+
 ACADEMIC INTEGRITY
 -----
 Please review the University of Illinois Student Code before starting,

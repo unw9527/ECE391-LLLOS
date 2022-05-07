@@ -1,3 +1,5 @@
+// The keycode information in this file is obtained from https://wiki.osdev.org/Keyboard
+
 #include "lib.h"
 #include "i8259.h"
 #include "keyboard.h"
@@ -5,12 +7,17 @@
 #include "terminal.h"
 #include "page.h"
 #include "scheduling.h"
+#include "history.h"
+#include "signal.h"
+#include "tab.h"
 
 // the key flag
 uint8_t caps;
 uint8_t shift;
 uint8_t alt;
 uint8_t ctrl;
+uint8_t normal_key; // any keys that can be displayed
+int32_t tab;
 
 typedef struct key                                                              /* The first entry is the scan code and the second is the ascii.*/
 {
@@ -97,6 +104,9 @@ void keyboard_initial(void) {
     enter_flag[0] = 0;
     enter_flag[1] = 0;
     enter_flag[2] = 0;
+    curr_history_id = 0;
+    normal_key = 0;
+    tab = 0;
     enable_irq(KEYBOARD_IRQ);
 }
 
@@ -127,7 +137,6 @@ uint8_t shift_ascii(uint8_t ascii_value) {
 
 void echo(uint8_t ascii_value) {
     uint8_t ascii;
-    cli();
     if (ascii_value == 0 || (ascii_value == BACKSPACE && terminal[curr_terminal].buffer_index == 0))
         return;
     ascii = ascii_value;
@@ -142,9 +151,13 @@ void echo(uint8_t ascii_value) {
     if (ascii == BACKSPACE) {
         putc(ascii, curr_terminal);
         if (terminal[curr_terminal].buffer_index > 0) {                                 // decrement the line buffer
-            if (terminal[curr_terminal].buffer_index <= MAX_BUFFER)
+            if (terminal[curr_terminal].buffer_index <= MAX_BUFFER){
                 terminal[curr_terminal].line_buffer[terminal[curr_terminal].buffer_index - 1] = NEW_LINE;
+            }
             terminal[curr_terminal].buffer_index--;
+            if (terminal[curr_terminal].buffer_index == 0) {
+                update_retri_id();
+            }
         }
     }
     else {
@@ -155,11 +168,7 @@ void echo(uint8_t ascii_value) {
             putc(ascii, curr_terminal);
         }
         else {
-            // terminal[curr_terminal].buffer_index++;
-            // if (enter) {
-            //     terminal[curr_terminal].buffer_index = 0;
-            //     enter = 0;
-            // }
+            terminal[curr_terminal].buffer_index++;
         }
     }
     sti();
@@ -176,6 +185,7 @@ void echo(uint8_t ascii_value) {
 void keyboard_handler(void) {
     uint8_t scan_code = inb(KEYBOARD_PORT);
     uint8_t ascii_value;
+    cli();
     switch (scan_code)
     {
     case 0x3A:          // CAPS LOCK pressed
@@ -226,6 +236,7 @@ void keyboard_handler(void) {
         return;
 
     case 0x1C:          // Enter pressed
+        normal_key = 0;
         ascii_value = 0x0A;
         enter_flag[curr_terminal] = 1;
         store_vid_mem(curr_terminal);
@@ -235,6 +246,7 @@ void keyboard_handler(void) {
         sti();
         return;
     case 0x9C:         // Enter released
+        // update_history();
         store_vid_mem(curr_terminal);
         store_vid_mem(running_term);
         send_eoi(KEYBOARD_IRQ);
@@ -251,8 +263,49 @@ void keyboard_handler(void) {
         send_eoi(KEYBOARD_IRQ);
         sti();
         return;
+    case 0x48: // up arrow pressed 
+        send_eoi(KEYBOARD_IRQ);
+        if (0 == terminal[curr_terminal].buffer_index){
+            normal_key = 0;
+        }
+        if (0 == normal_key){
+            retrieve_history_up();
+        }
+        sti();
+        return;
+    case 0xC8: // up arrow released 
+        send_eoi(KEYBOARD_IRQ);
+        sti();
+        return;
+    case 0x50: // down arrow pressed
+        send_eoi(KEYBOARD_IRQ);
+        
+        if (0 == normal_key) {
+            retrieve_history_down();
+        }
+
+        sti();
+        return;
+    case 0xD0: // down arrow released
+        send_eoi(KEYBOARD_IRQ);
+        sti();
+        return;
+    case 0x0F:          // tab is pressed
+        send_eoi(KEYBOARD_IRQ);
+        if (0 == tab){
+            tab = 1;
+            press_tab();
+        }
+        sti();
+        return;
+    case 0x8F:          // tab is released
+        send_eoi(KEYBOARD_IRQ);
+        tab = 0;
+        sti();
+        return;
     default:
         ascii_value = key_to_ascii(scan_code);
+        if (((32 <= ascii_value) && (127 >= ascii_value)) || ((0 != terminal[curr_terminal].buffer_index) && (BACK_SPACE == ascii_value)))  normal_key = 1;
     }
     
     if(alt && !shift) {
@@ -312,14 +365,19 @@ void keyboard_handler(void) {
     //     return;
     // }
 
+    /* ctrl + c */
+    if (ctrl & (ascii_value == 0x63)){
+        send_eoi(KEYBOARD_IRQ);
+        signal_update(INTERRUPT);
+        buffer_index = 0;
+        enter = 0;
+        sti();
+        return;
+    }
+
+
     // echo the key
     echo(ascii_value);
-    if (scan_code == 0x0F) {                  // Tab
-        echo(ascii_value);
-        echo(ascii_value);
-        echo(ascii_value);
-        sti();
-    }
     store_vid_mem(running_term);
     send_eoi(KEYBOARD_IRQ);
 }

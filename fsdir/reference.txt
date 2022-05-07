@@ -1,0 +1,11 @@
+1. ISA Reference Manual for x86: Volume 3: System Programming Guide
+2. Understanding Linux Kernel. Chapter 9, 11.
+3. https://wiki.osdev.org/Keyboard.
+4. https://wiki.osdev.org/Mouse.
+5. https://wiki.osdev.org/RTC.
+6. MP3 Notes.
+7. https://wiki.osdev.org/CMOS#Getting_Current_Date_and_Time_from_RTC
+8. http://wiki.osdev.org/VGA_Hardware#Memory_Layout_in_16-color_graphics_modes
+9. https://forum.osdev.org/viewtopic.php?f=1&t=30884
+10. https://wiki.osdev.org/User:Kazinsal/VirtualBox_Video_Adapter
+11. https://docs.microsoft.com/en-us/windows/win32/directshow/working-with-16-bit-rgb

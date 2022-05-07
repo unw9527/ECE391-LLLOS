@@ -17,11 +17,14 @@ uint32_t curr_ebp;
 
 uint32_t schedule;
 
-int32_t running_term;
+volatile int32_t running_term;
+extern int32_t signal_flag[3];
+extern int32_t sleep_flag[3];
+extern int32_t sleep_num;
 // initialize PIT
 extern void PIT_init();
 // swap process to execute
 extern void PIT_handler();
-
+extern int32_t pit_disable_rtc;
 #endif
 

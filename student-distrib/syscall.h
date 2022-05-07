@@ -26,5 +26,7 @@ int32_t sys_getargs (uint8_t* buf, int32_t nbytes);
 int32_t sys_vidmap (uint8_t** screen_start);
 int32_t sys_set_handler (int32_t signum, void* handler);
 int32_t sys_sigreturn (void);
+void* sys_malloc(int32_t size);
+int32_t sys_free(void* addr);
 
 #endif

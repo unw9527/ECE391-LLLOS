@@ -4,6 +4,10 @@
 #include "x86_desc.h"
 #include "syscall.h"
 #include "scheduling.h"
+#include "history.h"
+int32_t rtc_disable = 0;
+int32_t refresh_terminal;
+
 /* void clear_buffer(void)
  * Inputs: void
  * Return Value: none
@@ -25,6 +29,7 @@ void terminal_init(void) {
 
     clear();
     reset_cursor();
+    refresh_terminal = 0;
     clear_buffer();
     int i;
 	for (i = 0; i < MAX_TERMINAL; i++) {
@@ -80,12 +85,22 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
         size = MAX_BUFFER;
     enter_flag[running_term] = 0;
 
+    if (curr_history_id == MAX_HISTORY){
+        update_history(1); // 1 means we need to reset curr_history_id to 0
+    }
+
     for (i = 0; i < MAX_BUFFER; i++){       // store the line buffer to the buf
-        if (i < terminal[running_term].buffer_index) 
+        if (i < terminal[running_term].buffer_index){ 
             buf1[i] = terminal[running_term].line_buffer[i];
+            // store history
+            history_holder[curr_history_id][i] = buf1[i];
+        }
         terminal[running_term].line_buffer[i] = NULL;
     }
     buf1[terminal[running_term].buffer_index] = NEW_LINE;
+    // story history
+    history_holder[curr_history_id][terminal[running_term].buffer_index] = NEW_LINE;
+    update_history(0);
     terminal[running_term].buffer_index = 0;
     sti();
     return size+1;
@@ -104,6 +119,7 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes) {
         return -1;
     cli();
     for (i = 0; i < nbytes; i++) {        // print the content of the buf
+        store_vid_mem(running_term);
         putc(buf1[i], running_term);
     }
     sti();
@@ -125,14 +141,14 @@ void switch_terminal(int32_t term_id) {
     if (term_id == prev_terminal)           // if the terminal id equals to the previos terminal, just return
         return;
 
-    curr_terminal = term_id;                // switch to current terminal
+    curr_terminal = term_id;
+    set_video_page(curr_terminal);
+    store_vid_mem(curr_terminal);
 
     store_vid_mem(curr_terminal);           // store the video memory to the current terminal
 
-    // Copy the memory between current terminal and previous terminal
-    memcpy((void*) terminal[prev_terminal].vid_mem, (const void*)VIDEO, VIDEO_MEM_SIZE);      
-
-    memcpy((void*)VIDEO, (const void*) terminal[curr_terminal].vid_mem, VIDEO_MEM_SIZE);    
+    memcpy((void*)VIDEO, (const void*) terminal[curr_terminal].vid_mem, 4096);    
+    refresh_terminal = 1;
     
     // Move the cursor to the current terminal
     move_cursor(curr_terminal);

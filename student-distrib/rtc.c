@@ -4,16 +4,21 @@
 #include "tests.h"
 #include "scheduling.h"
 #include "terminal.h"
+#include "gui.h"
+#include "x86_desc.h"
+#include "syscall.h"
+#include "page.h"
+#include "time.h"
 
-int rtc_flag[3] = {1,1,1};
-int rtc_active[3] = {0,0,0};
-int rtc_count[3] = {0,0,0};
-int rtc_count1[3] = {0,0,0};
+// Reference: https://wiki.osdev.org/RTC
 
-/* Note:
- * Some code that relates to turning on IRQ and setting the frequency is from
- * https://wiki.osdev.org/RTC
- */
+int rtc_active[3]       = {0,0,0};
+int rtc_flag[3]         = {1,1,1};
+int rtc_counter[3]      = {0,0,0};
+int rtc_init_counter[3] = {0,0,0};
+int time_counter = 0;
+uint32_t time = 0;
+uint32_t time1 = 0; 
 
 /* void RTC_init(void);
  * Inputs: void
@@ -23,8 +28,8 @@ void RTC_init()
 {
     uint32_t flags;
     unsigned char prev;
-    unsigned char rate = 3; 
-    RTC_intr = 0;                                         /* The maximux rates is 32784 >> 3 = 4096HZ*/
+    unsigned char rate = 5; 
+    RTC_intr = 0;                                         /* The maximux rates is 32784 >> 5 = 1024HZ*/
     cli_and_save(flags);
     outb(REG_B, CMOS_PORT_0);
     prev = inb(CMOS_PORT_1);
@@ -39,6 +44,7 @@ void RTC_init()
     outb(REG_C, CMOS_PORT_0);                                             /* Do some strange stuff with register C.*/
     inb(CMOS_PORT_1);
     restore_flags(flags);
+    need_update = 0;
     sti();
     enable_irq(8);                                                   /* IRQ8 corresponds to rtc.*/
 }
@@ -51,21 +57,54 @@ void RTC_init()
 void RTC_handler()
 {
     int i;
+    // if (get_counter() == 3)
+    //     test_interrupts();
+    int draw = 0;
     outb(REG_C, CMOS_PORT_0);                                             /* Do some strange stuff with register C.*/
     inb(CMOS_PORT_1);
     RTC_intr = 1;
+    draw_mouse();
+    time_counter++;
+    if (time_counter > 0xFF) {
+        draw_os_font();
+        get_system_time();
+        time_counter = 0;
+    }
+
+
     send_eoi(8); // IRQ 8
     for (i = 0; i < 3; i++) // three terminals
     {
-        rtc_count[i]--;
+        rtc_counter[i]--;
+        time1++;
+        if (rtc_counter[i] != 0) {
+            if (pit_disable_rtc == 0) {
+                if ((need_update || refresh_terminal) && time1 > 10) {
+                    draw_terminal((char *)VIDEO, curr_terminal);
+                    need_update = 0;
+                    time1 = 0;
+                    draw = 1;
+                }
+            }
+        }
         /* Check if counter has reached zero */
-        if(rtc_count[i] == 0)
-        {
+        if(rtc_counter[i] == 0) {
             /* Clear interrupt flag */
             rtc_flag[i] = 0;
             /* Reset counter */
-            rtc_count[i] = rtc_count1[i];
+            rtc_counter[i] = rtc_init_counter[i];
+            if (draw == 0) {
+                draw_terminal((char *)VIDEO, curr_terminal);
+            }
+            else
+                draw = 0;
         }
+    }
+    time++;
+    /* Check for 10 seconds.*/
+    if (time == 4 * MAX_FREQ){
+        signal_update(ALARM);
+        time = 0;
     }
 }
 
@@ -80,9 +119,9 @@ int32_t RTC_open(const uint8_t * filename){
     /* Set RTC to active for the running terminal */
     rtc_active[running_term] = 1;
 
-    rtc_count[running_term] = 1024/freq;
+    rtc_counter[running_term] = 1024/freq;
 
-    rtc_count1[running_term] = rtc_count[running_term];
+    rtc_init_counter[running_term] = rtc_count[running_term];
 
     return 0;
 }
@@ -130,8 +169,7 @@ int32_t RTC_write(int32_t fd, const void * buf, int32_t nbytes){
     if ((freq < MIN_FREQ || freq > MAX_FREQ) || ((!(freq & (freq - 1))) != 1))
       return -1;
 
-    rtc_count[running_term] = MAX_FREQ / FREQ_COEF / freq;
-    rtc_count1[running_term] = rtc_count[running_term];
+    rtc_counter[running_term] = MAX_FREQ / freq;
 
     // Return number of bytes
     return nbytes;

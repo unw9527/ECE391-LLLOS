@@ -1,3 +1,5 @@
+// Reference: https://wiki.osdev.org/RTC
+
 #ifndef _RTC_H
 #define _RTC_H
 #define CMOS_PORT_0 0x70
@@ -11,7 +13,7 @@
 #define RTC_RATE_1024   0x6 // 1024 Hz
 
 // mp3.5
-#define MAX_FREQ    8192
+#define MAX_FREQ    1024
 #define MIN_FREQ    2
 #define FREQ_COEF   8 // based on trial
 
@@ -29,6 +31,8 @@ extern void RTC_set_freq(int32_t rate);
 extern int rtc_active[3];
 extern int rtc_flag[3];
 extern int rtc_counter[3];
+extern uint32_t time;
+volatile int32_t need_update;
 
 #endif
 

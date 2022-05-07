@@ -4,8 +4,7 @@
 #include "lib.h"
 #include "terminal.h"
 #include "scheduling.h"
-// static int screen_x;
-// static int screen_y;
+#include "rtc.h"
 static char* video_mem = (char *)VIDEO;
 
 /* void clear(void);
@@ -224,18 +223,21 @@ void backspace(void) {
  *  Function: Output a character to the console */
 void putc(uint8_t c, int32_t tid) {
     cli();
+
     if (tid < 0 || tid > 2 || c == 0) {
         sti();
         return;
     }
 
+    if (tid == curr_terminal)
+        need_update = 1;
     if (c == BACK_SPACE) {        // backspace
         backspace();
         sti();
         return;
     }
-
-    if (terminal[tid].terminal_x == NUM_COLS - 1 && c != '\n') {         // Determine whether the vertical scroll is needed
+    
+    if ((c != '\n') && (terminal[tid].terminal_x == NUM_COLS - 1)) {         // Determine whether the vertical scroll is needed
         terminal[tid].terminal_x = 0;
         terminal[tid].terminal_y++;
         if (terminal[tid].terminal_y == NUM_ROWS){
@@ -243,6 +245,7 @@ void putc(uint8_t c, int32_t tid) {
             terminal[tid].terminal_y--;
         }
     }
+    
     if (c == '\n' || c == '\r') {           
         terminal[tid].terminal_x = 0;
         terminal[tid].terminal_y++;
@@ -253,7 +256,8 @@ void putc(uint8_t c, int32_t tid) {
     } 
     else { 
         *(uint8_t *)(video_mem + ((NUM_COLS * terminal[tid].terminal_y + terminal[tid].terminal_x) << 1)) = c;
-        *(uint8_t *)(video_mem + ((NUM_COLS * terminal[tid].terminal_y + terminal[tid].terminal_x) << 1) + 1) = ATTRIB;
+        if (*(uint8_t *)(video_mem + ((NUM_COLS * terminal[tid].terminal_y + terminal[tid].terminal_x) << 1) + 1) != 0x2)
+            *(uint8_t *)(video_mem + ((NUM_COLS * terminal[tid].terminal_y + terminal[tid].terminal_x) << 1) + 1) = ATTRIB;
         terminal[tid].terminal_x++;
         terminal[tid].terminal_x %= NUM_COLS;
         terminal[tid].terminal_y = (terminal[tid].terminal_y + (terminal[tid].terminal_x / NUM_COLS)) % NUM_ROWS;

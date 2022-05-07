@@ -4,6 +4,7 @@
 #include "types.h"
 #include "filesys.h"
 #include "keyboard.h"
+#include "signal.h"
 #define KERNEL_STACK 2048
 #define NUM_PROCESS 6
 #define START_PCB 0x007F4000
@@ -25,6 +26,10 @@ typedef struct thread_info
     int32_t padding;
     int32_t terminal_id;
     uint32_t entry_point;
+    int32_t pending_exist;                                           /* This is used to indicate the existence of the pending signal.*/
+    sigpending_head_t pending_list;                                  /* A linked list which stores the pending signals.*/
+    uint32_t running;
+    volatile uint32_t sig_dealing;
 } thread_info_t;
 
 typedef struct PCB
